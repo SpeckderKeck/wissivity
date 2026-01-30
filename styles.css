@@ -589,6 +589,62 @@ body.fullscreen .board {
   gap: 20px;
 }
 
+.team-status {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.team-status h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.team-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.team-status-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--surface-alt);
+  border: 1px solid transparent;
+}
+
+.team-status-item.is-active {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.15);
+}
+
+.team-status-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.team-status-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+}
+
+.team-status-position {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
 .card-stack {
   --card-height: 260px;
   display: flex;

@@ -98,6 +98,34 @@
           </div>
 
           <div class="card">
+            <h2>Spiellänge</h2>
+            <p class="hint">Passe die Größe des Spielbretts vor dem Start an.</p>
+            <div class="field-group board-size-group">
+              <label class="option-card">
+                <input type="radio" name="board-size" value="short" />
+                <span>
+                  <strong>Kurzes Spiel</strong>
+                  <small>24 Felder · Raster 6 × 4</small>
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="board-size" value="normal" checked />
+                <span>
+                  <strong>Normales Spiel</strong>
+                  <small>30 Felder · Raster 6 × 5</small>
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="board-size" value="long" />
+                <span>
+                  <strong>Langes Spiel</strong>
+                  <small>42 Felder · Raster 7 × 6</small>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div class="card">
             <div class="card-row">
               <h2>Kartensatz</h2>
               <button class="info-button" id="csv-info" aria-label="CSV Info">i</button>
@@ -175,6 +203,30 @@
                   <select id="time-pantomime-game"></select>
                 </label>
               </div>
+            </div>
+            <div class="field-group board-size-group">
+              <p>Spiellänge</p>
+              <label class="option-card">
+                <input type="radio" name="board-size-game" value="short" />
+                <span>
+                  <strong>Kurzes Spiel</strong>
+                  <small>24 Felder · Raster 6 × 4</small>
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="board-size-game" value="normal" checked />
+                <span>
+                  <strong>Normales Spiel</strong>
+                  <small>30 Felder · Raster 6 × 5</small>
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="board-size-game" value="long" />
+                <span>
+                  <strong>Langes Spiel</strong>
+                  <small>42 Felder · Raster 7 × 6</small>
+                </span>
+              </label>
             </div>
             <label class="field">
               Strafzeit beim Tauschen

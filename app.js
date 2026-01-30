@@ -39,6 +39,8 @@ const openSettingsButton = document.getElementById("open-settings");
 const closeSettingsButton = document.getElementById("close-settings");
 const applySettingsButton = document.getElementById("apply-settings");
 const mainMenuButton = document.getElementById("main-menu");
+const boardSizeInputs = document.querySelectorAll('input[name="board-size"]');
+const boardSizeGameInputs = document.querySelectorAll('input[name="board-size-game"]');
 
 const CATEGORY_CONFIG = {
   Erklären: { id: "explain", icon: "💬" },
@@ -147,6 +149,8 @@ const state = {
   teams: [],
   currentTeam: 0,
   positions: [],
+  boardSize: "normal",
+  boardDimensions: { rows: 5, cols: 6, total: 30 },
   pendingRoll: null,
   pendingCategory: null,
   timer: null,
@@ -179,6 +183,11 @@ const TEAM_COLORS = [
 const TEAM_ICONS = ["🐯", "🐼", "🦊", "🐸", "🐙", "🦁", "🐧", "🐨"];
 const DEFAULT_TEAM_NAMES = ["Team Nord", "Team Süd", "Team Ost", "Team West"];
 const THEME_STORAGE_KEY = "wissivity-theme";
+const BOARD_CONFIGS = {
+  short: { rows: 4, cols: 6, total: 24 },
+  normal: { rows: 5, cols: 6, total: 30 },
+  long: { rows: 6, cols: 7, total: 42 },
+};
 
 function applyTheme(theme) {
   if (theme === "light") {
@@ -268,29 +277,53 @@ function renderTeams(count) {
   }
 }
 
-function buildBoard(categories = state.categories) {
+function getSelectedBoardSize(inputs) {
+  const selected = [...inputs].find((input) => input.checked);
+  return selected?.value ?? "normal";
+}
+
+function applyBoardSize(size) {
+  const config = BOARD_CONFIGS[size] ?? BOARD_CONFIGS.normal;
+  state.boardSize = size;
+  state.boardDimensions = { rows: config.rows, cols: config.cols, total: config.total };
+  state.positions = state.positions.map((pos) => Math.min(pos, config.total - 1));
+  buildBoard();
+  positionTokens();
+}
+
+function syncBoardSizeControls(size) {
+  boardSizeInputs.forEach((input) => {
+    input.checked = input.value === size;
+  });
+  boardSizeGameInputs.forEach((input) => {
+    input.checked = input.value === size;
+  });
+}
+
+function buildBoard() {
   const existingTokens = [...board.querySelectorAll(".token")];
   board.innerHTML = "";
   const cells = [];
-  const icons = categories.map((category) => CATEGORY_ICONS[category]).filter(Boolean);
-  if (icons.length === 0) {
-    icons.push("❓");
-  }
-  for (let row = 0; row < 6; row += 1) {
+  const { rows, cols, total } = state.boardDimensions;
+  board.style.setProperty("--board-cols", cols);
+  board.style.setProperty("--board-rows", rows);
+  for (let row = 0; row < rows; row += 1) {
     const rowIndices = [];
-    for (let col = 0; col < 6; col += 1) {
-      const index = row % 2 === 0 ? row * 6 + col : row * 6 + (5 - col);
+    for (let col = 0; col < cols; col += 1) {
+      const index = row % 2 === 0 ? row * cols + col : row * cols + (cols - 1 - col);
       rowIndices.push(index);
     }
-    rowIndices.forEach((index, colIndex) => {
+    rowIndices.forEach((index) => {
       const cell = document.createElement("div");
       cell.className = `board-cell path alt-${index % 4}`;
       if (index === 0) {
-        cell.textContent = "🏁";
-      } else if (index === 35) {
-        cell.textContent = "🏆";
+        cell.textContent = "Start";
+        cell.classList.add("start");
+      } else if (index === total - 1) {
+        cell.textContent = "Ziel";
+        cell.classList.add("goal");
       } else {
-        cell.textContent = icons[(index + colIndex) % icons.length];
+        cell.textContent = `${index + 1}`;
       }
       cell.dataset.index = index;
       board.appendChild(cell);
@@ -419,7 +452,7 @@ function handleRoll() {
   state.pendingCategory = category;
   setTimeout(() => {
     moveToken(roll).then(() => {
-      if (state.positions[state.currentTeam] >= 35) {
+      if (state.positions[state.currentTeam] >= state.boardDimensions.total - 1) {
         showWinner(formatTeamLabel(state.currentTeam));
         return;
       }
@@ -446,7 +479,7 @@ function moveToken(steps) {
       token.classList.add("moving");
       state.positions[teamIndex] = Math.max(
         0,
-        Math.min(35, state.positions[teamIndex] + direction)
+        Math.min(state.boardDimensions.total - 1, state.positions[teamIndex] + direction)
       );
       positionTokens();
       remaining -= 1;
@@ -491,11 +524,13 @@ function handleStartGame() {
     alert("Bitte mindestens eine Kategorie wählen.");
     return;
   }
+  const selectedBoardSize = getSelectedBoardSize(boardSizeInputs);
+  syncBoardSizeControls(selectedBoardSize);
+  applyBoardSize(selectedBoardSize);
   state.categories = selectedCategories;
   state.categoryTimes = readCategoryTimes(menuCategoryControls);
   state.timeLimit = state.categoryTimes[selectedCategories[0]] ?? 60;
   state.swapPenalty = Number.parseInt(swapSelect.value, 10);
-  buildBoard(state.categories);
   const teams = [...teamListContainer.querySelectorAll(".team-row")].map((row, index) => {
     const nameInput = row.querySelector("[data-team-name]");
     const iconSelect = row.querySelector("[data-team-icon]");
@@ -559,6 +594,7 @@ function handleCsvUpload(event) {
 function syncSettingsPanel() {
   swapSelectGame.value = swapSelect.value;
   syncCategoryControls(gameCategoryControls, state.categories, state.categoryTimes);
+  syncBoardSizeControls(state.boardSize);
 }
 
 function applySettingsFromPanel() {
@@ -567,6 +603,9 @@ function applySettingsFromPanel() {
     alert("Bitte mindestens eine Kategorie wählen.");
     return;
   }
+  const selectedBoardSize = getSelectedBoardSize(boardSizeGameInputs);
+  syncBoardSizeControls(selectedBoardSize);
+  applyBoardSize(selectedBoardSize);
   state.categories = selectedCategories;
   state.categoryTimes = readCategoryTimes(gameCategoryControls);
   state.timeLimit = state.categoryTimes[selectedCategories[0]] ?? 60;
@@ -576,7 +615,6 @@ function applySettingsFromPanel() {
   if (!state.timer) {
     updateTimerDisplay(state.timeLimit);
   }
-  buildBoard(state.categories);
   positionTokens();
   settingsPanel.classList.add("hidden");
 }
@@ -699,7 +737,9 @@ function setup() {
   menuCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
   gameCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
   renderTeams(Number.parseInt(teamCountSelect.value, 10));
-  buildBoard(state.categories);
+  const selectedBoardSize = getSelectedBoardSize(boardSizeInputs);
+  syncBoardSizeControls(selectedBoardSize);
+  applyBoardSize(selectedBoardSize);
   positionTokens();
   updateTimerDisplay(state.timeLimit);
   updateFullscreenState();
@@ -709,6 +749,13 @@ function setup() {
 window.addEventListener("resize", positionTokens);
 teamCountSelect.addEventListener("change", (event) => {
   renderTeams(Number.parseInt(event.target.value, 10));
+});
+boardSizeInputs.forEach((input) => {
+  input.addEventListener("change", () => {
+    const selectedBoardSize = getSelectedBoardSize(boardSizeInputs);
+    syncBoardSizeControls(selectedBoardSize);
+    applyBoardSize(selectedBoardSize);
+  });
 });
 
 startButton.addEventListener("click", handleStartGame);

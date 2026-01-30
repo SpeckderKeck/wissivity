@@ -258,6 +258,34 @@ body.fullscreen .board {
   padding: 12px;
 }
 
+.board-size-group {
+  margin-top: 12px;
+}
+
+.option-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.option-card small {
+  display: block;
+  color: var(--muted);
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.option-card input {
+  accent-color: var(--accent);
+}
+
 .category-toggle {
   display: flex;
   align-items: center;
@@ -379,8 +407,8 @@ body.fullscreen .board {
 .board {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: repeat(6, 1fr);
+  grid-template-columns: repeat(var(--board-cols, 6), 1fr);
+  grid-template-rows: repeat(var(--board-rows, 6), 1fr);
   gap: 2px;
   background: var(--board);
   border-radius: 24px;
@@ -394,23 +422,45 @@ body.fullscreen .board {
   justify-content: center;
   font-size: 1.2rem;
   color: var(--text);
+  font-weight: 600;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  position: relative;
 }
 
 .board-cell.path {
-  background: var(--pastel-1);
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .board-cell.path.alt-1 {
-  background: var(--pastel-2);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .board-cell.path.alt-2 {
-  background: var(--pastel-3);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .board-cell.path.alt-3 {
-  background: var(--pastel-4);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.board-cell.start {
+  background: rgba(46, 213, 115, 0.2);
+  border-color: rgba(46, 213, 115, 0.55);
+}
+
+.board-cell.goal {
+  background: rgba(255, 165, 2, 0.22);
+  border-color: rgba(255, 165, 2, 0.6);
+}
+
+.board-cell::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 10px;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  pointer-events: none;
 }
 
 .token {

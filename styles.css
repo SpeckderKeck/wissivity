@@ -205,6 +205,16 @@ body.fullscreen .board {
   box-shadow: 0 10px 30px var(--shadow);
 }
 
+.card--teams {
+  min-width: 320px;
+}
+
+@media (min-width: 900px) {
+  .card--teams {
+    grid-column: span 2;
+  }
+}
+
 .card-row {
   display: flex;
   align-items: center;
@@ -315,6 +325,13 @@ body.fullscreen .board {
   border-radius: 12px;
 }
 
+.team-row-fields {
+  display: grid;
+  grid-template-columns: minmax(160px, 2fr) repeat(2, minmax(120px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
 .team-row-header {
   display: flex;
   align-items: center;
@@ -333,6 +350,12 @@ body.fullscreen .board {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 10px 12px;
+}
+
+@media (max-width: 700px) {
+  .team-row-fields {
+    grid-template-columns: 1fr;
+  }
 }
 
 .primary {

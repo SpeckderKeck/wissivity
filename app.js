@@ -166,8 +166,17 @@ const state = {
   gameOver: false,
 };
 
-const colors = ["#f97316", "#38bdf8", "#34d399", "#f472b6"];
-const TEAM_ICONS = ["🐯", "🐼", "🦊", "🐸", "🐙", "🦁"];
+const TEAM_COLORS = [
+  { label: "Orange", value: "#f97316" },
+  { label: "Blau", value: "#38bdf8" },
+  { label: "Grün", value: "#34d399" },
+  { label: "Pink", value: "#f472b6" },
+  { label: "Rot", value: "#ef4444" },
+  { label: "Gelb", value: "#facc15" },
+  { label: "Lila", value: "#8b5cf6" },
+  { label: "Türkis", value: "#14b8a6" },
+];
+const TEAM_ICONS = ["🐯", "🐼", "🦊", "🐸", "🐙", "🦁", "🐧", "🐨"];
 const DEFAULT_TEAM_NAMES = ["Team Nord", "Team Süd", "Team Ost", "Team West"];
 const THEME_STORAGE_KEY = "wissivity-theme";
 
@@ -222,24 +231,38 @@ function renderTeams(count) {
   teamListContainer.innerHTML = "";
   for (let i = 0; i < count; i += 1) {
     const defaultIcon = TEAM_ICONS[i % TEAM_ICONS.length];
+    const defaultColor = TEAM_COLORS[i % TEAM_COLORS.length].value;
     const defaultName = DEFAULT_TEAM_NAMES[i] ?? `Team ${i + 1}`;
     const row = document.createElement("div");
     row.className = "team-row";
     row.innerHTML = `
       <div class="team-row-header">Team ${i + 1}</div>
-      <label class="field">
-        Teamname
-        <input type="text" data-team-name value="${defaultName}" />
-      </label>
-      <label class="field">
-        Icon
-        <select data-team-icon>
-          ${TEAM_ICONS.map(
-            (icon) =>
-              `<option value="${icon}" ${icon === defaultIcon ? "selected" : ""}>${icon}</option>`
-          ).join("")}
-        </select>
-      </label>
+      <div class="team-row-fields">
+        <label class="field">
+          Teamname
+          <input type="text" data-team-name value="${defaultName}" />
+        </label>
+        <label class="field">
+          Farbe
+          <select data-team-color>
+            ${TEAM_COLORS.map(
+              (color) =>
+                `<option value="${color.value}" ${
+                  color.value === defaultColor ? "selected" : ""
+                }>${color.label}</option>`
+            ).join("")}
+          </select>
+        </label>
+        <label class="field">
+          Icon
+          <select data-team-icon>
+            ${TEAM_ICONS.map(
+              (icon) =>
+                `<option value="${icon}" ${icon === defaultIcon ? "selected" : ""}>${icon}</option>`
+            ).join("")}
+          </select>
+        </label>
+      </div>
     `;
     teamListContainer.appendChild(row);
   }
@@ -282,7 +305,7 @@ function createTokens(teamData) {
   board.querySelectorAll(".token").forEach((token) => token.remove());
   const teams = teamData.map((team, index) => ({
     ...team,
-    color: colors[index % colors.length],
+    color: team.color || TEAM_COLORS[index % TEAM_COLORS.length].value,
   }));
   state.positions = teams.map(() => 0);
   state.teams = teams;
@@ -476,9 +499,11 @@ function handleStartGame() {
   const teams = [...teamListContainer.querySelectorAll(".team-row")].map((row, index) => {
     const nameInput = row.querySelector("[data-team-name]");
     const iconSelect = row.querySelector("[data-team-icon]");
+    const colorSelect = row.querySelector("[data-team-color]");
     const name = nameInput?.value.trim() || `Team ${index + 1}`;
     const icon = iconSelect?.value || TEAM_ICONS[0];
-    return { name, icon };
+    const color = colorSelect?.value || TEAM_COLORS[0].value;
+    return { name, icon, color };
   });
   createTokens(teams);
   menuPanel.classList.remove("panel--active");

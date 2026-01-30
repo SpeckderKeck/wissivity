@@ -22,6 +22,7 @@ const turnTimer = document.getElementById("turn-timer");
 const turnWordTitle = document.getElementById("turn-word-title");
 const turnTabooList = document.getElementById("turn-taboo-list");
 const turnContinueButton = document.getElementById("turn-continue");
+const turnReadyButton = document.getElementById("turn-ready");
 const winnerScreen = document.getElementById("winner-screen");
 const winnerLabel = document.getElementById("winner-label");
 const winnerRestartButton = document.getElementById("winner-restart");
@@ -308,6 +309,7 @@ function updateTimerDisplay(value) {
 
 function startTimer() {
   clearInterval(state.timer);
+  state.timer = null;
   state.remainingTime = state.timeLimit;
   updateTimerDisplay(state.remainingTime);
   state.timer = setInterval(() => {
@@ -323,6 +325,8 @@ function startTimer() {
 function stopTimer() {
   clearInterval(state.timer);
   clearInterval(state.countdownTimer);
+  state.timer = null;
+  state.countdownTimer = null;
 }
 
 function getCardByCategory(category) {
@@ -559,16 +563,17 @@ function setOverlayStartFromCell() {
 }
 
 function showTurnOverlay() {
-  state.phase = "category";
+  state.phase = "ready";
   setOverlayStartFromCell();
   turnCategory.classList.remove("hidden");
   turnWord.classList.add("hidden");
   turnCountdown.classList.add("hidden");
+  turnReadyButton.classList.remove("hidden");
+  turnReadyButton.disabled = false;
   turnOverlay.classList.remove("hidden");
   turnOverlay.classList.add("active");
   requestAnimationFrame(() => {
     turnOverlay.classList.add("expanded");
-    startCountdown();
   });
 }
 
@@ -582,14 +587,18 @@ function hideTurnOverlay() {
 }
 
 function startCountdown() {
+  clearInterval(state.countdownTimer);
+  state.countdownTimer = null;
   let countdown = 3;
   turnCountdown.textContent = `${countdown}`;
   turnCountdown.classList.remove("hidden");
+  turnReadyButton.classList.add("hidden");
   state.phase = "countdown";
   state.countdownTimer = setInterval(() => {
     countdown -= 1;
     if (countdown <= 0) {
       clearInterval(state.countdownTimer);
+      state.countdownTimer = null;
       showWordCard();
       return;
     }
@@ -646,6 +655,11 @@ closeSettingsButton.addEventListener("click", handleCloseSettings);
 applySettingsButton.addEventListener("click", applySettingsFromPanel);
 mainMenuButton.addEventListener("click", handleMainMenu);
 turnContinueButton.addEventListener("click", () => finishTurn(false));
+turnReadyButton.addEventListener("click", () => {
+  if (state.phase !== "ready") return;
+  turnReadyButton.disabled = true;
+  startCountdown();
+});
 winnerRestartButton.addEventListener("click", handleWinnerRestart);
 
 csvInfo.addEventListener("click", () => {

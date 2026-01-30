@@ -28,6 +28,7 @@ const csvStatus = document.getElementById("csv-status");
 const csvInfo = document.getElementById("csv-info");
 const csvTooltip = document.getElementById("csv-tooltip");
 const cardStack = document.querySelector(".card-stack");
+const fullscreenToggle = document.getElementById("fullscreen-toggle");
 
 const CATEGORY_ICONS = {
   Erklären: "💬",
@@ -399,6 +400,7 @@ function handleStartGame() {
   createTokens(colorsList);
   menuPanel.classList.remove("panel--active");
   gamePanel.classList.add("panel--active");
+  document.body.classList.add("game-active");
   positionTokens();
   statusText.textContent = `Nächstes: ${state.teams[state.currentTeam].name} würfelt.`;
 }
@@ -451,6 +453,7 @@ function setup() {
   buildBoard();
   positionTokens();
   updateTimerDisplay(state.timeLimit);
+  updateFullscreenState();
 }
 
 window.addEventListener("resize", positionTokens);
@@ -470,6 +473,31 @@ csvUpload.addEventListener("change", handleCsvUpload);
 csvInfo.addEventListener("click", () => {
   const isHidden = csvTooltip.getAttribute("aria-hidden") === "true";
   csvTooltip.setAttribute("aria-hidden", isHidden ? "false" : "true");
+});
+
+function updateFullscreenState() {
+  const isFullscreen = Boolean(document.fullscreenElement);
+  document.body.classList.toggle("fullscreen", isFullscreen);
+  fullscreenToggle.setAttribute("aria-pressed", String(isFullscreen));
+  fullscreenToggle.textContent = isFullscreen ? "🗗" : "⛶";
+  fullscreenToggle.title = isFullscreen ? "Vollbildmodus verlassen" : "Vollbildmodus";
+}
+
+fullscreenToggle.addEventListener("click", () => {
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else {
+    gamePanel
+      .requestFullscreen()
+      .catch(() => {
+        statusText.textContent = "Vollbildmodus nicht verfügbar.";
+      });
+  }
+});
+
+document.addEventListener("fullscreenchange", () => {
+  updateFullscreenState();
+  positionTokens();
 });
 
 setup();

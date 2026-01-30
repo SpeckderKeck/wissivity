@@ -42,6 +42,46 @@ body {
   margin-top: 6px;
 }
 
+body.game-active .app-header {
+  margin-bottom: 0;
+}
+
+body.game-active .app-header h1,
+body.game-active .app-header .tagline {
+  display: none;
+}
+
+body.fullscreen .app {
+  max-width: none;
+  width: 100%;
+  min-height: 100vh;
+  padding: 24px 24px 32px;
+}
+
+#game {
+  position: relative;
+}
+
+.fullscreen-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 1.6rem;
+  padding: 0;
+  line-height: 1;
+}
+
+body.fullscreen .game-top {
+  grid-template-columns: minmax(360px, 1.2fr) minmax(300px, 0.8fr);
+}
+
+body.fullscreen .board {
+  min-height: clamp(480px, 65vh, 760px);
+}
+
 .panel {
   display: none;
 }

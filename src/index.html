@@ -8,15 +8,79 @@
   </head>
   <body>
     <header class="hero">
-      <h1>Wissivity</h1>
-      <p>Educational Activity Game – der Startpunkt für interaktive Lernspiele.</p>
-      <button class="primary" type="button">Spiel starten</button>
+      <div class="hero-inner">
+        <div>
+          <p class="eyebrow">Wissivity</p>
+          <h1>Das moderne Spielbrett für Wissen, Kreativität & Action.</h1>
+          <p>
+            Educational Activity Game – der Startpunkt für interaktive Lernspiele
+            mit klarer Struktur, flexiblen Kategorien und elegantem Design.
+          </p>
+          <button class="primary" type="button">Spiel starten</button>
+        </div>
+        <div class="hero-card">
+          <h2>Spieleinstellungen</h2>
+          <p>Wähle die gewünschte Spiellänge und starte direkt.</p>
+          <form class="settings" aria-label="Spieleinstellungen">
+            <label class="option">
+              <input type="radio" name="board-size" value="short" checked />
+              <span>
+                <strong>Kurzes Spiel</strong>
+                <small>24 Felder · Raster 6 × 4</small>
+              </span>
+            </label>
+            <label class="option">
+              <input type="radio" name="board-size" value="normal" />
+              <span>
+                <strong>Normales Spiel</strong>
+                <small>30 Felder · Raster 6 × 5</small>
+              </span>
+            </label>
+            <label class="option">
+              <input type="radio" name="board-size" value="long" />
+              <span>
+                <strong>Langes Spiel</strong>
+                <small>42 Felder · Raster 7 × 6</small>
+              </span>
+            </label>
+          </form>
+        </div>
+      </div>
     </header>
 
     <main class="content">
-      <section>
-        <h2>Grundlage</h2>
-        <p>Hier entsteht die Basis für das Spiel. Inhalte und Logik folgen als Nächstes.</p>
+      <section class="board-section">
+        <div class="section-header">
+          <div>
+            <h2>Spielbrett</h2>
+            <p>
+              Der Weg bleibt neutral und kann jederzeit über Kategorienkarten
+              eingefärbt oder mit Symbolen ergänzt werden.
+            </p>
+          </div>
+          <div class="legend">
+            <span class="legend-item start">Start</span>
+            <span class="legend-item goal">Ziel</span>
+            <span class="legend-item">Kategorie wählbar</span>
+          </div>
+        </div>
+        <div class="board-shell">
+          <div
+            class="board-grid"
+            id="game-board"
+            role="grid"
+            aria-label="Spielbrett"
+          ></div>
+        </div>
+      </section>
+
+      <section class="info">
+        <h2>Flexibel & skalierbar</h2>
+        <p>
+          Das Spielbrett passt sich automatisch der gewählten Rastergröße an,
+          bleibt auf Desktop und Smartphone klar lesbar und bietet genügend
+          Randfläche für Logos, Erweiterungen oder zusätzliche Module.
+        </p>
       </section>
     </main>
 

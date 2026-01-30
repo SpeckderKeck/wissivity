@@ -31,6 +31,7 @@ const csvStatus = document.getElementById("csv-status");
 const csvInfo = document.getElementById("csv-info");
 const csvTooltip = document.getElementById("csv-tooltip");
 const themeToggle = document.getElementById("theme-toggle");
+const themeToggleWrapper = themeToggle?.closest(".theme-switch");
 const fullscreenToggle = document.getElementById("fullscreen-toggle");
 const swapSelectGame = document.getElementById("swap-select-game");
 const settingsPanel = document.getElementById("settings-panel");
@@ -180,9 +181,11 @@ function applyTheme(theme) {
 }
 
 function updateThemeToggle(isLight) {
-  themeToggle.setAttribute("aria-pressed", String(isLight));
-  themeToggle.textContent = isLight ? "🌞" : "🎨";
-  themeToggle.title = isLight ? "Standarddesign aktivieren" : "Helles Design aktivieren";
+  themeToggle.checked = isLight;
+  themeToggle.setAttribute("aria-checked", String(isLight));
+  if (themeToggleWrapper) {
+    themeToggleWrapper.title = isLight ? "Dunkles Design aktivieren" : "Helles Design aktivieren";
+  }
 }
 
 function populateTimeSelect(selectEl, defaultValue = 60) {
@@ -704,15 +707,14 @@ csvInfo.addEventListener("click", () => {
   csvTooltip.setAttribute("aria-hidden", isHidden ? "false" : "true");
 });
 
-themeToggle.addEventListener("click", () => {
-  const isLight = document.body.dataset.theme === "light";
-  const nextTheme = isLight ? "default" : "light";
-  if (nextTheme === "light") {
+themeToggle.addEventListener("change", (event) => {
+  const isLight = event.target.checked;
+  if (isLight) {
     localStorage.setItem(THEME_STORAGE_KEY, "light");
   } else {
     localStorage.removeItem(THEME_STORAGE_KEY);
   }
-  applyTheme(nextTheme);
+  applyTheme(isLight ? "light" : "default");
 });
 
 function updateFullscreenState() {

@@ -40,14 +40,17 @@
       <section id="menu" class="panel panel--active" aria-label="Hauptmenü">
         <div class="panel-grid">
           <div class="card card--teams">
-            <h2>Teams</h2>
             <label class="field">
               Anzahl Teams
-              <select id="team-count">
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4" selected>4</option>
-              </select>
+              <div class="team-count-control" role="group" aria-label="Anzahl Teams">
+                <button type="button" class="count-button" id="team-count-decrease" aria-label="Teamanzahl verringern">
+                  –
+                </button>
+                <input id="team-count" type="number" min="2" max="4" step="1" value="2" />
+                <button type="button" class="count-button" id="team-count-increase" aria-label="Teamanzahl erhöhen">
+                  +
+                </button>
+              </div>
             </label>
             <div id="team-list" class="team-list"></div>
           </div>
@@ -103,6 +106,34 @@
                 <option value="long">Langes Spiel · 42 Felder (7 × 6)</option>
               </select>
             </label>
+          </div>
+
+          <div class="card">
+            <h2>Spiellänge</h2>
+            <p class="hint">Passe die Größe des Spielbretts vor dem Start an.</p>
+            <div class="field-group board-size-group">
+              <label class="option-card">
+                <input type="radio" name="board-size" value="short" />
+                <span>
+                  <strong>Kurzes Spiel</strong>
+                  <small>24 Felder · Raster 6 × 4</small>
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="board-size" value="normal" checked />
+                <span>
+                  <strong>Normales Spiel</strong>
+                  <small>30 Felder · Raster 6 × 5</small>
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="board-size" value="long" />
+                <span>
+                  <strong>Langes Spiel</strong>
+                  <small>42 Felder · Raster 7 × 6</small>
+                </span>
+              </label>
+            </div>
           </div>
 
           <div class="card">
@@ -183,6 +214,30 @@
                   <select id="time-pantomime-game"></select>
                 </label>
               </div>
+            </div>
+            <div class="field-group board-size-group">
+              <p>Spiellänge</p>
+              <label class="option-card">
+                <input type="radio" name="board-size-game" value="short" />
+                <span>
+                  <strong>Kurzes Spiel</strong>
+                  <small>24 Felder · Raster 6 × 4</small>
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="board-size-game" value="normal" checked />
+                <span>
+                  <strong>Normales Spiel</strong>
+                  <small>30 Felder · Raster 6 × 5</small>
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="board-size-game" value="long" />
+                <span>
+                  <strong>Langes Spiel</strong>
+                  <small>42 Felder · Raster 7 × 6</small>
+                </span>
+              </label>
             </div>
             <label class="field">
               Strafzeit beim Tauschen

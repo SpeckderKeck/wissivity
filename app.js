@@ -1,5 +1,7 @@
 const swapSelect = document.getElementById("swap-select");
-const teamCountSelect = document.getElementById("team-count");
+const teamCountInput = document.getElementById("team-count");
+const teamCountDecrease = document.getElementById("team-count-decrease");
+const teamCountIncrease = document.getElementById("team-count-increase");
 const teamListContainer = document.getElementById("team-list");
 const startButton = document.getElementById("start-game");
 const menuPanel = document.getElementById("menu");
@@ -41,6 +43,8 @@ const openSettingsButton = document.getElementById("open-settings");
 const closeSettingsButton = document.getElementById("close-settings");
 const applySettingsButton = document.getElementById("apply-settings");
 const mainMenuButton = document.getElementById("main-menu");
+const boardSizeInputs = document.querySelectorAll('input[name="board-size"]');
+const boardSizeGameInputs = document.querySelectorAll('input[name="board-size-game"]');
 
 const CATEGORY_CONFIG = {
   Erklären: { id: "explain", icon: "💬" },
@@ -179,9 +183,13 @@ const TEAM_COLORS = [
   { label: "Gelb", value: "#facc15" },
   { label: "Lila", value: "#8b5cf6" },
   { label: "Türkis", value: "#14b8a6" },
+  { label: "Cyan", value: "#22d3ee" },
+  { label: "Limette", value: "#84cc16" },
+  { label: "Beere", value: "#f43f5e" },
+  { label: "Schiefer", value: "#64748b" },
 ];
-const TEAM_ICONS = ["🐯", "🐼", "🦊", "🐸", "🐙", "🦁", "🐧", "🐨"];
-const DEFAULT_TEAM_NAMES = ["Team Nord", "Team Süd", "Team Ost", "Team West"];
+const TEAM_ICONS = ["🐯", "🐼", "🦊", "🐸", "🐙", "🦁", "🐧", "🐨", "🐶", "🐱", "🦉", "🦄"];
+const DEFAULT_TEAM_NAMES = ["Team A", "Team B", "Team C", "Team D"];
 const THEME_STORAGE_KEY = "wissivity-theme";
 const BOARD_CONFIGS = {
   short: { rows: 4, cols: 6, total: 24 },
@@ -242,43 +250,88 @@ function renderTeams(count) {
     const defaultIcon = TEAM_ICONS[i % TEAM_ICONS.length];
     const defaultColor = TEAM_COLORS[i % TEAM_COLORS.length].value;
     const defaultName = DEFAULT_TEAM_NAMES[i] ?? `Team ${i + 1}`;
+    const colorOptions = TEAM_COLORS.map(
+      (color) => `
+        <button
+          type="button"
+          class="picker-option picker-option--color ${
+            color.value === defaultColor ? "is-selected" : ""
+          }"
+          data-team-color-option
+          data-color-value="${color.value}"
+          aria-label="${color.label}"
+          style="--swatch-color: ${color.value};"
+        ></button>
+      `
+    ).join("");
+    const iconOptions = TEAM_ICONS.map(
+      (icon) => `
+        <button
+          type="button"
+          class="picker-option picker-option--icon ${icon === defaultIcon ? "is-selected" : ""}"
+          data-team-icon-option
+          data-icon-value="${icon}"
+          aria-label="Icon ${icon}"
+        >${icon}</button>
+      `
+    ).join("");
     const row = document.createElement("div");
     row.className = "team-row";
     row.innerHTML = `
-      <div class="team-row-header">Team ${i + 1}</div>
       <div class="team-row-fields">
         <label class="field">
-          Teamname
-          <input type="text" data-team-name value="${defaultName}" />
+          <input type="text" data-team-name value="${defaultName}" aria-label="Teamname" />
         </label>
-        <label class="field">
-          Farbe
-          <select data-team-color>
-            ${TEAM_COLORS.map(
-              (color) =>
-                `<option value="${color.value}" ${
-                  color.value === defaultColor ? "selected" : ""
-                }>${color.label}</option>`
-            ).join("")}
-          </select>
-        </label>
-        <label class="field">
-          Icon
-          <select data-team-icon>
-            ${TEAM_ICONS.map(
-              (icon) =>
-                `<option value="${icon}" ${icon === defaultIcon ? "selected" : ""}>${icon}</option>`
-            ).join("")}
-          </select>
-        </label>
+        <div class="team-picker" data-picker="color">
+          <input type="hidden" data-team-color value="${defaultColor}" />
+          <button
+            type="button"
+            class="picker-button picker-button--color"
+            data-team-color-toggle
+            aria-label="Teamfarbe wählen"
+            aria-expanded="false"
+            style="background: ${defaultColor};"
+          ></button>
+          <div class="picker-panel" role="listbox" aria-label="Teamfarbe auswählen">
+            ${colorOptions}
+          </div>
+        </div>
+        <div class="team-picker" data-picker="icon">
+          <input type="hidden" data-team-icon value="${defaultIcon}" />
+          <button
+            type="button"
+            class="picker-button picker-button--icon"
+            data-team-icon-toggle
+            aria-label="Teamicon wählen"
+            aria-expanded="false"
+          >${defaultIcon}</button>
+          <div class="picker-panel" role="listbox" aria-label="Teamicon auswählen">
+            ${iconOptions}
+          </div>
+        </div>
       </div>
     `;
     teamListContainer.appendChild(row);
   }
 }
 
-function getSelectedBoardSize(selectEl) {
-  return selectEl?.value ?? "normal";
+function clampTeamCount(value) {
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed)) return 2;
+  return Math.min(4, Math.max(2, parsed));
+}
+
+function syncTeamCountControls(value) {
+  const clamped = clampTeamCount(value);
+  teamCountInput.value = clamped;
+  teamCountDecrease.disabled = clamped <= 2;
+  teamCountIncrease.disabled = clamped >= 4;
+  renderTeams(clamped);
+}
+
+function getSelectedBoardSize(inputs) {
+  const selected = [...inputs].find((input) => input.checked);
+  return selected?.value ?? "normal";
 }
 
 function applyBoardSize(size) {
@@ -291,15 +344,64 @@ function applyBoardSize(size) {
 }
 
 function syncBoardSizeControls(size) {
-  if (boardSizeSelect) {
-    boardSizeSelect.value = size;
-  }
-  if (boardSizeSelectGame) {
-    boardSizeSelectGame.value = size;
-  }
+  boardSizeInputs.forEach((input) => {
+    input.checked = input.value === size;
+  });
+  boardSizeGameInputs.forEach((input) => {
+    input.checked = input.value === size;
+  });
 }
 
 function buildBoard() {
+function closeAllTeamPickers() {
+  teamListContainer.querySelectorAll(".team-picker.open").forEach((picker) => {
+    picker.classList.remove("open");
+    const toggle = picker.querySelector(".picker-button");
+    if (toggle) {
+      toggle.setAttribute("aria-expanded", "false");
+    }
+  });
+}
+
+function updatePickerSelection(picker, value, type) {
+  const hiddenInput = picker.querySelector(type === "color" ? "[data-team-color]" : "[data-team-icon]");
+  const toggleButton = picker.querySelector(
+    type === "color" ? "[data-team-color-toggle]" : "[data-team-icon-toggle]"
+  );
+  const options = picker.querySelectorAll(
+    type === "color" ? "[data-team-color-option]" : "[data-team-icon-option]"
+  );
+  options.forEach((option) => option.classList.remove("is-selected"));
+  const selectedOption = picker.querySelector(
+    type === "color" ? `[data-color-value="${value}"]` : `[data-icon-value="${value}"]`
+  );
+  if (selectedOption) {
+    selectedOption.classList.add("is-selected");
+  }
+  if (hiddenInput) {
+    hiddenInput.value = value;
+  }
+  if (toggleButton) {
+    if (type === "color") {
+      toggleButton.style.background = value;
+    } else {
+      toggleButton.textContent = value;
+    }
+  }
+}
+
+function toggleTeamPicker(picker, toggleButton) {
+  const isOpen = picker.classList.contains("open");
+  closeAllTeamPickers();
+  if (!isOpen) {
+    picker.classList.add("open");
+    if (toggleButton) {
+      toggleButton.setAttribute("aria-expanded", "true");
+    }
+  }
+}
+
+function buildBoard(categories = state.categories) {
   const existingTokens = [...board.querySelectorAll(".token")];
   board.innerHTML = "";
   const cells = [];
@@ -523,7 +625,7 @@ function handleStartGame() {
     alert("Bitte mindestens eine Kategorie wählen.");
     return;
   }
-  const selectedBoardSize = getSelectedBoardSize(boardSizeSelect);
+  const selectedBoardSize = getSelectedBoardSize(boardSizeInputs);
   syncBoardSizeControls(selectedBoardSize);
   applyBoardSize(selectedBoardSize);
   state.categories = selectedCategories;
@@ -602,7 +704,7 @@ function applySettingsFromPanel() {
     alert("Bitte mindestens eine Kategorie wählen.");
     return;
   }
-  const selectedBoardSize = getSelectedBoardSize(boardSizeSelectGame);
+  const selectedBoardSize = getSelectedBoardSize(boardSizeGameInputs);
   syncBoardSizeControls(selectedBoardSize);
   applyBoardSize(selectedBoardSize);
   state.categories = selectedCategories;
@@ -735,8 +837,8 @@ function handleWinnerRestart() {
 function setup() {
   menuCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
   gameCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
-  renderTeams(Number.parseInt(teamCountSelect.value, 10));
-  const selectedBoardSize = getSelectedBoardSize(boardSizeSelect);
+  syncTeamCountControls(teamCountInput.value);
+  const selectedBoardSize = getSelectedBoardSize(boardSizeInputs);
   syncBoardSizeControls(selectedBoardSize);
   applyBoardSize(selectedBoardSize);
   positionTokens();
@@ -746,8 +848,21 @@ function setup() {
 }
 
 window.addEventListener("resize", positionTokens);
-teamCountSelect.addEventListener("change", (event) => {
-  renderTeams(Number.parseInt(event.target.value, 10));
+teamCountInput.addEventListener("change", (event) => {
+  syncTeamCountControls(event.target.value);
+});
+teamCountDecrease.addEventListener("click", () => {
+  syncTeamCountControls(Number.parseInt(teamCountInput.value, 10) - 1);
+});
+teamCountIncrease.addEventListener("click", () => {
+  syncTeamCountControls(Number.parseInt(teamCountInput.value, 10) + 1);
+});
+boardSizeInputs.forEach((input) => {
+  input.addEventListener("change", () => {
+    const selectedBoardSize = getSelectedBoardSize(boardSizeInputs);
+    syncBoardSizeControls(selectedBoardSize);
+    applyBoardSize(selectedBoardSize);
+  });
 });
 boardSizeSelect?.addEventListener("change", () => {
   const selectedBoardSize = getSelectedBoardSize(boardSizeSelect);

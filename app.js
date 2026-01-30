@@ -1,4 +1,3 @@
-const timeSelect = document.getElementById("time-select");
 const swapSelect = document.getElementById("swap-select");
 const teamCountSelect = document.getElementById("team-count");
 const teamColorsContainer = document.getElementById("team-colors");
@@ -31,7 +30,6 @@ const csvStatus = document.getElementById("csv-status");
 const csvInfo = document.getElementById("csv-info");
 const csvTooltip = document.getElementById("csv-tooltip");
 const fullscreenToggle = document.getElementById("fullscreen-toggle");
-const timeSelectGame = document.getElementById("time-select-game");
 const swapSelectGame = document.getElementById("swap-select-game");
 const settingsPanel = document.getElementById("settings-panel");
 const openSettingsButton = document.getElementById("open-settings");
@@ -39,11 +37,29 @@ const closeSettingsButton = document.getElementById("close-settings");
 const applySettingsButton = document.getElementById("apply-settings");
 const mainMenuButton = document.getElementById("main-menu");
 
+const CATEGORY_CONFIG = {
+  Erklären: { id: "explain", icon: "💬" },
+  Zeichnen: { id: "draw", icon: "✏️" },
+  Pantomime: { id: "pantomime", icon: "🎭" },
+};
+
 const CATEGORY_ICONS = {
   Erklären: "💬",
   Zeichnen: "✏️",
   Pantomime: "🎭",
 };
+
+const menuCategoryControls = Object.entries(CATEGORY_CONFIG).map(([category, config]) => ({
+  category,
+  checkbox: document.getElementById(`category-${config.id}`),
+  timeSelect: document.getElementById(`time-${config.id}`),
+}));
+
+const gameCategoryControls = Object.entries(CATEGORY_CONFIG).map(([category, config]) => ({
+  category,
+  checkbox: document.getElementById(`category-${config.id}-game`),
+  timeSelect: document.getElementById(`time-${config.id}-game`),
+}));
 
 const DEFAULT_DATA = [
   { category: "Erklären", term: "Korrosion", taboo: ["Rost", "Metall", "Oxidation"] },
@@ -134,6 +150,11 @@ const state = {
   countdownTimer: null,
   remainingTime: 0,
   timeLimit: 60,
+  categoryTimes: {
+    Erklären: 60,
+    Zeichnen: 60,
+    Pantomime: 60,
+  },
   swapPenalty: 10,
   categories: ["Erklären", "Zeichnen", "Pantomime"],
   cards: [...DEFAULT_DATA],
@@ -154,6 +175,26 @@ function populateTimeSelect(selectEl, defaultValue = 60) {
   }
 }
 
+function getSelectedCategories(controls) {
+  return controls.filter((control) => control.checkbox.checked).map((control) => control.category);
+}
+
+function readCategoryTimes(controls) {
+  return controls.reduce((times, control) => {
+    times[control.category] = Number.parseInt(control.timeSelect.value, 10);
+    return times;
+  }, {});
+}
+
+function syncCategoryControls(controls, selectedCategories, categoryTimes) {
+  controls.forEach((control) => {
+    control.checkbox.checked = selectedCategories.includes(control.category);
+    if (categoryTimes[control.category]) {
+      control.timeSelect.value = categoryTimes[control.category];
+    }
+  });
+}
+
 function renderTeamColors(count) {
   teamColorsContainer.innerHTML = "";
   for (let i = 0; i < count; i += 1) {
@@ -167,10 +208,14 @@ function renderTeamColors(count) {
   }
 }
 
-function buildBoard() {
+function buildBoard(categories = state.categories) {
+  const existingTokens = [...board.querySelectorAll(".token")];
   board.innerHTML = "";
   const cells = [];
-  const icons = ["💬", "✏️", "🎭"];
+  const icons = categories.map((category) => CATEGORY_ICONS[category]).filter(Boolean);
+  if (icons.length === 0) {
+    icons.push("❓");
+  }
   for (let row = 0; row < 6; row += 1) {
     const rowIndices = [];
     for (let col = 0; col < 6; col += 1) {
@@ -192,6 +237,7 @@ function buildBoard() {
       cells[index] = cell;
     });
   }
+  existingTokens.forEach((token) => board.appendChild(token));
   return cells;
 }
 
@@ -367,16 +413,16 @@ function handleUndo() {
 }
 
 function handleStartGame() {
-  const selectedCategories = [...document.querySelectorAll(".chip input:checked")].map(
-    (input) => input.value
-  );
+  const selectedCategories = getSelectedCategories(menuCategoryControls);
   if (selectedCategories.length === 0) {
     alert("Bitte mindestens eine Kategorie wählen.");
     return;
   }
   state.categories = selectedCategories;
-  state.timeLimit = Number.parseInt(timeSelect.value, 10);
+  state.categoryTimes = readCategoryTimes(menuCategoryControls);
+  state.timeLimit = state.categoryTimes[selectedCategories[0]] ?? 60;
   state.swapPenalty = Number.parseInt(swapSelect.value, 10);
+  buildBoard(state.categories);
   const colorsList = [...teamColorsContainer.querySelectorAll("input")].map(
     (input) => input.value
   );
@@ -432,33 +478,27 @@ function handleCsvUpload(event) {
 }
 
 function syncSettingsPanel() {
-  timeSelectGame.value = timeSelect.value;
   swapSelectGame.value = swapSelect.value;
-  const gameCategoryInputs = settingsPanel.querySelectorAll(".chip input");
-  gameCategoryInputs.forEach((input) => {
-    input.checked = state.categories.includes(input.value);
-  });
+  syncCategoryControls(gameCategoryControls, state.categories, state.categoryTimes);
 }
 
 function applySettingsFromPanel() {
-  const selectedCategories = [
-    ...settingsPanel.querySelectorAll(".chip input:checked"),
-  ].map((input) => input.value);
+  const selectedCategories = getSelectedCategories(gameCategoryControls);
   if (selectedCategories.length === 0) {
     alert("Bitte mindestens eine Kategorie wählen.");
     return;
   }
   state.categories = selectedCategories;
-  state.timeLimit = Number.parseInt(timeSelectGame.value, 10);
+  state.categoryTimes = readCategoryTimes(gameCategoryControls);
+  state.timeLimit = state.categoryTimes[selectedCategories[0]] ?? 60;
   state.swapPenalty = Number.parseInt(swapSelectGame.value, 10);
-  timeSelect.value = timeSelectGame.value;
   swapSelect.value = swapSelectGame.value;
-  document.querySelectorAll("#menu .chip input").forEach((input) => {
-    input.checked = selectedCategories.includes(input.value);
-  });
+  syncCategoryControls(menuCategoryControls, state.categories, state.categoryTimes);
   if (!state.timer) {
     updateTimerDisplay(state.timeLimit);
   }
+  buildBoard(state.categories);
+  positionTokens();
   settingsPanel.classList.add("hidden");
 }
 
@@ -535,6 +575,7 @@ function showWordCard() {
   state.phase = "word";
   const card = getCardByCategory(state.pendingCategory);
   setWordCard(card);
+  state.timeLimit = state.categoryTimes[state.pendingCategory] ?? 60;
   startTimer();
 }
 
@@ -553,10 +594,10 @@ function handleWinnerRestart() {
 }
 
 function setup() {
-  populateTimeSelect(timeSelect, 60);
-  populateTimeSelect(timeSelectGame, 60);
+  menuCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
+  gameCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
   renderTeamColors(Number.parseInt(teamCountSelect.value, 10));
-  buildBoard();
+  buildBoard(state.categories);
   positionTokens();
   updateTimerDisplay(state.timeLimit);
   updateFullscreenState();

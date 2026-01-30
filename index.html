@@ -26,15 +26,38 @@
         <div class="panel-grid">
           <div class="card">
             <h2>Spieleinstellungen</h2>
-            <label class="field">
-              Zeit je Kategorie
-              <select id="time-select"></select>
-            </label>
-            <div class="field-group">
+            <div class="field-group category-settings">
               <p>Kategorien</p>
-              <label class="chip"><input type="checkbox" value="Erklären" checked /> Erklären</label>
-              <label class="chip"><input type="checkbox" value="Zeichnen" checked /> Zeichnen</label>
-              <label class="chip"><input type="checkbox" value="Pantomime" checked /> Pantomime</label>
+              <div class="category-setting">
+                <label class="category-toggle">
+                  <input type="checkbox" id="category-explain" value="Erklären" checked />
+                  Erklären
+                </label>
+                <label class="field category-time">
+                  Zeit pro Runde
+                  <select id="time-explain"></select>
+                </label>
+              </div>
+              <div class="category-setting">
+                <label class="category-toggle">
+                  <input type="checkbox" id="category-draw" value="Zeichnen" checked />
+                  Zeichnen
+                </label>
+                <label class="field category-time">
+                  Zeit pro Runde
+                  <select id="time-draw"></select>
+                </label>
+              </div>
+              <div class="category-setting">
+                <label class="category-toggle">
+                  <input type="checkbox" id="category-pantomime" value="Pantomime" checked />
+                  Pantomime
+                </label>
+                <label class="field category-time">
+                  Zeit pro Runde
+                  <select id="time-pantomime"></select>
+                </label>
+              </div>
             </div>
             <label class="field">
               Strafzeit beim Tauschen
@@ -105,15 +128,38 @@
               <h2>Spieleinstellungen</h2>
               <button id="close-settings" class="ghost">Schließen</button>
             </div>
-            <label class="field">
-              Zeit je Kategorie
-              <select id="time-select-game"></select>
-            </label>
-            <div class="field-group">
+            <div class="field-group category-settings">
               <p>Kategorien</p>
-              <label class="chip"><input type="checkbox" value="Erklären" checked /> Erklären</label>
-              <label class="chip"><input type="checkbox" value="Zeichnen" checked /> Zeichnen</label>
-              <label class="chip"><input type="checkbox" value="Pantomime" checked /> Pantomime</label>
+              <div class="category-setting">
+                <label class="category-toggle">
+                  <input type="checkbox" id="category-explain-game" value="Erklären" checked />
+                  Erklären
+                </label>
+                <label class="field category-time">
+                  Zeit pro Runde
+                  <select id="time-explain-game"></select>
+                </label>
+              </div>
+              <div class="category-setting">
+                <label class="category-toggle">
+                  <input type="checkbox" id="category-draw-game" value="Zeichnen" checked />
+                  Zeichnen
+                </label>
+                <label class="field category-time">
+                  Zeit pro Runde
+                  <select id="time-draw-game"></select>
+                </label>
+              </div>
+              <div class="category-setting">
+                <label class="category-toggle">
+                  <input type="checkbox" id="category-pantomime-game" value="Pantomime" checked />
+                  Pantomime
+                </label>
+                <label class="field category-time">
+                  Zeit pro Runde
+                  <select id="time-pantomime-game"></select>
+                </label>
+              </div>
             </div>
             <label class="field">
               Strafzeit beim Tauschen

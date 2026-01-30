@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wissivity – Klassenspiel</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1>Wissivity</h1>
+      <p class="tagline">Activity-Klassenspiel – offline &amp; ohne Login</p>
+    </header>
+
+    <main>
+      <section id="menu" class="panel panel--active" aria-label="Hauptmenü">
+        <div class="panel-grid">
+          <div class="card">
+            <h2>Spieleinstellungen</h2>
+            <label class="field">
+              Zeit je Kategorie
+              <select id="time-select"></select>
+            </label>
+            <div class="field-group">
+              <p>Kategorien</p>
+              <label class="chip"><input type="checkbox" value="Erklären" checked /> Erklären</label>
+              <label class="chip"><input type="checkbox" value="Zeichnen" checked /> Zeichnen</label>
+              <label class="chip"><input type="checkbox" value="Pantomime" checked /> Pantomime</label>
+            </div>
+            <label class="field">
+              Strafzeit beim Tauschen
+              <select id="swap-select">
+                <option value="5">5s</option>
+                <option value="10" selected>10s</option>
+                <option value="15">15s</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="card">
+            <div class="card-row">
+              <h2>Kartensatz</h2>
+              <button class="info-button" id="csv-info" aria-label="CSV Info">i</button>
+            </div>
+            <label class="field upload">
+              CSV Upload
+              <input id="csv-upload" type="file" accept=".csv" />
+            </label>
+            <p class="hint" id="csv-status">Standarddatensatz aktiv.</p>
+            <div class="tooltip" id="csv-tooltip" role="dialog" aria-hidden="true">
+              <h3>CSV-Format</h3>
+              <ul>
+                <li>Spalten: Kategorie;Begriff;Tabu1;Tabu2;Tabu3…</li>
+                <li>Kategorien: Erklären, Zeichnen, Pantomime</li>
+                <li>Excel: als CSV (UTF-8, Semikolon) exportieren</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Teams &amp; Farben</h2>
+            <label class="field">
+              Anzahl Teams
+              <select id="team-count">
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4" selected>4</option>
+              </select>
+            </label>
+            <div id="team-colors" class="color-grid"></div>
+          </div>
+        </div>
+        <button id="start-game" class="primary">Spiel starten</button>
+      </section>
+
+      <section id="game" class="panel" aria-label="Spielfeld">
+        <div class="game-top">
+          <div class="board" id="board" aria-hidden="true"></div>
+          <div class="side-panel">
+            <div class="card-stack">
+              <div class="flip-card" id="category-card">
+                <div class="flip-inner">
+                  <div class="flip-face flip-front">
+                    <p>Bereit?</p>
+                  </div>
+                  <div class="flip-face flip-back">
+                    <div class="category-icon" id="category-icon">?</div>
+                    <h3 id="category-label">Kategorie</h3>
+                    <button id="flip-category" class="ghost">Karte umdrehen</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="word-card" id="word-card">
+                <div class="timer" id="timer">00</div>
+                <h3 id="word-title">Begriff</h3>
+                <div class="divider"></div>
+                <ul id="taboo-list"></ul>
+                <div class="card-actions">
+                  <button id="correct" class="success">Richtig</button>
+                  <button id="wrong" class="danger">Falsch</button>
+                  <button id="swap" class="ghost">Tauschen</button>
+                </div>
+              </div>
+            </div>
+            <div class="dice-area">
+              <button id="roll" class="dice" aria-label="Würfeln">🎲</button>
+              <div id="dice-result" class="dice-result">–</div>
+            </div>
+          </div>
+        </div>
+        <div class="game-bottom">
+          <button id="undo" class="ghost">Zug zurück</button>
+          <div id="status" class="status">Würfeln, um zu starten.</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="overlay" class="overlay hidden" aria-live="polite">
+    <div class="overlay-content" id="overlay-content">🎲</div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

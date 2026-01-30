@@ -36,6 +36,8 @@ const themeToggle = document.getElementById("theme-toggle");
 const themeToggleWrapper = themeToggle?.closest(".theme-switch");
 const fullscreenToggle = document.getElementById("fullscreen-toggle");
 const swapSelectGame = document.getElementById("swap-select-game");
+const boardSizeSelect = document.getElementById("board-size-select");
+const boardSizeSelectGame = document.getElementById("board-size-select-game");
 const settingsPanel = document.getElementById("settings-panel");
 const openSettingsButton = document.getElementById("open-settings");
 const closeSettingsButton = document.getElementById("close-settings");
@@ -861,6 +863,11 @@ boardSizeInputs.forEach((input) => {
     syncBoardSizeControls(selectedBoardSize);
     applyBoardSize(selectedBoardSize);
   });
+});
+boardSizeSelect?.addEventListener("change", () => {
+  const selectedBoardSize = getSelectedBoardSize(boardSizeSelect);
+  syncBoardSizeControls(selectedBoardSize);
+  applyBoardSize(selectedBoardSize);
 });
 
 startButton.addEventListener("click", handleStartGame);

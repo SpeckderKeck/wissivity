@@ -175,8 +175,12 @@ const TEAM_COLORS = [
   { label: "Gelb", value: "#facc15" },
   { label: "Lila", value: "#8b5cf6" },
   { label: "Türkis", value: "#14b8a6" },
+  { label: "Cyan", value: "#22d3ee" },
+  { label: "Limette", value: "#84cc16" },
+  { label: "Beere", value: "#f43f5e" },
+  { label: "Schiefer", value: "#64748b" },
 ];
-const TEAM_ICONS = ["🐯", "🐼", "🦊", "🐸", "🐙", "🦁", "🐧", "🐨"];
+const TEAM_ICONS = ["🐯", "🐼", "🦊", "🐸", "🐙", "🦁", "🐧", "🐨", "🐶", "🐱", "🦉", "🦄"];
 const DEFAULT_TEAM_NAMES = ["Team Nord", "Team Süd", "Team Ost", "Team West"];
 const THEME_STORAGE_KEY = "wissivity-theme";
 
@@ -233,6 +237,31 @@ function renderTeams(count) {
     const defaultIcon = TEAM_ICONS[i % TEAM_ICONS.length];
     const defaultColor = TEAM_COLORS[i % TEAM_COLORS.length].value;
     const defaultName = DEFAULT_TEAM_NAMES[i] ?? `Team ${i + 1}`;
+    const colorOptions = TEAM_COLORS.map(
+      (color) => `
+        <button
+          type="button"
+          class="picker-option picker-option--color ${
+            color.value === defaultColor ? "is-selected" : ""
+          }"
+          data-team-color-option
+          data-color-value="${color.value}"
+          aria-label="${color.label}"
+          style="--swatch-color: ${color.value};"
+        ></button>
+      `
+    ).join("");
+    const iconOptions = TEAM_ICONS.map(
+      (icon) => `
+        <button
+          type="button"
+          class="picker-option picker-option--icon ${icon === defaultIcon ? "is-selected" : ""}"
+          data-team-icon-option
+          data-icon-value="${icon}"
+          aria-label="Icon ${icon}"
+        >${icon}</button>
+      `
+    ).join("");
     const row = document.createElement("div");
     row.className = "team-row";
     row.innerHTML = `
@@ -242,29 +271,84 @@ function renderTeams(count) {
           Teamname
           <input type="text" data-team-name value="${defaultName}" />
         </label>
-        <label class="field">
-          Farbe
-          <select data-team-color>
-            ${TEAM_COLORS.map(
-              (color) =>
-                `<option value="${color.value}" ${
-                  color.value === defaultColor ? "selected" : ""
-                }>${color.label}</option>`
-            ).join("")}
-          </select>
-        </label>
-        <label class="field">
-          Icon
-          <select data-team-icon>
-            ${TEAM_ICONS.map(
-              (icon) =>
-                `<option value="${icon}" ${icon === defaultIcon ? "selected" : ""}>${icon}</option>`
-            ).join("")}
-          </select>
-        </label>
+        <div class="team-picker" data-picker="color">
+          <input type="hidden" data-team-color value="${defaultColor}" />
+          <button
+            type="button"
+            class="picker-button picker-button--color"
+            data-team-color-toggle
+            aria-label="Teamfarbe wählen"
+            aria-expanded="false"
+            style="background: ${defaultColor};"
+          ></button>
+          <div class="picker-panel" role="listbox" aria-label="Teamfarbe auswählen">
+            ${colorOptions}
+          </div>
+        </div>
+        <div class="team-picker" data-picker="icon">
+          <input type="hidden" data-team-icon value="${defaultIcon}" />
+          <button
+            type="button"
+            class="picker-button picker-button--icon"
+            data-team-icon-toggle
+            aria-label="Teamicon wählen"
+            aria-expanded="false"
+          >${defaultIcon}</button>
+          <div class="picker-panel" role="listbox" aria-label="Teamicon auswählen">
+            ${iconOptions}
+          </div>
+        </div>
       </div>
     `;
     teamListContainer.appendChild(row);
+  }
+}
+
+function closeAllTeamPickers() {
+  teamListContainer.querySelectorAll(".team-picker.open").forEach((picker) => {
+    picker.classList.remove("open");
+    const toggle = picker.querySelector(".picker-button");
+    if (toggle) {
+      toggle.setAttribute("aria-expanded", "false");
+    }
+  });
+}
+
+function updatePickerSelection(picker, value, type) {
+  const hiddenInput = picker.querySelector(type === "color" ? "[data-team-color]" : "[data-team-icon]");
+  const toggleButton = picker.querySelector(
+    type === "color" ? "[data-team-color-toggle]" : "[data-team-icon-toggle]"
+  );
+  const options = picker.querySelectorAll(
+    type === "color" ? "[data-team-color-option]" : "[data-team-icon-option]"
+  );
+  options.forEach((option) => option.classList.remove("is-selected"));
+  const selectedOption = picker.querySelector(
+    type === "color" ? `[data-color-value="${value}"]` : `[data-icon-value="${value}"]`
+  );
+  if (selectedOption) {
+    selectedOption.classList.add("is-selected");
+  }
+  if (hiddenInput) {
+    hiddenInput.value = value;
+  }
+  if (toggleButton) {
+    if (type === "color") {
+      toggleButton.style.background = value;
+    } else {
+      toggleButton.textContent = value;
+    }
+  }
+}
+
+function toggleTeamPicker(picker, toggleButton) {
+  const isOpen = picker.classList.contains("open");
+  closeAllTeamPickers();
+  if (!isOpen) {
+    picker.classList.add("open");
+    if (toggleButton) {
+      toggleButton.setAttribute("aria-expanded", "true");
+    }
   }
 }
 
@@ -709,6 +793,50 @@ function setup() {
 window.addEventListener("resize", positionTokens);
 teamCountSelect.addEventListener("change", (event) => {
   renderTeams(Number.parseInt(event.target.value, 10));
+});
+teamListContainer.addEventListener("click", (event) => {
+  const colorToggle = event.target.closest("[data-team-color-toggle]");
+  const iconToggle = event.target.closest("[data-team-icon-toggle]");
+  const colorOption = event.target.closest("[data-team-color-option]");
+  const iconOption = event.target.closest("[data-team-icon-option]");
+  if (colorToggle) {
+    event.stopPropagation();
+    const picker = colorToggle.closest(".team-picker");
+    if (picker) {
+      toggleTeamPicker(picker, colorToggle);
+    }
+    return;
+  }
+  if (iconToggle) {
+    event.stopPropagation();
+    const picker = iconToggle.closest(".team-picker");
+    if (picker) {
+      toggleTeamPicker(picker, iconToggle);
+    }
+    return;
+  }
+  if (colorOption) {
+    event.stopPropagation();
+    const picker = colorOption.closest(".team-picker");
+    if (picker) {
+      updatePickerSelection(picker, colorOption.dataset.colorValue, "color");
+      closeAllTeamPickers();
+    }
+    return;
+  }
+  if (iconOption) {
+    event.stopPropagation();
+    const picker = iconOption.closest(".team-picker");
+    if (picker) {
+      updatePickerSelection(picker, iconOption.dataset.iconValue, "icon");
+      closeAllTeamPickers();
+    }
+  }
+});
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".team-picker")) {
+    closeAllTeamPickers();
+  }
 });
 
 startButton.addEventListener("click", handleStartGame);

@@ -45,6 +45,7 @@ const applySettingsButton = document.getElementById("apply-settings");
 const mainMenuButton = document.getElementById("main-menu");
 const boardSizeInputs = document.querySelectorAll('input[name="board-size"]');
 const boardSizeGameInputs = document.querySelectorAll('input[name="board-size-game"]');
+const teamStatusList = document.getElementById("team-status-list");
 
 const CATEGORY_CONFIG = {
   Erklären: { id: "explain", icon: "💬" },
@@ -356,7 +357,6 @@ function syncBoardSizeControls(size) {
   });
 }
 
-function buildBoard() {
 function closeAllTeamPickers() {
   teamListContainer.querySelectorAll(".team-picker.open").forEach((picker) => {
     picker.classList.remove("open");
@@ -464,6 +464,31 @@ function formatTeamLabel(teamIndex) {
   return `${team.icon} ${team.name}`.trim();
 }
 
+function renderTeamStatus() {
+  if (!teamStatusList) return;
+  teamStatusList.innerHTML = "";
+  state.teams.forEach((team, index) => {
+    const item = document.createElement("div");
+    item.className = "team-status-item";
+    if (index === state.currentTeam && !state.gameOver) {
+      item.classList.add("is-active");
+    }
+    const info = document.createElement("div");
+    info.className = "team-status-info";
+    const swatch = document.createElement("span");
+    swatch.className = "team-status-swatch";
+    swatch.style.background = team.color;
+    const label = document.createElement("span");
+    label.textContent = formatTeamLabel(index);
+    info.append(swatch, label);
+    const position = document.createElement("div");
+    position.className = "team-status-position";
+    position.textContent = `Feld ${state.positions[index] + 1}`;
+    item.append(info, position);
+    teamStatusList.appendChild(item);
+  });
+}
+
 function positionTokens() {
   const cells = [...board.querySelectorAll(".board-cell")];
   state.positions.forEach((pos, index) => {
@@ -476,6 +501,7 @@ function positionTokens() {
     token.style.left = `${rect.left - boardRect.left + rect.width / 2}px`;
     token.style.top = `${rect.top - boardRect.top + rect.height / 2}px`;
   });
+  renderTeamStatus();
 }
 
 function showOverlay(content, duration = 800) {
@@ -612,6 +638,7 @@ function finishTurn(isCorrect, timedOut = false) {
   statusText.textContent = `${formatTeamLabel(state.currentTeam)} beendet den Zug.`;
   state.currentTeam = (state.currentTeam + 1) % state.teams.length;
   statusText.textContent = `Nächstes: ${formatTeamLabel(state.currentTeam)} würfelt.`;
+  renderTeamStatus();
 }
 
 function handleUndo() {
@@ -621,6 +648,7 @@ function handleUndo() {
   state.currentTeam = last.team;
   positionTokens();
   statusText.textContent = `Zug zurück: ${formatTeamLabel(state.currentTeam)} ist dran.`;
+  renderTeamStatus();
 }
 
 function handleStartGame() {

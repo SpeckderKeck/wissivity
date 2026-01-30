@@ -133,14 +133,32 @@ body.fullscreen .board {
   margin-top: 8px;
 }
 
-.chip {
+.category-settings {
+  gap: 12px;
+}
+
+.category-setting {
+  display: grid;
+  gap: 12px;
+  background: var(--card);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.category-toggle {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--card);
-  padding: 10px 12px;
-  border-radius: 999px;
   color: var(--text);
+  font-weight: 600;
+}
+
+.category-toggle input {
+  accent-color: var(--accent);
+}
+
+.category-time {
+  margin: 0;
 }
 
 .info-button {

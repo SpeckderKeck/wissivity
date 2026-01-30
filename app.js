@@ -1,5 +1,7 @@
 const swapSelect = document.getElementById("swap-select");
-const teamCountSelect = document.getElementById("team-count");
+const teamCountInput = document.getElementById("team-count");
+const teamCountDecrease = document.getElementById("team-count-decrease");
+const teamCountIncrease = document.getElementById("team-count-increase");
 const teamListContainer = document.getElementById("team-list");
 const startButton = document.getElementById("start-game");
 const menuPanel = document.getElementById("menu");
@@ -185,7 +187,7 @@ const TEAM_COLORS = [
   { label: "Schiefer", value: "#64748b" },
 ];
 const TEAM_ICONS = ["🐯", "🐼", "🦊", "🐸", "🐙", "🦁", "🐧", "🐨", "🐶", "🐱", "🦉", "🦄"];
-const DEFAULT_TEAM_NAMES = ["Team Nord", "Team Süd", "Team Ost", "Team West"];
+const DEFAULT_TEAM_NAMES = ["Team A", "Team B", "Team C", "Team D"];
 const THEME_STORAGE_KEY = "wissivity-theme";
 const BOARD_CONFIGS = {
   short: { rows: 4, cols: 6, total: 24 },
@@ -274,11 +276,9 @@ function renderTeams(count) {
     const row = document.createElement("div");
     row.className = "team-row";
     row.innerHTML = `
-      <div class="team-row-header">Team ${i + 1}</div>
       <div class="team-row-fields">
         <label class="field">
-          Teamname
-          <input type="text" data-team-name value="${defaultName}" />
+          <input type="text" data-team-name value="${defaultName}" aria-label="Teamname" />
         </label>
         <div class="team-picker" data-picker="color">
           <input type="hidden" data-team-color value="${defaultColor}" />
@@ -311,6 +311,20 @@ function renderTeams(count) {
     `;
     teamListContainer.appendChild(row);
   }
+}
+
+function clampTeamCount(value) {
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed)) return 2;
+  return Math.min(4, Math.max(2, parsed));
+}
+
+function syncTeamCountControls(value) {
+  const clamped = clampTeamCount(value);
+  teamCountInput.value = clamped;
+  teamCountDecrease.disabled = clamped <= 2;
+  teamCountIncrease.disabled = clamped >= 4;
+  renderTeams(clamped);
 }
 
 function getSelectedBoardSize(inputs) {
@@ -821,7 +835,7 @@ function handleWinnerRestart() {
 function setup() {
   menuCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
   gameCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
-  renderTeams(Number.parseInt(teamCountSelect.value, 10));
+  syncTeamCountControls(teamCountInput.value);
   const selectedBoardSize = getSelectedBoardSize(boardSizeInputs);
   syncBoardSizeControls(selectedBoardSize);
   applyBoardSize(selectedBoardSize);
@@ -832,8 +846,14 @@ function setup() {
 }
 
 window.addEventListener("resize", positionTokens);
-teamCountSelect.addEventListener("change", (event) => {
-  renderTeams(Number.parseInt(event.target.value, 10));
+teamCountInput.addEventListener("change", (event) => {
+  syncTeamCountControls(event.target.value);
+});
+teamCountDecrease.addEventListener("click", () => {
+  syncTeamCountControls(Number.parseInt(teamCountInput.value, 10) - 1);
+});
+teamCountIncrease.addEventListener("click", () => {
+  syncTeamCountControls(Number.parseInt(teamCountInput.value, 10) + 1);
 });
 boardSizeInputs.forEach((input) => {
   input.addEventListener("change", () => {

@@ -9,17 +9,6 @@ const board = document.getElementById("board");
 const rollButton = document.getElementById("roll");
 const diceResult = document.getElementById("dice-result");
 const statusText = document.getElementById("status");
-const categoryCard = document.getElementById("category-card");
-const categoryIcon = document.getElementById("category-icon");
-const categoryLabel = document.getElementById("category-label");
-const flipCategoryButton = document.getElementById("flip-category");
-const wordCard = document.getElementById("word-card");
-const wordTitle = document.getElementById("word-title");
-const tabooList = document.getElementById("taboo-list");
-const timerEl = document.getElementById("timer");
-const correctButton = document.getElementById("correct");
-const wrongButton = document.getElementById("wrong");
-const swapButton = document.getElementById("swap");
 const undoButton = document.getElementById("undo");
 const overlay = document.getElementById("overlay");
 const overlayContent = document.getElementById("overlay-content");
@@ -28,7 +17,6 @@ const turnOverlayPanel = document.getElementById("turn-overlay-panel");
 const turnCategory = document.getElementById("turn-category");
 const turnCategoryIcon = document.getElementById("turn-category-icon");
 const turnCategoryLabel = document.getElementById("turn-category-label");
-const turnReadyButton = document.getElementById("turn-ready");
 const turnCountdown = document.getElementById("turn-countdown");
 const turnWord = document.getElementById("turn-word");
 const turnTimer = document.getElementById("turn-timer");
@@ -42,7 +30,6 @@ const csvUpload = document.getElementById("csv-upload");
 const csvStatus = document.getElementById("csv-status");
 const csvInfo = document.getElementById("csv-info");
 const csvTooltip = document.getElementById("csv-tooltip");
-const cardStack = document.querySelector(".card-stack");
 const fullscreenToggle = document.getElementById("fullscreen-toggle");
 const timeSelectGame = document.getElementById("time-select-game");
 const swapSelectGame = document.getElementById("swap-select-game");
@@ -246,7 +233,6 @@ function showOverlay(content, duration = 800) {
 }
 
 function updateTimerDisplay(value) {
-  timerEl.textContent = `${value}s`;
   turnTimer.textContent = `${value}s`;
 }
 
@@ -277,53 +263,24 @@ function getCardByCategory(category) {
 
 function setWordCard(card) {
   if (!card) {
-    wordTitle.textContent = "Keine Karte";
-    tabooList.innerHTML = "";
-    tabooList.className = "";
     turnWordTitle.textContent = "Keine Karte";
     turnTabooList.innerHTML = "";
     return;
   }
-  wordTitle.textContent = card.term;
-  tabooList.innerHTML = "";
-  tabooList.className = "";
   turnWordTitle.textContent = card.term;
   turnTabooList.innerHTML = "";
   if (card.category === "Erklären") {
-    cardStack.style.setProperty("--card-height", "320px");
-    card.taboo.forEach((taboo) => {
-      const li = document.createElement("li");
-      li.textContent = taboo;
-      tabooList.appendChild(li);
-    });
     card.taboo.forEach((taboo) => {
       const li = document.createElement("li");
       li.textContent = taboo;
       turnTabooList.appendChild(li);
     });
-    const tabooCount = card.taboo.length;
-    if (tabooCount >= 5) {
-      tabooList.classList.add("taboo-size-5");
-    } else if (tabooCount === 4) {
-      tabooList.classList.add("taboo-size-4");
-    } else if (tabooCount === 3) {
-      tabooList.classList.add("taboo-size-3");
-    }
-  } else {
-    cardStack.style.setProperty("--card-height", "260px");
   }
 }
 
 function setCategory(category) {
-  categoryLabel.textContent = category;
-  categoryIcon.textContent = CATEGORY_ICONS[category] || "?";
   turnCategoryLabel.textContent = category;
   turnCategoryIcon.textContent = CATEGORY_ICONS[category] || "?";
-  if (category === "Erklären") {
-    cardStack.style.setProperty("--card-height", "320px");
-  } else {
-    cardStack.style.setProperty("--card-height", "260px");
-  }
 }
 
 function handleRoll() {
@@ -400,16 +357,6 @@ function finishTurn(isCorrect, timedOut = false) {
   statusText.textContent = `Nächstes: ${state.teams[state.currentTeam].name} würfelt.`;
 }
 
-function handleSwap() {
-  state.remainingTime = Math.max(0, state.remainingTime - state.swapPenalty);
-  updateTimerDisplay(state.remainingTime);
-  showOverlay(`-${state.swapPenalty}s`, 600);
-  if (state.pendingCategory) {
-    const card = getCardByCategory(state.pendingCategory);
-    setWordCard(card);
-  }
-}
-
 function handleUndo() {
   const last = state.history.pop();
   if (!last) return;
@@ -447,13 +394,6 @@ function handleStartGame() {
   turnOverlay.classList.add("hidden");
   turnOverlay.classList.remove("active", "expanded");
   statusText.textContent = `Nächstes: ${state.teams[state.currentTeam].name} würfelt.`;
-}
-
-function handleFlipCategory() {
-  categoryCard.classList.toggle("flipped");
-  const card = getCardByCategory(state.pendingCategory);
-  setWordCard(card);
-  startTimer();
 }
 
 function parseCsv(text) {
@@ -556,11 +496,11 @@ function showTurnOverlay() {
   turnCategory.classList.remove("hidden");
   turnWord.classList.add("hidden");
   turnCountdown.classList.add("hidden");
-  turnReadyButton.disabled = false;
   turnOverlay.classList.remove("hidden");
   turnOverlay.classList.add("active");
   requestAnimationFrame(() => {
     turnOverlay.classList.add("expanded");
+    startCountdown();
   });
 }
 
@@ -577,7 +517,6 @@ function startCountdown() {
   let countdown = 3;
   turnCountdown.textContent = `${countdown}`;
   turnCountdown.classList.remove("hidden");
-  turnReadyButton.disabled = true;
   state.phase = "countdown";
   state.countdownTimer = setInterval(() => {
     countdown -= 1;
@@ -631,17 +570,12 @@ teamCountSelect.addEventListener("change", (event) => {
 
 startButton.addEventListener("click", handleStartGame);
 rollButton.addEventListener("click", handleRoll);
-flipCategoryButton.addEventListener("click", handleFlipCategory);
-correctButton.addEventListener("click", () => finishTurn(true));
-wrongButton.addEventListener("click", () => finishTurn(false));
-swapButton.addEventListener("click", handleSwap);
 undoButton.addEventListener("click", handleUndo);
 csvUpload.addEventListener("change", handleCsvUpload);
 openSettingsButton.addEventListener("click", handleOpenSettings);
 closeSettingsButton.addEventListener("click", handleCloseSettings);
 applySettingsButton.addEventListener("click", applySettingsFromPanel);
 mainMenuButton.addEventListener("click", handleMainMenu);
-turnReadyButton.addEventListener("click", startCountdown);
 turnContinueButton.addEventListener("click", () => finishTurn(false));
 winnerRestartButton.addEventListener("click", handleWinnerRestart);
 

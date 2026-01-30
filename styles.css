@@ -35,11 +35,42 @@ body {
 .app-header {
   text-align: center;
   margin-bottom: 24px;
+  position: relative;
 }
 
 .tagline {
   color: var(--muted);
   margin-top: 6px;
+}
+
+.icon-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid #2a3445;
+  background: var(--panel);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+}
+
+body.fullscreen .app {
+  max-width: none;
+  width: 100%;
+  min-height: 100vh;
+  padding: 24px 24px 32px;
+}
+
+body.fullscreen .game-top {
+  grid-template-columns: minmax(360px, 1.2fr) minmax(300px, 0.8fr);
+}
+
+body.fullscreen .board {
+  min-height: clamp(480px, 65vh, 760px);
 }
 
 .panel {

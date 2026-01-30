@@ -98,42 +98,6 @@
                 <option value="15">15s</option>
               </select>
             </label>
-            <label class="field">
-              Spiellänge
-              <select id="board-size-select">
-                <option value="short">Kurzes Spiel · 24 Felder (6 × 4)</option>
-                <option value="normal" selected>Normales Spiel · 30 Felder (6 × 5)</option>
-                <option value="long">Langes Spiel · 42 Felder (7 × 6)</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="card">
-            <h2>Spiellänge</h2>
-            <p class="hint">Passe die Größe des Spielbretts vor dem Start an.</p>
-            <div class="field-group board-size-group">
-              <label class="option-card">
-                <input type="radio" name="board-size" value="short" />
-                <span>
-                  <strong>Kurzes Spiel</strong>
-                  <small>24 Felder · Raster 6 × 4</small>
-                </span>
-              </label>
-              <label class="option-card">
-                <input type="radio" name="board-size" value="normal" checked />
-                <span>
-                  <strong>Normales Spiel</strong>
-                  <small>30 Felder · Raster 6 × 5</small>
-                </span>
-              </label>
-              <label class="option-card">
-                <input type="radio" name="board-size" value="long" />
-                <span>
-                  <strong>Langes Spiel</strong>
-                  <small>42 Felder · Raster 7 × 6</small>
-                </span>
-              </label>
-            </div>
           </div>
 
           <div class="card">
@@ -146,6 +110,14 @@
               <input id="csv-upload" type="file" accept=".csv" />
             </label>
             <p class="hint" id="csv-status">Standarddatensatz aktiv.</p>
+            <label class="field">
+              Spiellänge
+              <select id="board-size-select">
+                <option value="short">Kurzes Spiel · 24 Felder (6 × 4)</option>
+                <option value="normal" selected>Normales Spiel · 30 Felder (6 × 5)</option>
+                <option value="long">Langes Spiel · 42 Felder (7 × 6)</option>
+              </select>
+            </label>
             <div class="tooltip" id="csv-tooltip" role="dialog" aria-hidden="true">
               <h3>CSV-Format</h3>
               <ul>

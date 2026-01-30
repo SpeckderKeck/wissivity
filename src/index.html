@@ -1,93 +1,272 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Wissivity</title>
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <header class="hero">
-      <div class="hero-inner">
-        <div>
-          <p class="eyebrow">Wissivity</p>
-          <h1>Das moderne Spielbrett für Wissen, Kreativität & Action.</h1>
-          <p>
-            Educational Activity Game – der Startpunkt für interaktive Lernspiele
-            mit klarer Struktur, flexiblen Kategorien und elegantem Design.
-          </p>
-          <button class="primary" type="button">Spiel starten</button>
-        </div>
-        <div class="hero-card">
-          <h2>Spieleinstellungen</h2>
-          <p>Wähle die gewünschte Spiellänge und starte direkt.</p>
-          <form class="settings" aria-label="Spieleinstellungen">
-            <label class="option">
-              <input type="radio" name="board-size" value="short" checked />
-              <span>
-                <strong>Kurzes Spiel</strong>
-                <small>24 Felder · Raster 6 × 4</small>
-              </span>
-            </label>
-            <label class="option">
-              <input type="radio" name="board-size" value="normal" />
-              <span>
-                <strong>Normales Spiel</strong>
-                <small>30 Felder · Raster 6 × 5</small>
-              </span>
-            </label>
-            <label class="option">
-              <input type="radio" name="board-size" value="long" />
-              <span>
-                <strong>Langes Spiel</strong>
-                <small>42 Felder · Raster 7 × 6</small>
-              </span>
-            </label>
-          </form>
-        </div>
-      </div>
-    </header>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wissivity – Klassenspiel</title>
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body>
+  <header class="global-header">
+    <div class="global-header-inner">
+      <label class="theme-switch" title="Helles Design aktivieren">
+        <input
+          id="theme-toggle"
+          type="checkbox"
+          role="switch"
+          aria-label="Design umschalten"
+          aria-checked="false"
+        />
+        <span class="theme-switch-track" aria-hidden="true">
+          <span class="theme-switch-thumb"></span>
+        </span>
+      </label>
+      <button
+        id="fullscreen-toggle"
+        class="icon-button"
+        type="button"
+        aria-label="Vollbildmodus umschalten"
+        aria-pressed="false"
+        title="Vollbildmodus"
+      >
+        ⛶
+      </button>
+    </div>
+  </header>
 
-    <main class="content">
-      <section class="board-section">
-        <div class="section-header">
-          <div>
-            <h2>Spielbrett</h2>
-            <p>
-              Der Weg bleibt neutral und kann jederzeit über Kategorienkarten
-              eingefärbt oder mit Symbolen ergänzt werden.
-            </p>
+  <div class="app">
+
+    <main>
+      <section id="menu" class="panel panel--active" aria-label="Hauptmenü">
+        <div class="panel-grid">
+          <div class="card card--teams">
+            <label class="field">
+              Anzahl Teams
+              <div class="team-count-control" role="group" aria-label="Anzahl Teams">
+                <button type="button" class="count-button" id="team-count-decrease" aria-label="Teamanzahl verringern">
+                  –
+                </button>
+                <input id="team-count" type="number" min="2" max="4" step="1" value="2" />
+                <button type="button" class="count-button" id="team-count-increase" aria-label="Teamanzahl erhöhen">
+                  +
+                </button>
+              </div>
+            </label>
+            <div id="team-list" class="team-list"></div>
           </div>
-          <div class="legend">
-            <span class="legend-item start">Start</span>
-            <span class="legend-item goal">Ziel</span>
-            <span class="legend-item">Kategorie wählbar</span>
+
+          <div class="card">
+            <h2>Spieleinstellungen</h2>
+            <div class="field-group category-settings">
+              <p>Kategorien</p>
+              <div class="category-setting">
+                <label class="category-toggle">
+                  <input type="checkbox" id="category-explain" value="Erklären" checked />
+                  Erklären
+                </label>
+                <label class="field category-time">
+                  Zeit pro Runde
+                  <select id="time-explain"></select>
+                </label>
+              </div>
+              <div class="category-setting">
+                <label class="category-toggle">
+                  <input type="checkbox" id="category-draw" value="Zeichnen" checked />
+                  Zeichnen
+                </label>
+                <label class="field category-time">
+                  Zeit pro Runde
+                  <select id="time-draw"></select>
+                </label>
+              </div>
+              <div class="category-setting">
+                <label class="category-toggle">
+                  <input type="checkbox" id="category-pantomime" value="Pantomime" checked />
+                  Pantomime
+                </label>
+                <label class="field category-time">
+                  Zeit pro Runde
+                  <select id="time-pantomime"></select>
+                </label>
+              </div>
+            </div>
+            <label class="field">
+              Strafzeit beim Tauschen
+              <select id="swap-select">
+                <option value="5">5s</option>
+                <option value="10" selected>10s</option>
+                <option value="15">15s</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="card">
+            <div class="card-row">
+              <h2>Kartensatz</h2>
+              <button class="info-button" id="csv-info" aria-label="CSV Info">i</button>
+            </div>
+            <label class="field upload">
+              CSV Upload
+              <input id="csv-upload" type="file" accept=".csv" />
+            </label>
+            <p class="hint" id="csv-status">Standarddatensatz aktiv.</p>
+            <label class="field">
+              Spiellänge
+              <select id="board-size-select">
+                <option value="short">Kurzes Spiel · 24 Felder (6 × 4)</option>
+                <option value="normal" selected>Normales Spiel · 30 Felder (6 × 5)</option>
+                <option value="long">Langes Spiel · 42 Felder (7 × 6)</option>
+              </select>
+            </label>
+            <div class="tooltip" id="csv-tooltip" role="dialog" aria-hidden="true">
+              <h3>CSV-Format</h3>
+              <ul>
+                <li>Spalten: Kategorie;Begriff;Tabu1;Tabu2;Tabu3…</li>
+                <li>Kategorien: Erklären, Zeichnen, Pantomime</li>
+                <li>Excel: als CSV (UTF-8, Semikolon) exportieren</li>
+              </ul>
+            </div>
           </div>
         </div>
-        <div class="board-shell">
-          <div
-            class="board-grid"
-            id="game-board"
-            role="grid"
-            aria-label="Spielbrett"
-          ></div>
-        </div>
+        <button id="start-game" class="primary">Spiel starten</button>
       </section>
 
-      <section class="info">
-        <h2>Flexibel & skalierbar</h2>
-        <p>
-          Das Spielbrett passt sich automatisch der gewählten Rastergröße an,
-          bleibt auf Desktop und Smartphone klar lesbar und bietet genügend
-          Randfläche für Logos, Erweiterungen oder zusätzliche Module.
-        </p>
+      <section id="game" class="panel" aria-label="Spielfeld">
+        <div class="game-top">
+          <div class="board" id="board" aria-hidden="true"></div>
+          <div class="side-panel"></div>
+        </div>
+        <div class="game-bottom">
+          <div class="game-controls game-controls-left">
+            <button id="roll" class="dice" aria-label="Würfeln">🎲</button>
+            <div id="dice-result" class="dice-result" aria-hidden="true">–</div>
+            <button id="undo" class="ghost">↩️ Zug zurück</button>
+          </div>
+          <div id="status" class="status">Würfeln, um zu starten.</div>
+          <div class="game-controls game-controls-right">
+            <button id="open-settings" class="ghost">Spieleinstellungen</button>
+            <button id="main-menu" class="ghost">Hauptmenü</button>
+          </div>
+        </div>
+        <div id="settings-panel" class="settings-panel hidden" role="dialog" aria-modal="true" aria-label="Spieleinstellungen">
+          <div class="settings-card">
+            <div class="settings-header">
+              <h2>Spieleinstellungen</h2>
+              <button id="close-settings" class="ghost">Schließen</button>
+            </div>
+            <div class="field-group category-settings">
+              <p>Kategorien</p>
+              <div class="category-setting">
+                <label class="category-toggle">
+                  <input type="checkbox" id="category-explain-game" value="Erklären" checked />
+                  Erklären
+                </label>
+                <label class="field category-time">
+                  Zeit pro Runde
+                  <select id="time-explain-game"></select>
+                </label>
+              </div>
+              <div class="category-setting">
+                <label class="category-toggle">
+                  <input type="checkbox" id="category-draw-game" value="Zeichnen" checked />
+                  Zeichnen
+                </label>
+                <label class="field category-time">
+                  Zeit pro Runde
+                  <select id="time-draw-game"></select>
+                </label>
+              </div>
+              <div class="category-setting">
+                <label class="category-toggle">
+                  <input type="checkbox" id="category-pantomime-game" value="Pantomime" checked />
+                  Pantomime
+                </label>
+                <label class="field category-time">
+                  Zeit pro Runde
+                  <select id="time-pantomime-game"></select>
+                </label>
+              </div>
+            </div>
+            <div class="field-group board-size-group">
+              <p>Spiellänge</p>
+              <label class="option-card">
+                <input type="radio" name="board-size-game" value="short" />
+                <span>
+                  <strong>Kurzes Spiel</strong>
+                  <small>24 Felder · Raster 6 × 4</small>
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="board-size-game" value="normal" checked />
+                <span>
+                  <strong>Normales Spiel</strong>
+                  <small>30 Felder · Raster 6 × 5</small>
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="board-size-game" value="long" />
+                <span>
+                  <strong>Langes Spiel</strong>
+                  <small>42 Felder · Raster 7 × 6</small>
+                </span>
+              </label>
+            </div>
+            <label class="field">
+              Strafzeit beim Tauschen
+              <select id="swap-select-game">
+                <option value="5">5s</option>
+                <option value="10" selected>10s</option>
+                <option value="15">15s</option>
+              </select>
+            </label>
+            <label class="field">
+              Spiellänge
+              <select id="board-size-select-game">
+                <option value="short">Kurzes Spiel · 24 Felder (6 × 4)</option>
+                <option value="normal" selected>Normales Spiel · 30 Felder (6 × 5)</option>
+                <option value="long">Langes Spiel · 42 Felder (7 × 6)</option>
+              </select>
+            </label>
+            <button id="apply-settings" class="primary">Einstellungen speichern</button>
+          </div>
+        </div>
       </section>
     </main>
+  </div>
 
-    <footer class="footer">
-      <small>© 2025 Wissivity</small>
-    </footer>
+  <div id="overlay" class="overlay hidden" aria-live="polite">
+    <div class="overlay-content" id="overlay-content">🎲</div>
+  </div>
 
-    <script src="./main.js" defer></script>
-  </body>
+  <div id="turn-overlay" class="turn-overlay hidden" aria-live="polite">
+    <div class="turn-overlay-panel" id="turn-overlay-panel">
+      <div class="turn-category" id="turn-category">
+        <div class="turn-category-icon" id="turn-category-icon">?</div>
+        <h2 id="turn-category-label">Kategorie</h2>
+        <div class="turn-countdown hidden" id="turn-countdown">3</div>
+        <button id="turn-ready" class="primary">Bereit</button>
+      </div>
+      <div class="turn-word hidden" id="turn-word">
+        <div class="turn-timer" id="turn-timer">00</div>
+        <h2 id="turn-word-title">Begriff</h2>
+        <ul id="turn-taboo-list"></ul>
+        <button id="turn-continue" class="primary">Weiter</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="winner-screen" class="winner-screen hidden" aria-live="polite">
+    <div class="winner-card">
+      <div class="confetti" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <h2 id="winner-label">Team hat gewonnen</h2>
+      <button id="winner-restart" class="ghost">Zurück zum Menü</button>
+    </div>
+  </div>
+
+  <script src="../app.js"></script>
+</body>
 </html>

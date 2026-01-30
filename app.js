@@ -329,8 +329,12 @@ function syncTeamCountControls(value) {
   renderTeams(clamped);
 }
 
-function getSelectedBoardSize(inputs) {
-  const selected = [...inputs].find((input) => input.checked);
+function getSelectedBoardSize(source) {
+  if (!source) return "normal";
+  if (source instanceof HTMLSelectElement) {
+    return source.value || "normal";
+  }
+  const selected = [...source].find((input) => input.checked);
   return selected?.value ?? "normal";
 }
 
@@ -625,7 +629,7 @@ function handleStartGame() {
     alert("Bitte mindestens eine Kategorie wählen.");
     return;
   }
-  const selectedBoardSize = getSelectedBoardSize(boardSizeInputs);
+  const selectedBoardSize = getSelectedBoardSize(boardSizeSelect ?? boardSizeInputs);
   syncBoardSizeControls(selectedBoardSize);
   applyBoardSize(selectedBoardSize);
   state.categories = selectedCategories;
@@ -838,7 +842,7 @@ function setup() {
   menuCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
   gameCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
   syncTeamCountControls(teamCountInput.value);
-  const selectedBoardSize = getSelectedBoardSize(boardSizeInputs);
+  const selectedBoardSize = getSelectedBoardSize(boardSizeSelect ?? boardSizeInputs);
   syncBoardSizeControls(selectedBoardSize);
   applyBoardSize(selectedBoardSize);
   positionTokens();

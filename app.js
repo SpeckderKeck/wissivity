@@ -59,6 +59,24 @@ const CATEGORY_ICONS = {
   Pantomime: "🎭",
 };
 
+const CATEGORY_VISUALS = {
+  Erklären: {
+    color: "#f7b6b6",
+    iconClass: "icon-explain",
+    iconColor: "#b45454",
+  },
+  Zeichnen: {
+    color: "#bfe3ff",
+    iconClass: "icon-draw",
+    iconColor: "#3b7fb8",
+  },
+  Pantomime: {
+    color: "#f7c4de",
+    iconClass: "icon-pantomime",
+    iconColor: "#b4557c",
+  },
+};
+
 const menuCategoryControls = Object.entries(CATEGORY_CONFIG).map(([category, config]) => ({
   category,
   checkbox: document.getElementById(`category-${config.id}`),
@@ -171,6 +189,7 @@ const state = {
   categories: ["Erklären", "Zeichnen", "Pantomime"],
   cards: [...DEFAULT_DATA],
   history: [],
+  boardCategories: [],
   phase: "idle",
   gameOver: false,
 };
@@ -412,6 +431,17 @@ function buildBoard(categories = state.categories) {
   const { rows, cols, total } = state.boardDimensions;
   board.style.setProperty("--board-cols", cols);
   board.style.setProperty("--board-rows", rows);
+  const assignments = [];
+  for (let index = 0; index < total; index += 1) {
+    if (index === 0 || index === total - 1) {
+      assignments[index] = null;
+    } else if (categories.length > 0) {
+      assignments[index] = categories[(index - 1) % categories.length];
+    } else {
+      assignments[index] = null;
+    }
+  }
+  state.boardCategories = assignments;
   for (let row = 0; row < rows; row += 1) {
     const rowIndices = [];
     for (let col = 0; col < cols; col += 1) {
@@ -428,7 +458,25 @@ function buildBoard(categories = state.categories) {
         cell.textContent = "Ziel";
         cell.classList.add("goal");
       } else {
-        cell.textContent = `${index + 1}`;
+        const number = document.createElement("span");
+        number.className = "cell-number";
+        number.textContent = `${index + 1}`;
+        const category = assignments[index];
+        if (category) {
+          const visuals = CATEGORY_VISUALS[category];
+          const card = document.createElement("div");
+          card.className = "category-card";
+          card.style.setProperty("--card-color", visuals?.color ?? "#ffffff");
+          card.style.setProperty("--icon-color", visuals?.iconColor ?? "#3b3b3b");
+          const icon = document.createElement("span");
+          icon.className = `category-icon ${visuals?.iconClass ?? ""}`.trim();
+          card.appendChild(icon);
+          cell.append(number, card);
+          cell.dataset.category = category;
+          cell.classList.add("has-category");
+        } else {
+          cell.append(number);
+        }
       }
       cell.dataset.index = index;
       board.appendChild(cell);
@@ -578,9 +626,6 @@ function handleRoll() {
     positions: previousPositions,
     team: state.currentTeam,
   });
-  const available = state.categories;
-  const category = available[Math.floor(Math.random() * available.length)];
-  state.pendingCategory = category;
   setTimeout(() => {
     moveToken(roll).then(() => {
       if (state.positions[state.currentTeam] >= state.boardDimensions.total - 1) {
@@ -588,6 +633,9 @@ function handleRoll() {
         return;
       }
       setTimeout(() => {
+        const landingIndex = state.positions[state.currentTeam];
+        const category = state.boardCategories[landingIndex] ?? state.categories[0];
+        state.pendingCategory = category;
         setCategory(category);
         showTurnOverlay();
       }, 2000);
@@ -659,11 +707,11 @@ function handleStartGame() {
   }
   const selectedBoardSize = getSelectedBoardSize(boardSizeSelect ?? boardSizeInputs);
   syncBoardSizeControls(selectedBoardSize);
-  applyBoardSize(selectedBoardSize);
   state.categories = selectedCategories;
   state.categoryTimes = readCategoryTimes(menuCategoryControls);
   state.timeLimit = state.categoryTimes[selectedCategories[0]] ?? 60;
   state.swapPenalty = Number.parseInt(swapSelect.value, 10);
+  applyBoardSize(selectedBoardSize);
   const teams = [...teamListContainer.querySelectorAll(".team-row")].map((row, index) => {
     const nameInput = row.querySelector("[data-team-name]");
     const iconSelect = row.querySelector("[data-team-icon]");
@@ -738,13 +786,13 @@ function applySettingsFromPanel() {
   }
   const selectedBoardSize = getSelectedBoardSize(boardSizeGameInputs);
   syncBoardSizeControls(selectedBoardSize);
-  applyBoardSize(selectedBoardSize);
   state.categories = selectedCategories;
   state.categoryTimes = readCategoryTimes(gameCategoryControls);
   state.timeLimit = state.categoryTimes[selectedCategories[0]] ?? 60;
   state.swapPenalty = Number.parseInt(swapSelectGame.value, 10);
   swapSelect.value = swapSelectGame.value;
   syncCategoryControls(menuCategoryControls, state.categories, state.categoryTimes);
+  applyBoardSize(selectedBoardSize);
   if (!state.timer) {
     updateTimerDisplay(state.timeLimit);
   }

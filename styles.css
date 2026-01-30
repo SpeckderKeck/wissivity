@@ -1,17 +1,20 @@
 :root {
-  color-scheme: dark;
-  --bg: #0d0f14;
-  --panel: #161b22;
-  --card: #1e2430;
-  --text: #f8f9fb;
-  --muted: #a7b0c3;
-  --accent: #8b5cf6;
-  --success: #22c55e;
-  --danger: #ef4444;
-  --pastel-1: rgba(171, 221, 255, 0.2);
-  --pastel-2: rgba(196, 255, 208, 0.2);
-  --pastel-3: rgba(255, 225, 183, 0.2);
-  --pastel-4: rgba(248, 198, 255, 0.2);
+  color-scheme: light;
+  --bg: #f5e9dc;
+  --panel: #c9d8c5;
+  --card: #e7dfd4;
+  --text: #5a4e42;
+  --muted: #7a6b5c;
+  --accent: #afc7e8;
+  --button: #e8b7c3;
+  --success: #9fc9a5;
+  --danger: #d99a9a;
+  --border: #d6c7b8;
+  --shadow: rgba(90, 78, 66, 0.18);
+  --pastel-1: rgba(201, 216, 197, 0.55);
+  --pastel-2: rgba(175, 199, 232, 0.45);
+  --pastel-3: rgba(232, 183, 195, 0.45);
+  --pastel-4: rgba(245, 233, 220, 0.75);
 }
 
 * {
@@ -52,7 +55,7 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  border: 1px solid #2a3445;
+  border: 1px solid var(--border);
   background: var(--panel);
   color: var(--text);
   display: grid;
@@ -99,7 +102,7 @@ body.fullscreen .board {
   background: var(--panel);
   padding: 20px;
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 10px 30px var(--shadow);
 }
 
 .card-row {
@@ -122,7 +125,7 @@ body.fullscreen .board {
 .field input[type="file"] {
   background: var(--card);
   color: var(--text);
-  border: 1px solid #2a3445;
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 10px 12px;
 }
@@ -164,7 +167,7 @@ body.fullscreen .board {
 .info-button {
   background: var(--accent);
   border: none;
-  color: white;
+  color: var(--text);
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -173,8 +176,8 @@ body.fullscreen .board {
 
 .tooltip {
   display: none;
-  background: #0f141d;
-  border: 1px solid #2a3445;
+  background: #fdf7f0;
+  border: 1px solid var(--border);
   padding: 16px;
   border-radius: 12px;
   margin-top: 12px;
@@ -218,7 +221,7 @@ body.fullscreen .board {
 .team-row select {
   background: var(--panel);
   color: var(--text);
-  border: 1px solid #2a3445;
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 10px 12px;
 }
@@ -227,8 +230,8 @@ body.fullscreen .board {
   width: 100%;
   padding: 16px;
   border-radius: 999px;
-  background: var(--accent);
-  color: white;
+  background: var(--button);
+  color: var(--text);
   border: none;
   font-size: 1.1rem;
   font-weight: 600;
@@ -246,7 +249,7 @@ body.fullscreen .board {
   grid-template-columns: repeat(6, 1fr);
   grid-template-rows: repeat(6, 1fr);
   gap: 2px;
-  background: #0a0d12;
+  background: #eadfd2;
   border-radius: 24px;
   padding: 12px;
   min-height: 520px;
@@ -257,7 +260,7 @@ body.fullscreen .board {
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(90, 78, 66, 0.9);
 }
 
 .board-cell.path {
@@ -282,7 +285,7 @@ body.fullscreen .board {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 12px rgba(90, 78, 66, 0.35);
   transform: translate(-50%, -50%);
   transition: transform 0.6s ease, top 0.6s ease, left 0.6s ease;
 }
@@ -292,7 +295,7 @@ body.fullscreen .board {
   position: absolute;
   inset: 2px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .token.moving {
@@ -363,8 +366,8 @@ body.fullscreen .board {
 
 .timer {
   align-self: center;
-  background: white;
-  color: black;
+  background: #fdf7f0;
+  color: var(--text);
   padding: 6px 18px;
   border-radius: 999px;
   font-weight: 700;
@@ -373,7 +376,7 @@ body.fullscreen .board {
 
 .divider {
   height: 1px;
-  background: #2a3445;
+  background: var(--border);
   margin: 8px 0;
 }
 
@@ -426,7 +429,7 @@ button {
 
 .ghost {
   background: transparent;
-  border: 1px solid #2a3445;
+  border: 1px solid var(--border);
   color: var(--text);
   padding: 10px;
   border-radius: 12px;
@@ -442,7 +445,7 @@ button {
   font-size: 2.4rem;
   background: var(--panel);
   border-radius: 12px;
-  border: 1px solid #2a3445;
+  border: 1px solid var(--border);
   width: 72px;
   height: 72px;
 }
@@ -478,7 +481,7 @@ button {
 .settings-panel {
   position: fixed;
   inset: 0;
-  background: rgba(6, 8, 12, 0.82);
+  background: rgba(90, 78, 66, 0.35);
   display: grid;
   place-items: center;
   z-index: 12;
@@ -490,7 +493,7 @@ button {
   background: var(--panel);
   border-radius: 20px;
   padding: 24px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 20px 40px var(--shadow);
 }
 
 .settings-header {
@@ -503,7 +506,7 @@ button {
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(90, 78, 66, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -512,7 +515,7 @@ button {
 }
 
 .overlay-content {
-  background: #111827;
+  background: #fdf7f0;
   padding: 30px 40px;
   border-radius: 20px;
   animation: pop 0.6s ease;
@@ -524,7 +527,7 @@ button {
   z-index: 20;
   display: grid;
   place-items: center;
-  background: rgba(6, 8, 12, 0.6);
+  background: rgba(90, 78, 66, 0.4);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
@@ -581,8 +584,8 @@ button {
 }
 
 .turn-timer {
-  background: white;
-  color: black;
+  background: #fdf7f0;
+  color: var(--text);
   padding: 8px 22px;
   border-radius: 999px;
   font-weight: 700;
@@ -602,7 +605,7 @@ button {
   position: fixed;
   inset: 0;
   z-index: 30;
-  background: rgba(6, 8, 12, 0.85);
+  background: rgba(90, 78, 66, 0.45);
   display: grid;
   place-items: center;
   text-align: center;
@@ -615,7 +618,7 @@ button {
   border-radius: 24px;
   width: min(520px, 90vw);
   overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 40px var(--shadow);
 }
 
 .confetti {

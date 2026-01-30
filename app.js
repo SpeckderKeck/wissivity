@@ -1,6 +1,6 @@
 const swapSelect = document.getElementById("swap-select");
 const teamCountSelect = document.getElementById("team-count");
-const teamColorsContainer = document.getElementById("team-colors");
+const teamListContainer = document.getElementById("team-list");
 const startButton = document.getElementById("start-game");
 const menuPanel = document.getElementById("menu");
 const gamePanel = document.getElementById("game");
@@ -164,6 +164,8 @@ const state = {
 };
 
 const colors = ["#f97316", "#38bdf8", "#34d399", "#f472b6"];
+const TEAM_ICONS = ["🐯", "🐼", "🦊", "🐸", "🐙", "🦁"];
+const DEFAULT_TEAM_NAMES = ["Team Nord", "Team Süd", "Team Ost", "Team West"];
 
 function populateTimeSelect(selectEl, defaultValue = 60) {
   for (let i = 10; i <= 120; i += 10) {
@@ -195,16 +197,30 @@ function syncCategoryControls(controls, selectedCategories, categoryTimes) {
   });
 }
 
-function renderTeamColors(count) {
-  teamColorsContainer.innerHTML = "";
+function renderTeams(count) {
+  teamListContainer.innerHTML = "";
   for (let i = 0; i < count; i += 1) {
-    const wrapper = document.createElement("label");
-    wrapper.className = "color-choice";
-    wrapper.innerHTML = `
-      <span>Team ${i + 1}</span>
-      <input type="color" value="${colors[i % colors.length]}" />
+    const defaultIcon = TEAM_ICONS[i % TEAM_ICONS.length];
+    const defaultName = DEFAULT_TEAM_NAMES[i] ?? `Team ${i + 1}`;
+    const row = document.createElement("div");
+    row.className = "team-row";
+    row.innerHTML = `
+      <div class="team-row-header">Team ${i + 1}</div>
+      <label class="field">
+        Teamname
+        <input type="text" data-team-name value="${defaultName}" />
+      </label>
+      <label class="field">
+        Icon
+        <select data-team-icon>
+          ${TEAM_ICONS.map(
+            (icon) =>
+              `<option value="${icon}" ${icon === defaultIcon ? "selected" : ""}>${icon}</option>`
+          ).join("")}
+        </select>
+      </label>
     `;
-    teamColorsContainer.appendChild(wrapper);
+    teamListContainer.appendChild(row);
   }
 }
 
@@ -241,21 +257,29 @@ function buildBoard(categories = state.categories) {
   return cells;
 }
 
-function createTokens(colorsList) {
+function createTokens(teamData) {
   board.querySelectorAll(".token").forEach((token) => token.remove());
-  state.positions = colorsList.map(() => 0);
-  state.teams = colorsList.map((color, index) => ({
-    color,
-    name: `Team ${index + 1}`,
+  const teams = teamData.map((team, index) => ({
+    ...team,
+    color: colors[index % colors.length],
   }));
-  colorsList.forEach((color, index) => {
+  state.positions = teams.map(() => 0);
+  state.teams = teams;
+  teams.forEach((team, index) => {
     const token = document.createElement("div");
     token.className = "token";
-    token.style.background = color;
+    token.style.background = team.color;
     token.dataset.team = index;
     board.appendChild(token);
   });
   positionTokens();
+}
+
+function formatTeamLabel(teamIndex) {
+  const team = state.teams[teamIndex];
+  if (!team) return "Team";
+  if (!team.icon) return team.name;
+  return `${team.icon} ${team.name}`.trim();
 }
 
 function positionTokens() {
@@ -337,7 +361,7 @@ function handleRoll() {
   state.pendingRoll = roll;
   diceResult.textContent = roll;
   showOverlay("🎲");
-  statusText.textContent = `${state.teams[state.currentTeam].name} würfelt ${roll}.`;
+  statusText.textContent = `${formatTeamLabel(state.currentTeam)} würfelt ${roll}.`;
   const previousPositions = [...state.positions];
   state.history.push({
     positions: previousPositions,
@@ -349,7 +373,7 @@ function handleRoll() {
   setTimeout(() => {
     moveToken(roll).then(() => {
       if (state.positions[state.currentTeam] >= 35) {
-        showWinner(state.teams[state.currentTeam].name);
+        showWinner(formatTeamLabel(state.currentTeam));
         return;
       }
       setCategory(category);
@@ -398,9 +422,9 @@ function finishTurn(isCorrect, timedOut = false) {
   hideTurnOverlay();
   state.pendingRoll = null;
   state.pendingCategory = null;
-  statusText.textContent = `${state.teams[state.currentTeam].name} beendet den Zug.`;
+  statusText.textContent = `${formatTeamLabel(state.currentTeam)} beendet den Zug.`;
   state.currentTeam = (state.currentTeam + 1) % state.teams.length;
-  statusText.textContent = `Nächstes: ${state.teams[state.currentTeam].name} würfelt.`;
+  statusText.textContent = `Nächstes: ${formatTeamLabel(state.currentTeam)} würfelt.`;
 }
 
 function handleUndo() {
@@ -409,7 +433,7 @@ function handleUndo() {
   state.positions = last.positions;
   state.currentTeam = last.team;
   positionTokens();
-  statusText.textContent = `Zug zurück: ${state.teams[state.currentTeam].name} ist dran.`;
+  statusText.textContent = `Zug zurück: ${formatTeamLabel(state.currentTeam)} ist dran.`;
 }
 
 function handleStartGame() {
@@ -423,10 +447,14 @@ function handleStartGame() {
   state.timeLimit = state.categoryTimes[selectedCategories[0]] ?? 60;
   state.swapPenalty = Number.parseInt(swapSelect.value, 10);
   buildBoard(state.categories);
-  const colorsList = [...teamColorsContainer.querySelectorAll("input")].map(
-    (input) => input.value
-  );
-  createTokens(colorsList);
+  const teams = [...teamListContainer.querySelectorAll(".team-row")].map((row, index) => {
+    const nameInput = row.querySelector("[data-team-name]");
+    const iconSelect = row.querySelector("[data-team-icon]");
+    const name = nameInput?.value.trim() || `Team ${index + 1}`;
+    const icon = iconSelect?.value || TEAM_ICONS[0];
+    return { name, icon };
+  });
+  createTokens(teams);
   menuPanel.classList.remove("panel--active");
   gamePanel.classList.add("panel--active");
   document.body.classList.add("game-active");
@@ -439,7 +467,7 @@ function handleStartGame() {
   winnerScreen.classList.add("hidden");
   turnOverlay.classList.add("hidden");
   turnOverlay.classList.remove("active", "expanded");
-  statusText.textContent = `Nächstes: ${state.teams[state.currentTeam].name} würfelt.`;
+  statusText.textContent = `Nächstes: ${formatTeamLabel(state.currentTeam)} würfelt.`;
 }
 
 function parseCsv(text) {
@@ -596,7 +624,7 @@ function handleWinnerRestart() {
 function setup() {
   menuCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
   gameCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
-  renderTeamColors(Number.parseInt(teamCountSelect.value, 10));
+  renderTeams(Number.parseInt(teamCountSelect.value, 10));
   buildBoard(state.categories);
   positionTokens();
   updateTimerDisplay(state.timeLimit);
@@ -606,7 +634,7 @@ function setup() {
 
 window.addEventListener("resize", positionTokens);
 teamCountSelect.addEventListener("change", (event) => {
-  renderTeamColors(Number.parseInt(event.target.value, 10));
+  renderTeams(Number.parseInt(event.target.value, 10));
 });
 
 startButton.addEventListener("click", handleStartGame);

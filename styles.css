@@ -1,41 +1,61 @@
 :root {
-  color-scheme: light;
+  color-scheme: dark;
   --header-height: 64px;
-  --bg: #f5e9dc;
-  --panel: #c9d8c5;
-  --card: #e7dfd4;
-  --text: #5a4e42;
-  --muted: #7a6b5c;
-  --accent: #afc7e8;
-  --button: #e8b7c3;
-  --success: #9fc9a5;
-  --danger: #d99a9a;
-  --board: #eadfd2;
-  --border: #d6c7b8;
-  --shadow: rgba(90, 78, 66, 0.18);
-  --pastel-1: rgba(201, 216, 197, 0.55);
-  --pastel-2: rgba(175, 199, 232, 0.45);
-  --pastel-3: rgba(232, 183, 195, 0.45);
-  --pastel-4: rgba(245, 233, 220, 0.75);
+  --bg: #121212;
+  --panel: #1e1e1e;
+  --card: #242424;
+  --surface-alt: #262626;
+  --text: #f1f1f1;
+  --muted: #a0a0a0;
+  --accent: #ffa502;
+  --button: #5c7cfa;
+  --button-text: #f1f1f1;
+  --button-hover: #4b6cf0;
+  --button-active: #425fd6;
+  --button-disabled: #2f3f7a;
+  --success: #2ed573;
+  --success-hover: #27c168;
+  --success-active: #22aa5c;
+  --danger: #ff6b6b;
+  --danger-hover: #f45b5b;
+  --danger-active: #e04f4f;
+  --board: #1a1a1a;
+  --border: #2a2a2a;
+  --shadow: rgba(0, 0, 0, 0.4);
+  --overlay: rgba(0, 0, 0, 0.6);
+  --pastel-1: rgba(92, 124, 250, 0.22);
+  --pastel-2: rgba(46, 213, 115, 0.2);
+  --pastel-3: rgba(255, 165, 2, 0.18);
+  --pastel-4: rgba(30, 30, 30, 0.7);
 }
 
 body[data-theme="light"] {
   color-scheme: light;
-  --bg: #f8fafc;
+  --bg: #f7f5f2;
   --panel: #ffffff;
-  --card: #f1f5f9;
-  --text: #1f2937;
-  --muted: #6b7280;
-  --accent: #93c5fd;
-  --button: #fde68a;
-  --success: #34d399;
-  --danger: #fca5a5;
-  --board: #e2e8f0;
-  --border: #e2e8f0;
-  --shadow: rgba(15, 23, 42, 0.12);
-  --pastel-1: rgba(219, 234, 254, 0.6);
-  --pastel-2: rgba(226, 232, 240, 0.7);
-  --pastel-3: rgba(254, 215, 170, 0.6);
+  --card: #ffffff;
+  --surface-alt: #f5f5f5;
+  --text: #2e2e2e;
+  --muted: #6e6e6e;
+  --accent: #ffb347;
+  --button: #4a90e2;
+  --button-text: #ffffff;
+  --button-hover: #3a7fcf;
+  --button-active: #316bb0;
+  --button-disabled: #c4d7f3;
+  --success: #50c878;
+  --success-hover: #45b66b;
+  --success-active: #3ea15f;
+  --danger: #e57373;
+  --danger-hover: #d86464;
+  --danger-active: #c65757;
+  --board: #f7f5f2;
+  --border: #e2e2e2;
+  --shadow: rgba(46, 46, 46, 0.12);
+  --overlay: rgba(46, 46, 46, 0.35);
+  --pastel-1: rgba(74, 144, 226, 0.2);
+  --pastel-2: rgba(80, 200, 120, 0.18);
+  --pastel-3: rgba(255, 179, 71, 0.22);
   --pastel-4: rgba(255, 255, 255, 0.8);
 }
 
@@ -80,6 +100,51 @@ body {
   gap: 12px;
 }
 
+.theme-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.theme-switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.theme-switch-track {
+  width: 52px;
+  height: 28px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  padding: 3px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.theme-switch-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--button);
+  box-shadow: 0 2px 6px var(--shadow);
+  transform: translateX(0);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.theme-switch input:checked + .theme-switch-track {
+  background: var(--surface-alt);
+  border-color: var(--border);
+}
+
+.theme-switch input:checked + .theme-switch-track .theme-switch-thumb {
+  transform: translateX(22px);
+  background: var(--accent);
+}
+
 .tagline {
   color: var(--muted);
   margin-top: 6px;
@@ -95,6 +160,7 @@ body {
   display: grid;
   place-items: center;
   font-size: 1.2rem;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 body.fullscreen .app {
@@ -206,11 +272,20 @@ body.fullscreen .board {
   height: 28px;
   border-radius: 50%;
   font-weight: 700;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.info-button:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.info-button:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .tooltip {
   display: none;
-  background: #fdf7f0;
+  background: var(--surface-alt);
   border: 1px solid var(--border);
   padding: 16px;
   border-radius: 12px;
@@ -265,10 +340,11 @@ body.fullscreen .board {
   padding: 16px;
   border-radius: 999px;
   background: var(--button);
-  color: var(--text);
+  color: var(--button-text);
   border: none;
   font-size: 1.1rem;
   font-weight: 600;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .game-top {
@@ -294,7 +370,7 @@ body.fullscreen .board {
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
-  color: rgba(90, 78, 66, 0.9);
+  color: var(--text);
 }
 
 .board-cell.path {
@@ -400,7 +476,7 @@ body.fullscreen .board {
 
 .timer {
   align-self: center;
-  background: #fdf7f0;
+  background: var(--surface-alt);
   color: var(--text);
   padding: 6px 18px;
   border-radius: 999px;
@@ -445,20 +521,48 @@ button {
   cursor: pointer;
 }
 
+button:focus-visible,
+.theme-switch input:focus-visible + .theme-switch-track {
+  outline: 3px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--button-hover);
+  transform: translateY(-1px);
+}
+
+.primary:active:not(:disabled) {
+  background: var(--button-active);
+  transform: translateY(0);
+}
+
+.primary:disabled {
+  background: var(--button-disabled);
+  color: var(--text);
+}
+
 .success {
   background: var(--success);
   border: none;
-  color: white;
+  color: #ffffff;
   padding: 10px;
   border-radius: 12px;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .danger {
   background: var(--danger);
   border: none;
-  color: white;
+  color: #ffffff;
   padding: 10px;
   border-radius: 12px;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .ghost {
@@ -467,6 +571,36 @@ button {
   color: var(--text);
   padding: 10px;
   border-radius: 12px;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.success:hover:not(:disabled) {
+  background: var(--success-hover);
+}
+
+.success:active:not(:disabled) {
+  background: var(--success-active);
+}
+
+.danger:hover:not(:disabled) {
+  background: var(--danger-hover);
+}
+
+.danger:active:not(:disabled) {
+  background: var(--danger-active);
+}
+
+.ghost:hover:not(:disabled),
+.icon-button:hover:not(:disabled),
+.dice:hover:not(:disabled) {
+  background: var(--card);
+}
+
+.ghost:active:not(:disabled),
+.icon-button:active:not(:disabled),
+.dice:active:not(:disabled) {
+  background: var(--surface-alt);
+  transform: translateY(1px);
 }
 
 .dice-area {
@@ -515,7 +649,7 @@ button {
 .settings-panel {
   position: fixed;
   inset: 0;
-  background: rgba(90, 78, 66, 0.35);
+  background: var(--overlay);
   display: grid;
   place-items: center;
   z-index: 12;
@@ -540,7 +674,7 @@ button {
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(90, 78, 66, 0.4);
+  background: var(--overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -549,7 +683,7 @@ button {
 }
 
 .overlay-content {
-  background: #fdf7f0;
+  background: var(--surface-alt);
   padding: 30px 40px;
   border-radius: 20px;
   animation: pop 0.6s ease;
@@ -561,7 +695,7 @@ button {
   z-index: 20;
   display: grid;
   place-items: center;
-  background: rgba(90, 78, 66, 0.4);
+  background: var(--overlay);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
@@ -618,7 +752,7 @@ button {
 }
 
 .turn-timer {
-  background: #fdf7f0;
+  background: var(--surface-alt);
   color: var(--text);
   padding: 8px 22px;
   border-radius: 999px;
@@ -639,7 +773,7 @@ button {
   position: fixed;
   inset: 0;
   z-index: 30;
-  background: rgba(90, 78, 66, 0.45);
+  background: var(--overlay);
   display: grid;
   place-items: center;
   text-align: center;

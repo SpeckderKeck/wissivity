@@ -9,16 +9,18 @@
 <body>
   <header class="global-header">
     <div class="global-header-inner">
-      <button
-        id="theme-toggle"
-        class="icon-button"
-        type="button"
-        aria-label="Design umschalten"
-        aria-pressed="false"
-        title="Helles Design aktivieren"
-      >
-        ☀️
-      </button>
+      <label class="theme-switch" title="Helles Design aktivieren">
+        <input
+          id="theme-toggle"
+          type="checkbox"
+          role="switch"
+          aria-label="Design umschalten"
+          aria-checked="false"
+        />
+        <span class="theme-switch-track" aria-hidden="true">
+          <span class="theme-switch-thumb"></span>
+        </span>
+      </label>
       <button
         id="fullscreen-toggle"
         class="icon-button"

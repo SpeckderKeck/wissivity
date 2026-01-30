@@ -25,6 +25,19 @@
       <section id="menu" class="panel panel--active" aria-label="Hauptmenü">
         <div class="panel-grid">
           <div class="card">
+            <h2>Teams</h2>
+            <label class="field">
+              Anzahl Teams
+              <select id="team-count">
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4" selected>4</option>
+              </select>
+            </label>
+            <div id="team-list" class="team-list"></div>
+          </div>
+
+          <div class="card">
             <h2>Spieleinstellungen</h2>
             <div class="field-group category-settings">
               <p>Kategorien</p>
@@ -87,19 +100,6 @@
                 <li>Excel: als CSV (UTF-8, Semikolon) exportieren</li>
               </ul>
             </div>
-          </div>
-
-          <div class="card">
-            <h2>Teams &amp; Farben</h2>
-            <label class="field">
-              Anzahl Teams
-              <select id="team-count">
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4" selected>4</option>
-              </select>
-            </label>
-            <div id="team-colors" class="color-grid"></div>
           </div>
         </div>
         <button id="start-game" class="primary">Spiel starten</button>

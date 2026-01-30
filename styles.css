@@ -226,6 +226,7 @@ body.fullscreen .board {
 }
 
 .field select,
+.field input[type="number"],
 .field input[type="file"] {
   background: var(--card);
   color: var(--text);
@@ -346,6 +347,43 @@ body.fullscreen .board {
   gap: 12px;
 }
 
+.team-count-control {
+  display: grid;
+  grid-template-columns: auto minmax(60px, 80px) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.team-count-control input[type="number"] {
+  text-align: center;
+  font-weight: 600;
+  -moz-appearance: textfield;
+}
+
+.team-count-control input[type="number"]::-webkit-outer-spin-button,
+.team-count-control input[type="number"]::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.count-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 1.2rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+.count-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .team-row {
   display: grid;
   gap: 12px;
@@ -359,13 +397,6 @@ body.fullscreen .board {
   grid-template-columns: minmax(160px, 1fr) auto auto;
   gap: 12px;
   align-items: end;
-}
-
-.team-row-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
 }
 
 .team-row .field {

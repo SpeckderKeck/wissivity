@@ -23,6 +23,21 @@ const swapButton = document.getElementById("swap");
 const undoButton = document.getElementById("undo");
 const overlay = document.getElementById("overlay");
 const overlayContent = document.getElementById("overlay-content");
+const turnOverlay = document.getElementById("turn-overlay");
+const turnOverlayPanel = document.getElementById("turn-overlay-panel");
+const turnCategory = document.getElementById("turn-category");
+const turnCategoryIcon = document.getElementById("turn-category-icon");
+const turnCategoryLabel = document.getElementById("turn-category-label");
+const turnReadyButton = document.getElementById("turn-ready");
+const turnCountdown = document.getElementById("turn-countdown");
+const turnWord = document.getElementById("turn-word");
+const turnTimer = document.getElementById("turn-timer");
+const turnWordTitle = document.getElementById("turn-word-title");
+const turnTabooList = document.getElementById("turn-taboo-list");
+const turnContinueButton = document.getElementById("turn-continue");
+const winnerScreen = document.getElementById("winner-screen");
+const winnerLabel = document.getElementById("winner-label");
+const winnerRestartButton = document.getElementById("winner-restart");
 const csvUpload = document.getElementById("csv-upload");
 const csvStatus = document.getElementById("csv-status");
 const csvInfo = document.getElementById("csv-info");
@@ -129,12 +144,15 @@ const state = {
   pendingRoll: null,
   pendingCategory: null,
   timer: null,
+  countdownTimer: null,
   remainingTime: 0,
   timeLimit: 60,
   swapPenalty: 10,
   categories: ["Erklären", "Zeichnen", "Pantomime"],
   cards: [...DEFAULT_DATA],
   history: [],
+  phase: "idle",
+  gameOver: false,
 };
 
 const colors = ["#f97316", "#38bdf8", "#34d399", "#f472b6"];
@@ -229,6 +247,7 @@ function showOverlay(content, duration = 800) {
 
 function updateTimerDisplay(value) {
   timerEl.textContent = `${value}s`;
+  turnTimer.textContent = `${value}s`;
 }
 
 function startTimer() {
@@ -240,13 +259,14 @@ function startTimer() {
     updateTimerDisplay(state.remainingTime);
     if (state.remainingTime <= 0) {
       clearInterval(state.timer);
-      handleAnswer(false, true);
+      finishTurn(false, true);
     }
   }, 1000);
 }
 
 function stopTimer() {
   clearInterval(state.timer);
+  clearInterval(state.countdownTimer);
 }
 
 function getCardByCategory(category) {
@@ -260,17 +280,26 @@ function setWordCard(card) {
     wordTitle.textContent = "Keine Karte";
     tabooList.innerHTML = "";
     tabooList.className = "";
+    turnWordTitle.textContent = "Keine Karte";
+    turnTabooList.innerHTML = "";
     return;
   }
   wordTitle.textContent = card.term;
   tabooList.innerHTML = "";
   tabooList.className = "";
+  turnWordTitle.textContent = card.term;
+  turnTabooList.innerHTML = "";
   if (card.category === "Erklären") {
     cardStack.style.setProperty("--card-height", "320px");
     card.taboo.forEach((taboo) => {
       const li = document.createElement("li");
       li.textContent = taboo;
       tabooList.appendChild(li);
+    });
+    card.taboo.forEach((taboo) => {
+      const li = document.createElement("li");
+      li.textContent = taboo;
+      turnTabooList.appendChild(li);
     });
     const tabooCount = card.taboo.length;
     if (tabooCount >= 5) {
@@ -288,6 +317,8 @@ function setWordCard(card) {
 function setCategory(category) {
   categoryLabel.textContent = category;
   categoryIcon.textContent = CATEGORY_ICONS[category] || "?";
+  turnCategoryLabel.textContent = category;
+  turnCategoryIcon.textContent = CATEGORY_ICONS[category] || "?";
   if (category === "Erklären") {
     cardStack.style.setProperty("--card-height", "320px");
   } else {
@@ -296,19 +327,32 @@ function setCategory(category) {
 }
 
 function handleRoll() {
-  if (state.pendingRoll !== null || state.timer) return;
+  if (state.pendingRoll !== null || state.timer || state.phase !== "idle" || state.gameOver) {
+    return;
+  }
   const roll = Math.floor(Math.random() * 6) + 1;
   state.pendingRoll = roll;
   diceResult.textContent = roll;
   showOverlay("🎲");
   statusText.textContent = `${state.teams[state.currentTeam].name} würfelt ${roll}.`;
+  const previousPositions = [...state.positions];
+  state.history.push({
+    positions: previousPositions,
+    team: state.currentTeam,
+  });
   const available = state.categories;
   const category = available[Math.floor(Math.random() * available.length)];
   state.pendingCategory = category;
   setTimeout(() => {
-    setCategory(category);
-    categoryCard.classList.add("flipped");
-  }, 1000);
+    moveToken(roll).then(() => {
+      if (state.positions[state.currentTeam] >= 35) {
+        showWinner(state.teams[state.currentTeam].name);
+        return;
+      }
+      setCategory(category);
+      showTurnOverlay();
+    });
+  }, 600);
 }
 
 function moveToken(steps) {
@@ -343,32 +387,17 @@ function computeMultiplier() {
   return 0.5;
 }
 
-function handleAnswer(isCorrect, timedOut = false) {
+function finishTurn(isCorrect, timedOut = false) {
   if (state.pendingRoll === null) return;
   stopTimer();
-  const roll = state.pendingRoll;
-  const multiplier = isCorrect ? computeMultiplier() : 1;
-  const adjustedSteps = Math.ceil(roll * multiplier);
-  const steps = isCorrect ? adjustedSteps : -roll;
-  const animationText = isCorrect
-    ? `x${multiplier}`
-    : timedOut
-    ? "⏱️ Timeout"
-    : "↩️ Zurück";
+  const animationText = timedOut ? "⏱️ Timeout" : isCorrect ? "✅" : "⏭️ Weiter";
   showOverlay(animationText, 900);
-  const previousPositions = [...state.positions];
-  state.history.push({
-    positions: previousPositions,
-    team: state.currentTeam,
-  });
-  categoryCard.classList.remove("flipped");
-  moveToken(steps).then(() => {
-    state.pendingRoll = null;
-    state.pendingCategory = null;
-    statusText.textContent = `${state.teams[state.currentTeam].name} beendet den Zug.`;
-    state.currentTeam = (state.currentTeam + 1) % state.teams.length;
-    statusText.textContent = `Nächstes: ${state.teams[state.currentTeam].name} würfelt.`;
-  });
+  hideTurnOverlay();
+  state.pendingRoll = null;
+  state.pendingCategory = null;
+  statusText.textContent = `${state.teams[state.currentTeam].name} beendet den Zug.`;
+  state.currentTeam = (state.currentTeam + 1) % state.teams.length;
+  statusText.textContent = `Nächstes: ${state.teams[state.currentTeam].name} würfelt.`;
 }
 
 function handleSwap() {
@@ -409,6 +438,14 @@ function handleStartGame() {
   gamePanel.classList.add("panel--active");
   document.body.classList.add("game-active");
   positionTokens();
+  state.currentTeam = 0;
+  state.pendingRoll = null;
+  state.pendingCategory = null;
+  state.gameOver = false;
+  state.phase = "idle";
+  winnerScreen.classList.add("hidden");
+  turnOverlay.classList.add("hidden");
+  turnOverlay.classList.remove("active", "expanded");
   statusText.textContent = `Nächstes: ${state.teams[state.currentTeam].name} würfelt.`;
 }
 
@@ -496,9 +533,84 @@ function handleCloseSettings() {
 
 function handleMainMenu() {
   stopTimer();
+  hideTurnOverlay();
   menuPanel.classList.add("panel--active");
   gamePanel.classList.remove("panel--active");
   document.body.classList.remove("game-active");
+}
+
+function setOverlayStartFromCell() {
+  const currentIndex = state.positions[state.currentTeam];
+  const cell = board.querySelector(`.board-cell[data-index="${currentIndex}"]`);
+  if (!cell) return;
+  const rect = cell.getBoundingClientRect();
+  turnOverlayPanel.style.setProperty("--panel-width", `${rect.width}px`);
+  turnOverlayPanel.style.setProperty("--panel-height", `${rect.height}px`);
+  turnOverlayPanel.style.setProperty("--panel-x", `${rect.left}px`);
+  turnOverlayPanel.style.setProperty("--panel-y", `${rect.top}px`);
+}
+
+function showTurnOverlay() {
+  state.phase = "category";
+  setOverlayStartFromCell();
+  turnCategory.classList.remove("hidden");
+  turnWord.classList.add("hidden");
+  turnCountdown.classList.add("hidden");
+  turnReadyButton.disabled = false;
+  turnOverlay.classList.remove("hidden");
+  turnOverlay.classList.add("active");
+  requestAnimationFrame(() => {
+    turnOverlay.classList.add("expanded");
+  });
+}
+
+function hideTurnOverlay() {
+  turnOverlay.classList.remove("expanded");
+  turnOverlay.classList.remove("active");
+  setTimeout(() => {
+    turnOverlay.classList.add("hidden");
+  }, 700);
+  state.phase = "idle";
+}
+
+function startCountdown() {
+  let countdown = 3;
+  turnCountdown.textContent = `${countdown}`;
+  turnCountdown.classList.remove("hidden");
+  turnReadyButton.disabled = true;
+  state.phase = "countdown";
+  state.countdownTimer = setInterval(() => {
+    countdown -= 1;
+    if (countdown <= 0) {
+      clearInterval(state.countdownTimer);
+      showWordCard();
+      return;
+    }
+    turnCountdown.textContent = `${countdown}`;
+  }, 1000);
+}
+
+function showWordCard() {
+  turnCategory.classList.add("hidden");
+  turnWord.classList.remove("hidden");
+  state.phase = "word";
+  const card = getCardByCategory(state.pendingCategory);
+  setWordCard(card);
+  startTimer();
+}
+
+function showWinner(teamName) {
+  state.gameOver = true;
+  state.phase = "winner";
+  state.pendingRoll = null;
+  state.pendingCategory = null;
+  winnerLabel.textContent = `${teamName} hat gewonnen!`;
+  winnerScreen.classList.remove("hidden");
+}
+
+function handleWinnerRestart() {
+  winnerScreen.classList.add("hidden");
+  handleMainMenu();
 }
 
 function setup() {
@@ -520,8 +632,8 @@ teamCountSelect.addEventListener("change", (event) => {
 startButton.addEventListener("click", handleStartGame);
 rollButton.addEventListener("click", handleRoll);
 flipCategoryButton.addEventListener("click", handleFlipCategory);
-correctButton.addEventListener("click", () => handleAnswer(true));
-wrongButton.addEventListener("click", () => handleAnswer(false));
+correctButton.addEventListener("click", () => finishTurn(true));
+wrongButton.addEventListener("click", () => finishTurn(false));
 swapButton.addEventListener("click", handleSwap);
 undoButton.addEventListener("click", handleUndo);
 csvUpload.addEventListener("change", handleCsvUpload);
@@ -529,6 +641,9 @@ openSettingsButton.addEventListener("click", handleOpenSettings);
 closeSettingsButton.addEventListener("click", handleCloseSettings);
 applySettingsButton.addEventListener("click", applySettingsFromPanel);
 mainMenuButton.addEventListener("click", handleMainMenu);
+turnReadyButton.addEventListener("click", startCountdown);
+turnContinueButton.addEventListener("click", () => finishTurn(false));
+winnerRestartButton.addEventListener("click", handleWinnerRestart);
 
 csvInfo.addEventListener("click", () => {
   const isHidden = csvTooltip.getAttribute("aria-hidden") === "true";

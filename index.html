@@ -9,8 +9,6 @@
 <body>
   <div class="app">
     <header class="app-header">
-      <h1>Wissivity</h1>
-      <p class="tagline">Activity-Klassenspiel – offline &amp; ohne Login</p>
       <button
         id="fullscreen-toggle"
         class="icon-button"
@@ -114,15 +112,46 @@
                 </div>
               </div>
             </div>
-            <div class="dice-area">
-              <button id="roll" class="dice" aria-label="Würfeln">🎲</button>
-              <div id="dice-result" class="dice-result">–</div>
-            </div>
           </div>
         </div>
         <div class="game-bottom">
-          <button id="undo" class="ghost">Zug zurück</button>
+          <div class="game-controls game-controls-left">
+            <button id="roll" class="dice" aria-label="Würfeln">🎲</button>
+            <div id="dice-result" class="dice-result" aria-hidden="true">–</div>
+            <button id="undo" class="ghost">↩️ Zug zurück</button>
+          </div>
           <div id="status" class="status">Würfeln, um zu starten.</div>
+          <div class="game-controls game-controls-right">
+            <button id="open-settings" class="ghost">Spieleinstellungen</button>
+            <button id="main-menu" class="ghost">Hauptmenü</button>
+          </div>
+        </div>
+        <div id="settings-panel" class="settings-panel hidden" role="dialog" aria-modal="true" aria-label="Spieleinstellungen">
+          <div class="settings-card">
+            <div class="settings-header">
+              <h2>Spieleinstellungen</h2>
+              <button id="close-settings" class="ghost">Schließen</button>
+            </div>
+            <label class="field">
+              Zeit je Kategorie
+              <select id="time-select-game"></select>
+            </label>
+            <div class="field-group">
+              <p>Kategorien</p>
+              <label class="chip"><input type="checkbox" value="Erklären" checked /> Erklären</label>
+              <label class="chip"><input type="checkbox" value="Zeichnen" checked /> Zeichnen</label>
+              <label class="chip"><input type="checkbox" value="Pantomime" checked /> Pantomime</label>
+            </div>
+            <label class="field">
+              Strafzeit beim Tauschen
+              <select id="swap-select-game">
+                <option value="5">5s</option>
+                <option value="10" selected>10s</option>
+                <option value="15">15s</option>
+              </select>
+            </label>
+            <button id="apply-settings" class="primary">Einstellungen speichern</button>
+          </div>
         </div>
       </section>
     </main>

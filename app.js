@@ -29,6 +29,13 @@ const csvInfo = document.getElementById("csv-info");
 const csvTooltip = document.getElementById("csv-tooltip");
 const cardStack = document.querySelector(".card-stack");
 const fullscreenToggle = document.getElementById("fullscreen-toggle");
+const timeSelectGame = document.getElementById("time-select-game");
+const swapSelectGame = document.getElementById("swap-select-game");
+const settingsPanel = document.getElementById("settings-panel");
+const openSettingsButton = document.getElementById("open-settings");
+const closeSettingsButton = document.getElementById("close-settings");
+const applySettingsButton = document.getElementById("apply-settings");
+const mainMenuButton = document.getElementById("main-menu");
 
 const CATEGORY_ICONS = {
   Erklären: "💬",
@@ -132,13 +139,13 @@ const state = {
 
 const colors = ["#f97316", "#38bdf8", "#34d399", "#f472b6"];
 
-function populateTimeSelect() {
+function populateTimeSelect(selectEl, defaultValue = 60) {
   for (let i = 10; i <= 120; i += 10) {
     const option = document.createElement("option");
     option.value = i;
     option.textContent = `${i}s`;
-    if (i === 60) option.selected = true;
-    timeSelect.appendChild(option);
+    if (i === defaultValue) option.selected = true;
+    selectEl.appendChild(option);
   }
 }
 
@@ -400,6 +407,7 @@ function handleStartGame() {
   createTokens(colorsList);
   menuPanel.classList.remove("panel--active");
   gamePanel.classList.add("panel--active");
+  document.body.classList.add("game-active");
   positionTokens();
   statusText.textContent = `Nächstes: ${state.teams[state.currentTeam].name} würfelt.`;
 }
@@ -446,13 +454,62 @@ function handleCsvUpload(event) {
   reader.readAsText(file, "utf-8");
 }
 
+function syncSettingsPanel() {
+  timeSelectGame.value = timeSelect.value;
+  swapSelectGame.value = swapSelect.value;
+  const gameCategoryInputs = settingsPanel.querySelectorAll(".chip input");
+  gameCategoryInputs.forEach((input) => {
+    input.checked = state.categories.includes(input.value);
+  });
+}
+
+function applySettingsFromPanel() {
+  const selectedCategories = [
+    ...settingsPanel.querySelectorAll(".chip input:checked"),
+  ].map((input) => input.value);
+  if (selectedCategories.length === 0) {
+    alert("Bitte mindestens eine Kategorie wählen.");
+    return;
+  }
+  state.categories = selectedCategories;
+  state.timeLimit = Number.parseInt(timeSelectGame.value, 10);
+  state.swapPenalty = Number.parseInt(swapSelectGame.value, 10);
+  timeSelect.value = timeSelectGame.value;
+  swapSelect.value = swapSelectGame.value;
+  document.querySelectorAll("#menu .chip input").forEach((input) => {
+    input.checked = selectedCategories.includes(input.value);
+  });
+  if (!state.timer) {
+    updateTimerDisplay(state.timeLimit);
+  }
+  settingsPanel.classList.add("hidden");
+}
+
+function handleOpenSettings() {
+  syncSettingsPanel();
+  settingsPanel.classList.remove("hidden");
+}
+
+function handleCloseSettings() {
+  settingsPanel.classList.add("hidden");
+}
+
+function handleMainMenu() {
+  stopTimer();
+  menuPanel.classList.add("panel--active");
+  gamePanel.classList.remove("panel--active");
+  document.body.classList.remove("game-active");
+}
+
 function setup() {
-  populateTimeSelect();
+  populateTimeSelect(timeSelect, 60);
+  populateTimeSelect(timeSelectGame, 60);
   renderTeamColors(Number.parseInt(teamCountSelect.value, 10));
   buildBoard();
   positionTokens();
   updateTimerDisplay(state.timeLimit);
   updateFullscreenState();
+  syncSettingsPanel();
 }
 
 window.addEventListener("resize", positionTokens);
@@ -468,6 +525,10 @@ wrongButton.addEventListener("click", () => handleAnswer(false));
 swapButton.addEventListener("click", handleSwap);
 undoButton.addEventListener("click", handleUndo);
 csvUpload.addEventListener("change", handleCsvUpload);
+openSettingsButton.addEventListener("click", handleOpenSettings);
+closeSettingsButton.addEventListener("click", handleCloseSettings);
+applySettingsButton.addEventListener("click", applySettingsFromPanel);
+mainMenuButton.addEventListener("click", handleMainMenu);
 
 csvInfo.addEventListener("click", () => {
   const isHidden = csvTooltip.getAttribute("aria-hidden") === "true";

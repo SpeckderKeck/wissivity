@@ -526,6 +526,55 @@ body.fullscreen .board {
   position: relative;
 }
 
+.board-cell.has-category {
+  font-size: 0.85rem;
+  color: rgba(20, 20, 20, 0.7);
+}
+
+.cell-number {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  z-index: 2;
+}
+
+.category-card {
+  position: absolute;
+  inset: 8px;
+  border-radius: 10px;
+  background: var(--card-color, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+  z-index: 1;
+}
+
+.category-icon {
+  width: min(42%, 48px);
+  height: min(42%, 48px);
+  background: var(--icon-color, rgba(0, 0, 0, 0.4));
+  border-radius: 8px;
+  opacity: 0.85;
+}
+
+.category-icon.icon-explain {
+  border-radius: 50%;
+}
+
+.category-icon.icon-draw {
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  border-radius: 0;
+}
+
+.category-icon.icon-pantomime {
+  transform: rotate(45deg);
+  border-radius: 6px;
+}
+
 .board-cell.path {
   background: rgba(255, 255, 255, 0.04);
 }

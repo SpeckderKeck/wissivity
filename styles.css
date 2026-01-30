@@ -1,5 +1,6 @@
 :root {
   color-scheme: light;
+  --header-height: 64px;
   --bg: #f5e9dc;
   --panel: #c9d8c5;
   --card: #e7dfd4;
@@ -9,12 +10,33 @@
   --button: #e8b7c3;
   --success: #9fc9a5;
   --danger: #d99a9a;
+  --board: #eadfd2;
   --border: #d6c7b8;
   --shadow: rgba(90, 78, 66, 0.18);
   --pastel-1: rgba(201, 216, 197, 0.55);
   --pastel-2: rgba(175, 199, 232, 0.45);
   --pastel-3: rgba(232, 183, 195, 0.45);
   --pastel-4: rgba(245, 233, 220, 0.75);
+}
+
+body[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f8fafc;
+  --panel: #ffffff;
+  --card: #f1f5f9;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --accent: #93c5fd;
+  --button: #fde68a;
+  --success: #34d399;
+  --danger: #fca5a5;
+  --board: #e2e8f0;
+  --border: #e2e8f0;
+  --shadow: rgba(15, 23, 42, 0.12);
+  --pastel-1: rgba(219, 234, 254, 0.6);
+  --pastel-2: rgba(226, 232, 240, 0.7);
+  --pastel-3: rgba(254, 215, 170, 0.6);
+  --pastel-4: rgba(255, 255, 255, 0.8);
 }
 
 * {
@@ -27,6 +49,7 @@ body {
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
+  padding-top: var(--header-height);
 }
 
 .app {
@@ -35,12 +58,26 @@ body {
   padding: 24px 16px 40px;
 }
 
-.app-header {
+.global-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--header-height);
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+}
+
+.global-header-inner {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: 0 16px;
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 16px;
-  position: relative;
-  min-height: 40px;
+  gap: 12px;
 }
 
 .tagline {
@@ -49,9 +86,6 @@ body {
 }
 
 .icon-button {
-  position: absolute;
-  top: 0;
-  right: 0;
   width: 40px;
   height: 40px;
   border-radius: 12px;
@@ -249,7 +283,7 @@ body.fullscreen .board {
   grid-template-columns: repeat(6, 1fr);
   grid-template-rows: repeat(6, 1fr);
   gap: 2px;
-  background: #eadfd2;
+  background: var(--board);
   border-radius: 24px;
   padding: 12px;
   min-height: 520px;

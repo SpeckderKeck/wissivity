@@ -7,8 +7,18 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="app">
-    <header class="app-header">
+  <header class="global-header">
+    <div class="global-header-inner">
+      <button
+        id="theme-toggle"
+        class="icon-button"
+        type="button"
+        aria-label="Design umschalten"
+        aria-pressed="false"
+        title="Helles Design aktivieren"
+      >
+        ☀️
+      </button>
       <button
         id="fullscreen-toggle"
         class="icon-button"
@@ -19,7 +29,10 @@
       >
         ⛶
       </button>
-    </header>
+    </div>
+  </header>
+
+  <div class="app">
 
     <main>
       <section id="menu" class="panel panel--active" aria-label="Hauptmenü">

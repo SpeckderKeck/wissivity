@@ -30,6 +30,7 @@ const csvUpload = document.getElementById("csv-upload");
 const csvStatus = document.getElementById("csv-status");
 const csvInfo = document.getElementById("csv-info");
 const csvTooltip = document.getElementById("csv-tooltip");
+const themeToggle = document.getElementById("theme-toggle");
 const fullscreenToggle = document.getElementById("fullscreen-toggle");
 const swapSelectGame = document.getElementById("swap-select-game");
 const settingsPanel = document.getElementById("settings-panel");
@@ -167,6 +168,22 @@ const state = {
 const colors = ["#f97316", "#38bdf8", "#34d399", "#f472b6"];
 const TEAM_ICONS = ["🐯", "🐼", "🦊", "🐸", "🐙", "🦁"];
 const DEFAULT_TEAM_NAMES = ["Team Nord", "Team Süd", "Team Ost", "Team West"];
+const THEME_STORAGE_KEY = "wissivity-theme";
+
+function applyTheme(theme) {
+  if (theme === "light") {
+    document.body.dataset.theme = "light";
+  } else {
+    delete document.body.dataset.theme;
+  }
+  updateThemeToggle(theme === "light");
+}
+
+function updateThemeToggle(isLight) {
+  themeToggle.setAttribute("aria-pressed", String(isLight));
+  themeToggle.textContent = isLight ? "🌞" : "🎨";
+  themeToggle.title = isLight ? "Standarddesign aktivieren" : "Helles Design aktivieren";
+}
 
 function populateTimeSelect(selectEl, defaultValue = 60) {
   for (let i = 10; i <= 120; i += 10) {
@@ -667,6 +684,17 @@ csvInfo.addEventListener("click", () => {
   csvTooltip.setAttribute("aria-hidden", isHidden ? "false" : "true");
 });
 
+themeToggle.addEventListener("click", () => {
+  const isLight = document.body.dataset.theme === "light";
+  const nextTheme = isLight ? "default" : "light";
+  if (nextTheme === "light") {
+    localStorage.setItem(THEME_STORAGE_KEY, "light");
+  } else {
+    localStorage.removeItem(THEME_STORAGE_KEY);
+  }
+  applyTheme(nextTheme);
+});
+
 function updateFullscreenState() {
   const isFullscreen = Boolean(document.fullscreenElement);
   document.body.classList.toggle("fullscreen", isFullscreen);
@@ -688,4 +716,6 @@ document.addEventListener("fullscreenchange", () => {
   positionTokens();
 });
 
+const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+applyTheme(storedTheme === "light" ? "light" : "default");
 setup();

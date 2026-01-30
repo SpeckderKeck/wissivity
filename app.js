@@ -397,8 +397,10 @@ function handleRoll() {
         showWinner(formatTeamLabel(state.currentTeam));
         return;
       }
-      setCategory(category);
-      showTurnOverlay();
+      setTimeout(() => {
+        setCategory(category);
+        showTurnOverlay();
+      }, 2000);
     });
   }, 600);
 }
@@ -487,7 +489,7 @@ function handleStartGame() {
   state.phase = "idle";
   winnerScreen.classList.add("hidden");
   turnOverlay.classList.add("hidden");
-  turnOverlay.classList.remove("active", "expanded");
+  turnOverlay.classList.remove("active", "expanded", "category");
   statusText.textContent = `Nächstes: ${formatTeamLabel(state.currentTeam)} würfelt.`;
 }
 
@@ -579,9 +581,21 @@ function setOverlayStartFromCell() {
   turnOverlayPanel.style.setProperty("--panel-y", `${rect.top}px`);
 }
 
+function setOverlayCategorySize() {
+  const width = Math.round(window.innerWidth / 3);
+  const height = Math.round(window.innerHeight / 3);
+  const x = Math.round(window.innerWidth / 2 - width / 2);
+  const y = Math.round(window.innerHeight / 2 - height / 2);
+  turnOverlayPanel.style.setProperty("--panel-category-width", `${width}px`);
+  turnOverlayPanel.style.setProperty("--panel-category-height", `${height}px`);
+  turnOverlayPanel.style.setProperty("--panel-category-x", `${x}px`);
+  turnOverlayPanel.style.setProperty("--panel-category-y", `${y}px`);
+}
+
 function showTurnOverlay() {
   state.phase = "ready";
   setOverlayStartFromCell();
+  setOverlayCategorySize();
   turnCategory.classList.remove("hidden");
   turnWord.classList.add("hidden");
   turnCountdown.classList.add("hidden");
@@ -590,12 +604,13 @@ function showTurnOverlay() {
   turnOverlay.classList.remove("hidden");
   turnOverlay.classList.add("active");
   requestAnimationFrame(() => {
-    turnOverlay.classList.add("expanded");
+    turnOverlay.classList.add("category");
   });
 }
 
 function hideTurnOverlay() {
   turnOverlay.classList.remove("expanded");
+  turnOverlay.classList.remove("category");
   turnOverlay.classList.remove("active");
   setTimeout(() => {
     turnOverlay.classList.add("hidden");
@@ -626,10 +641,15 @@ function startCountdown() {
 function showWordCard() {
   turnCategory.classList.add("hidden");
   turnWord.classList.remove("hidden");
+  turnOverlay.classList.remove("category");
+  turnOverlay.classList.add("expanded");
   state.phase = "word";
   const card = getCardByCategory(state.pendingCategory);
   setWordCard(card);
   state.timeLimit = state.categoryTimes[state.pendingCategory] ?? 60;
+  if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  }
   startTimer();
 }
 

@@ -21,8 +21,12 @@ const turnCategoryLabel = document.getElementById("turn-category-label");
 const turnCountdown = document.getElementById("turn-countdown");
 const turnWord = document.getElementById("turn-word");
 const turnTimer = document.getElementById("turn-timer");
+const turnPenalty = document.getElementById("turn-penalty");
 const turnWordTitle = document.getElementById("turn-word-title");
 const turnTabooList = document.getElementById("turn-taboo-list");
+const turnCorrectButton = document.getElementById("turn-correct");
+const turnWrongButton = document.getElementById("turn-wrong");
+const turnSwapButton = document.getElementById("turn-swap");
 const turnContinueButton = document.getElementById("turn-continue");
 const turnReadyButton = document.getElementById("turn-ready");
 const winnerScreen = document.getElementById("winner-screen");
@@ -208,6 +212,7 @@ const state = {
   boardCategories: [],
   phase: "idle",
   gameOver: false,
+  pendingReturn: null,
 };
 
 const TEAM_COLORS = [
@@ -608,6 +613,14 @@ function stopTimer() {
   state.countdownTimer = null;
 }
 
+function showPenaltyToast(penalty) {
+  if (!turnPenalty) return;
+  turnPenalty.textContent = `-${penalty}s Strafzeit`;
+  turnPenalty.classList.remove("show");
+  void turnPenalty.offsetWidth;
+  turnPenalty.classList.add("show");
+}
+
 function getCardByCategory(category) {
   const pool = state.cards.filter((card) => card.category === category);
   if (pool.length === 0) return null;
@@ -667,9 +680,8 @@ function handleRoll() {
   }, 600);
 }
 
-function moveToken(steps) {
+function moveToken(steps, teamIndex = state.currentTeam) {
   return new Promise((resolve) => {
-    const teamIndex = state.currentTeam;
     const token = board.querySelector(`.token[data-team="${teamIndex}"]`);
     let remaining = Math.abs(steps);
     const direction = steps >= 0 ? 1 : -1;
@@ -699,9 +711,13 @@ function computeMultiplier() {
   return 0.5;
 }
 
-function finishTurn(isCorrect, timedOut = false) {
+function finishTurn(isCorrect, timedOut = false, { returnToStart = false } = {}) {
   if (state.pendingRoll === null) return;
   stopTimer();
+  const teamIndex = state.currentTeam;
+  if (returnToStart) {
+    state.pendingReturn = { teamIndex };
+  }
   const animationText = timedOut ? "⏱️ Timeout" : isCorrect ? "✅" : "⏭️ Weiter";
   showOverlay(animationText, 900);
   hideTurnOverlay();
@@ -711,6 +727,16 @@ function finishTurn(isCorrect, timedOut = false) {
   state.currentTeam = (state.currentTeam + 1) % state.teams.length;
   statusText.textContent = `Nächstes: ${formatTeamLabel(state.currentTeam)} würfelt.`;
   renderTeamStatus();
+  if (returnToStart) {
+    setTimeout(() => {
+      if (state.pendingReturn?.teamIndex !== teamIndex) return;
+      const stepsBack = state.positions[teamIndex];
+      state.pendingReturn = null;
+      if (stepsBack > 0) {
+        moveToken(-stepsBack, teamIndex);
+      }
+    }, 750);
+  }
 }
 
 function handleUndo() {
@@ -918,10 +944,25 @@ function showWordCard() {
   const card = getCardByCategory(state.pendingCategory);
   setWordCard(card);
   state.timeLimit = state.categoryTimes[state.pendingCategory] ?? 60;
-  if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen().catch(() => {});
-  }
   startTimer();
+}
+
+function applySwapPenalty() {
+  const penalty = state.swapPenalty;
+  if (!Number.isFinite(penalty) || penalty <= 0) return;
+  state.remainingTime = Math.max(0, state.remainingTime - penalty);
+  updateTimerDisplay(state.remainingTime);
+  showPenaltyToast(penalty);
+  if (state.remainingTime <= 0) {
+    finishTurn(false, true);
+  }
+}
+
+function handleSwapCard() {
+  if (state.phase !== "word") return;
+  const card = getCardByCategory(state.pendingCategory);
+  setWordCard(card);
+  applySwapPenalty();
 }
 
 function showWinner(teamName) {
@@ -983,12 +1024,25 @@ closeSettingsButton.addEventListener("click", handleCloseSettings);
 applySettingsButton.addEventListener("click", applySettingsFromPanel);
 mainMenuButton.addEventListener("click", handleMainMenu);
 turnContinueButton.addEventListener("click", () => finishTurn(false));
+turnCorrectButton?.addEventListener("click", () => {
+  if (state.phase !== "word") return;
+  finishTurn(true);
+});
+turnWrongButton?.addEventListener("click", () => {
+  if (state.phase !== "word") return;
+  finishTurn(false, false, { returnToStart: true });
+});
+turnSwapButton?.addEventListener("click", handleSwapCard);
 turnReadyButton.addEventListener("click", () => {
   if (state.phase !== "ready") return;
   turnReadyButton.disabled = true;
   startCountdown();
 });
 winnerRestartButton.addEventListener("click", handleWinnerRestart);
+
+turnPenalty?.addEventListener("animationend", () => {
+  turnPenalty.classList.remove("show");
+});
 
 csvInfo.addEventListener("click", () => {
   const isHidden = csvTooltip.getAttribute("aria-hidden") === "true";

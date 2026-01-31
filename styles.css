@@ -1045,7 +1045,7 @@ button:disabled {
 }
 
 .turn-word {
-  width: min(680px, 100%);
+  width: min(880px, 100%);
 }
 
 .turn-timer {
@@ -1057,6 +1057,11 @@ button:disabled {
   font-size: 1.3rem;
 }
 
+#turn-word-title {
+  font-size: clamp(2.4rem, 6vw, 4.8rem);
+  margin: 0;
+}
+
 #turn-taboo-list {
   list-style: none;
   padding: 0;
@@ -1064,6 +1069,58 @@ button:disabled {
   display: grid;
   gap: 8px;
   color: var(--muted);
+}
+
+.turn-penalty {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--danger);
+  opacity: 0;
+  min-height: 1.2em;
+}
+
+.turn-penalty.show {
+  animation: penalty-pop 1.4s ease;
+}
+
+.turn-action-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  align-items: center;
+}
+
+.turn-action-button {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: none;
+  display: grid;
+  place-items: center;
+  font-size: 1.6rem;
+  color: #ffffff;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.turn-action-button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.turn-action-button.is-correct {
+  background: var(--success);
+}
+
+.turn-action-button.is-wrong {
+  background: var(--danger);
+}
+
+.turn-action-button.is-swap {
+  background: var(--accent);
+  color: #1f2937;
+}
+
+.turn-action-button:hover:not(:disabled) {
+  filter: brightness(1.05);
 }
 
 .winner-screen {
@@ -1151,6 +1208,24 @@ button:disabled {
   }
   100% {
     transform: translateY(120vh) rotate(320deg);
+  }
+}
+
+@keyframes penalty-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.9);
+  }
+  25% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
   }
 }
 

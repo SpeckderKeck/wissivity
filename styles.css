@@ -557,16 +557,14 @@ body.fullscreen .board {
   width: min(42%, 48px);
   height: min(42%, 48px);
   display: inline-block;
-  background-color: var(--icon-color, rgba(0, 0, 0, 0.4));
-  mask: var(--icon-url, none) center / contain no-repeat;
-  -webkit-mask: var(--icon-url, none) center / contain no-repeat;
-  opacity: 0.85;
+  background-image: var(--icon-url, none);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
 }
 
 .category-icon.icon-fallback {
-  background-color: transparent;
-  mask: none;
-  -webkit-mask: none;
+  background-image: none;
   color: var(--icon-color, rgba(0, 0, 0, 0.5));
   font-size: 1.8rem;
   display: grid;
@@ -1023,15 +1021,14 @@ button:disabled {
   width: clamp(80px, 18vw, 140px);
   height: clamp(80px, 18vw, 140px);
   display: inline-block;
-  background-color: var(--icon-color, rgba(0, 0, 0, 0.4));
-  mask: var(--icon-url, none) center / contain no-repeat;
-  -webkit-mask: var(--icon-url, none) center / contain no-repeat;
+  background-image: var(--icon-url, none);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
 }
 
 .turn-category-icon.icon-fallback {
-  background-color: transparent;
-  mask: none;
-  -webkit-mask: none;
+  background-image: none;
   color: var(--icon-color, rgba(0, 0, 0, 0.5));
   font-size: 4rem;
   display: grid;

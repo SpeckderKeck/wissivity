@@ -517,6 +517,11 @@ function createTokens(teamData) {
     token.className = "token";
     token.style.background = team.color;
     token.dataset.team = index;
+    token.dataset.icon = team.icon;
+    const tokenIcon = document.createElement("span");
+    tokenIcon.className = "token-icon";
+    tokenIcon.textContent = team.icon;
+    token.appendChild(tokenIcon);
     board.appendChild(token);
   });
   positionTokens();
@@ -563,8 +568,10 @@ function positionTokens() {
     const boardRect = board.getBoundingClientRect();
     const token = board.querySelector(`.token[data-team="${index}"]`);
     if (!token) return;
-    token.style.left = `${rect.left - boardRect.left + rect.width / 2}px`;
-    token.style.top = `${rect.top - boardRect.top + rect.height / 2}px`;
+    const quadrantX = index % 2 === 0 ? 0.28 : 0.72;
+    const quadrantY = index < 2 ? 0.28 : 0.72;
+    token.style.left = `${rect.left - boardRect.left + rect.width * quadrantX}px`;
+    token.style.top = `${rect.top - boardRect.top + rect.height * quadrantY}px`;
   });
   renderTeamStatus();
 }

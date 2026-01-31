@@ -48,34 +48,50 @@ const boardSizeGameInputs = document.querySelectorAll('input[name="board-size-ga
 const teamStatusList = document.getElementById("team-status-list");
 
 const CATEGORY_CONFIG = {
-  Erklären: { id: "explain", icon: "💬" },
-  Zeichnen: { id: "draw", icon: "✏️" },
-  Pantomime: { id: "pantomime", icon: "🎭" },
-};
-
-const CATEGORY_ICONS = {
-  Erklären: "💬",
-  Zeichnen: "✏️",
-  Pantomime: "🎭",
+  Erklären: { id: "explain", iconPath: "assets/icons/explain.svg", fallbackIcon: "💬" },
+  Zeichnen: { id: "draw", iconPath: "assets/icons/draw.svg", fallbackIcon: "✏️" },
+  Pantomime: { id: "pantomime", iconPath: "assets/icons/pantomime.svg", fallbackIcon: "🎭" },
 };
 
 const CATEGORY_VISUALS = {
   Erklären: {
     color: "#f7b6b6",
-    iconClass: "icon-explain",
     iconColor: "#b45454",
   },
   Zeichnen: {
     color: "#bfe3ff",
-    iconClass: "icon-draw",
     iconColor: "#3b7fb8",
   },
   Pantomime: {
     color: "#f7c4de",
-    iconClass: "icon-pantomime",
     iconColor: "#b4557c",
   },
 };
+
+function getCategoryIconPath(category) {
+  return CATEGORY_CONFIG[category]?.iconPath ?? "";
+}
+
+function getCategoryFallbackIcon(category) {
+  return CATEGORY_CONFIG[category]?.fallbackIcon ?? "?";
+}
+
+function applyCategoryIcon(element, category, { allowFallback = false } = {}) {
+  const iconPath = getCategoryIconPath(category);
+  const visuals = CATEGORY_VISUALS[category];
+  element.classList.remove("icon-fallback");
+  element.style.setProperty("--icon-color", visuals?.iconColor ?? "#3b3b3b");
+  if (iconPath) {
+    element.textContent = "";
+    element.style.setProperty("--icon-url", `url("${iconPath}")`);
+    return;
+  }
+  element.style.removeProperty("--icon-url");
+  if (allowFallback) {
+    element.classList.add("icon-fallback");
+    element.textContent = getCategoryFallbackIcon(category);
+  }
+}
 
 const menuCategoryControls = Object.entries(CATEGORY_CONFIG).map(([category, config]) => ({
   category,
@@ -467,9 +483,10 @@ function buildBoard(categories = state.categories) {
           const card = document.createElement("div");
           card.className = "category-card";
           card.style.setProperty("--card-color", visuals?.color ?? "#ffffff");
-          card.style.setProperty("--icon-color", visuals?.iconColor ?? "#3b3b3b");
           const icon = document.createElement("span");
-          icon.className = `category-icon ${visuals?.iconClass ?? ""}`.trim();
+          icon.className = "category-icon";
+          icon.setAttribute("aria-hidden", "true");
+          applyCategoryIcon(icon, category);
           card.appendChild(icon);
           cell.append(number, card);
           cell.dataset.category = category;
@@ -609,7 +626,7 @@ function setWordCard(card) {
 
 function setCategory(category) {
   turnCategoryLabel.textContent = category;
-  turnCategoryIcon.textContent = CATEGORY_ICONS[category] || "?";
+  applyCategoryIcon(turnCategoryIcon, category, { allowFallback: true });
 }
 
 function handleRoll() {

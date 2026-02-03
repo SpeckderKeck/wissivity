@@ -49,7 +49,6 @@ const closeSettingsButton = document.getElementById("close-settings");
 const applySettingsButton = document.getElementById("apply-settings");
 const mainMenuButton = document.getElementById("main-menu");
 const boardSizeInputs = document.querySelectorAll('input[name="board-size"]');
-const boardSizeGameInputs = document.querySelectorAll('input[name="board-size-game"]');
 const teamStatusList = document.getElementById("team-status-list");
 
 let diceOverlayTimeout = null;
@@ -410,9 +409,12 @@ function syncBoardSizeControls(size) {
   boardSizeInputs.forEach((input) => {
     input.checked = input.value === size;
   });
-  boardSizeGameInputs.forEach((input) => {
-    input.checked = input.value === size;
-  });
+  if (boardSizeSelectGame) {
+    boardSizeSelectGame.value = size;
+  }
+  if (boardSizeSelect) {
+    boardSizeSelect.value = size;
+  }
 }
 
 function closeAllTeamPickers() {
@@ -876,7 +878,7 @@ function applySettingsFromPanel() {
     alert("Bitte mindestens eine Kategorie wählen.");
     return;
   }
-  const selectedBoardSize = getSelectedBoardSize(boardSizeGameInputs);
+  const selectedBoardSize = getSelectedBoardSize(boardSizeSelectGame);
   syncBoardSizeControls(selectedBoardSize);
   state.categories = selectedCategories;
   state.categoryTimes = readCategoryTimes(gameCategoryControls);

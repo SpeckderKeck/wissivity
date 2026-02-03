@@ -5,6 +5,7 @@ const teamCountIncrease = document.getElementById("team-count-increase");
 const teamListContainer = document.getElementById("team-list");
 const startButton = document.getElementById("start-game");
 const menuPanel = document.getElementById("menu");
+const introPanel = document.getElementById("intro");
 const gamePanel = document.getElementById("game");
 const board = document.getElementById("board");
 const rollButton = document.getElementById("roll");
@@ -52,6 +53,9 @@ const applySettingsButton = document.getElementById("apply-settings");
 const mainMenuButton = document.getElementById("main-menu");
 const boardSizeInputs = document.querySelectorAll('input[name="board-size"]');
 const teamStatusList = document.getElementById("team-status-list");
+const introStartButton = document.getElementById("intro-start");
+const introQr = document.getElementById("intro-qr");
+const introLink = document.getElementById("intro-link");
 
 function showDiceOverlay(roll) {
   if (!diceOverlay || !diceOverlayValue) return;
@@ -999,9 +1003,30 @@ function handleCloseSettings() {
 function handleMainMenu() {
   stopTimer();
   hideTurnOverlay();
+  introPanel?.classList.remove("panel--active");
   menuPanel.classList.add("panel--active");
   gamePanel.classList.remove("panel--active");
   document.body.classList.remove("game-active");
+}
+
+function handleIntroStart() {
+  introPanel?.classList.remove("panel--active");
+  menuPanel.classList.add("panel--active");
+}
+
+function setupIntroPanel() {
+  const fallbackUrl = introLink?.getAttribute("href") ?? "https://wissivity.app";
+  const origin = window.location.origin;
+  const websiteUrl = origin && origin !== "null" ? origin : fallbackUrl;
+  if (introLink) {
+    introLink.href = websiteUrl;
+    introLink.textContent = websiteUrl.replace(/^https?:\/\//, "");
+  }
+  if (introQr) {
+    const qrSource = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(websiteUrl)}`;
+    introQr.src = qrSource;
+    introQr.loading = "lazy";
+  }
 }
 
 function setOverlayStartFromCell() {
@@ -1145,6 +1170,7 @@ function setup() {
   updateTimerDisplay(state.timeLimit);
   updateFullscreenState();
   syncSettingsPanel();
+  setupIntroPanel();
   if (datasetSelect) {
     datasetSelect.value = DEFAULT_DATASET_KEY;
   }
@@ -1181,6 +1207,7 @@ boardSizeSelect?.addEventListener("change", () => {
 });
 
 startButton.addEventListener("click", handleStartGame);
+introStartButton?.addEventListener("click", handleIntroStart);
 rollButton.addEventListener("click", handleRoll);
 undoButton.addEventListener("click", handleUndo);
 csvUpload.addEventListener("change", handleCsvUpload);

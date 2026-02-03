@@ -90,6 +90,16 @@
                   <select id="time-pantomime"></select>
                 </label>
               </div>
+              <div class="category-setting">
+                <label class="category-toggle">
+                  <input type="checkbox" id="category-quiz" value="Quizfrage" checked />
+                  Quizfrage
+                </label>
+                <label class="field category-time">
+                  Zeit pro Runde
+                  <select id="time-quiz"></select>
+                </label>
+              </div>
             </div>
             <label class="field">
               Strafzeit beim Tauschen
@@ -122,8 +132,9 @@
             <div class="tooltip" id="csv-tooltip" role="dialog" aria-hidden="true">
               <h3>CSV-Format</h3>
               <ul>
-                <li>Spalten: Kategorie;Begriff;Tabu1;Tabu2;Tabu3…</li>
-                <li>Kategorien: Erklären, Zeichnen, Pantomime</li>
+                <li>Spalten: Kategorie;Begriff/Frage;Tabu1/Antwort;Tabu2;Tabu3…</li>
+                <li>Kategorien: Erklären, Zeichnen, Pantomime, Quizfrage</li>
+                <li>Quizfrage: Frage + Antwort in Spalte 2/3</li>
                 <li>Excel: als CSV (UTF-8, Semikolon) exportieren</li>
               </ul>
             </div>
@@ -191,6 +202,16 @@
                   <select id="time-pantomime-game"></select>
                 </label>
               </div>
+              <div class="category-setting">
+                <label class="category-toggle">
+                  <input type="checkbox" id="category-quiz-game" value="Quizfrage" checked />
+                  Quizfrage
+                </label>
+                <label class="field category-time">
+                  Zeit pro Runde
+                  <select id="time-quiz-game"></select>
+                </label>
+              </div>
             </div>
             <label class="field">
               Strafzeit beim Tauschen
@@ -243,6 +264,7 @@
             ⟲
           </button>
         </div>
+        <p id="turn-answer" class="turn-answer hidden"></p>
         <button id="turn-continue" class="primary">Weiter</button>
       </div>
     </div>

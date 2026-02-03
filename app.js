@@ -29,6 +29,7 @@ const turnCorrectButton = document.getElementById("turn-correct");
 const turnWrongButton = document.getElementById("turn-wrong");
 const turnSwapButton = document.getElementById("turn-swap");
 const turnContinueButton = document.getElementById("turn-continue");
+const turnAnswer = document.getElementById("turn-answer");
 const turnReadyButton = document.getElementById("turn-ready");
 const winnerScreen = document.getElementById("winner-screen");
 const winnerLabel = document.getElementById("winner-label");
@@ -68,6 +69,7 @@ const CATEGORY_CONFIG = {
   Erklären: { id: "explain", iconPath: "assets/icons/explain.svg", fallbackIcon: "💬" },
   Zeichnen: { id: "draw", iconPath: "assets/icons/draw.svg", fallbackIcon: "✏️" },
   Pantomime: { id: "pantomime", iconPath: "assets/icons/pantomime.svg", fallbackIcon: "🎭" },
+  Quizfrage: { id: "quiz", iconPath: "", fallbackIcon: "❓" },
 };
 
 const CATEGORY_VISUALS = {
@@ -82,6 +84,10 @@ const CATEGORY_VISUALS = {
   Pantomime: {
     color: "#e6d72a",
     iconColor: "#7a6d00",
+  },
+  Quizfrage: {
+    color: "#a78bfa",
+    iconColor: "#6d28d9",
   },
 };
 
@@ -199,6 +205,11 @@ const DEFAULT_DATA = [
   { category: "Pantomime", term: "Werkstück schleifen", taboo: [] },
   { category: "Pantomime", term: "Korrosion abschleifen", taboo: [] },
   { category: "Pantomime", term: "Schutzhaube montieren", taboo: [] },
+  { category: "Quizfrage", term: "Wie viele Minuten hat eine Stunde?", answer: "60", taboo: [] },
+  { category: "Quizfrage", term: "Was ist die Hauptstadt von Frankreich?", answer: "Paris", taboo: [] },
+  { category: "Quizfrage", term: "Welcher Planet ist der Sonne am nächsten?", answer: "Merkur", taboo: [] },
+  { category: "Quizfrage", term: "Wie heißt das chemische Symbol für Wasser?", answer: "H₂O", taboo: [] },
+  { category: "Quizfrage", term: "Wie viele Kontinente gibt es auf der Erde?", answer: "7", taboo: [] },
 ];
 
 const state = {
@@ -218,15 +229,18 @@ const state = {
     Erklären: 60,
     Zeichnen: 60,
     Pantomime: 60,
+    Quizfrage: 60,
   },
   swapPenalty: 10,
-  categories: ["Erklären", "Zeichnen", "Pantomime"],
+  categories: ["Erklären", "Zeichnen", "Pantomime", "Quizfrage"],
   cards: [...DEFAULT_DATA],
   history: [],
   boardCategories: [],
   phase: "idle",
   gameOver: false,
   pendingReturn: null,
+  currentCard: null,
+  quizPhase: null,
 };
 
 const TEAM_COLORS = [
@@ -581,7 +595,7 @@ function buildBoard(categories = state.categories) {
           const icon = document.createElement("span");
           icon.className = "category-icon";
           icon.setAttribute("aria-hidden", "true");
-          applyCategoryIcon(icon, category);
+          applyCategoryIcon(icon, category, { allowFallback: true });
           card.appendChild(icon);
           cell.append(number, card);
           cell.dataset.category = category;
@@ -699,7 +713,7 @@ function updateTimerDisplay(value) {
   turnTimer.textContent = `${value}s`;
 }
 
-function startTimer() {
+function startTimer({ onTimeout } = {}) {
   clearInterval(state.timer);
   state.timer = null;
   state.remainingTime = state.timeLimit;
@@ -709,7 +723,11 @@ function startTimer() {
     updateTimerDisplay(state.remainingTime);
     if (state.remainingTime <= 0) {
       clearInterval(state.timer);
-      finishTurn(false, true);
+      if (typeof onTimeout === "function") {
+        onTimeout();
+      } else {
+        finishTurn(false, true);
+      }
     }
   }, 1000);
 }
@@ -739,10 +757,18 @@ function setWordCard(card) {
   if (!card) {
     turnWordTitle.textContent = "Keine Karte";
     turnTabooList.innerHTML = "";
+    turnAnswer?.classList.add("hidden");
+    if (turnAnswer) {
+      turnAnswer.textContent = "";
+    }
     return;
   }
   turnWordTitle.textContent = card.term;
   turnTabooList.innerHTML = "";
+  turnAnswer?.classList.add("hidden");
+  if (turnAnswer) {
+    turnAnswer.textContent = "";
+  }
   if (card.category === "Erklären") {
     card.taboo.forEach((taboo) => {
       const li = document.createElement("li");
@@ -750,6 +776,50 @@ function setWordCard(card) {
       turnTabooList.appendChild(li);
     });
   }
+}
+
+function setQuizQuestionCard(card) {
+  if (!card) {
+    turnWordTitle.textContent = "Keine Quizfrage";
+    turnTabooList.innerHTML = "";
+    turnAnswer?.classList.add("hidden");
+    if (turnAnswer) {
+      turnAnswer.textContent = "";
+    }
+    return;
+  }
+  turnWordTitle.textContent = card.term;
+  turnTabooList.innerHTML = "";
+  if (turnAnswer) {
+    turnAnswer.textContent = "";
+    turnAnswer.classList.add("hidden");
+  }
+}
+
+function setQuizAnswerCard(card) {
+  if (!card) {
+    turnWordTitle.textContent = "Antwort";
+    turnTabooList.innerHTML = "";
+    if (turnAnswer) {
+      turnAnswer.textContent = "Antwort fehlt.";
+      turnAnswer.classList.remove("hidden");
+    }
+    return;
+  }
+  turnWordTitle.textContent = card.term;
+  turnTabooList.innerHTML = "";
+  if (turnAnswer) {
+    const answerText = card.answer ? `Antwort: ${card.answer}` : "Antwort fehlt.";
+    turnAnswer.textContent = answerText;
+    turnAnswer.classList.remove("hidden");
+  }
+}
+
+function setTurnButtons({ showCorrect = true, showWrong = true, showSwap = true, showContinue = true } = {}) {
+  turnCorrectButton?.classList.toggle("hidden", !showCorrect);
+  turnWrongButton?.classList.toggle("hidden", !showWrong);
+  turnSwapButton?.classList.toggle("hidden", !showSwap);
+  turnContinueButton?.classList.toggle("hidden", !showContinue);
 }
 
 function setCategory(category) {
@@ -835,6 +905,8 @@ function finishTurn(isCorrect, timedOut = false, { returnToPrevious = false } = 
   hideTurnOverlay();
   state.pendingRoll = null;
   state.pendingCategory = null;
+  state.currentCard = null;
+  state.quizPhase = null;
   statusText.textContent = `${formatTeamLabel(state.currentTeam)} beendet den Zug.`;
   state.currentTeam = (state.currentTeam + 1) % state.teams.length;
   statusText.textContent = `Nächstes: ${formatTeamLabel(state.currentTeam)} würfelt.`;
@@ -910,6 +982,16 @@ function parseCsv(text) {
     const parts = line.split(";").map((part) => part.trim());
     const [category, term, ...taboos] = parts;
     if (!category || !term) return;
+    if (category === "Quizfrage") {
+      const [answer] = taboos;
+      cards.push({
+        category,
+        term,
+        answer: answer || "",
+        taboo: [],
+      });
+      return;
+    }
     cards.push({
       category,
       term,
@@ -1055,9 +1137,21 @@ function showWordCard() {
   turnOverlay.classList.add("expanded");
   state.phase = "word";
   const card = getCardByCategory(state.pendingCategory);
-  setWordCard(card);
+  state.currentCard = card;
   state.timeLimit = state.categoryTimes[state.pendingCategory] ?? 60;
-  startTimer();
+  if (state.pendingCategory === "Quizfrage") {
+    state.quizPhase = "question";
+    setQuizQuestionCard(card);
+    setTurnButtons({ showCorrect: false, showWrong: false, showSwap: true, showContinue: true });
+    startTimer({
+      onTimeout: () => finishTurn(false, true, { returnToPrevious: true }),
+    });
+  } else {
+    state.quizPhase = null;
+    setWordCard(card);
+    setTurnButtons({ showCorrect: true, showWrong: true, showSwap: true, showContinue: true });
+    startTimer();
+  }
 }
 
 function applySwapPenalty() {
@@ -1073,8 +1167,14 @@ function applySwapPenalty() {
 
 function handleSwapCard() {
   if (state.phase !== "word") return;
+  if (state.quizPhase === "answer") return;
   const card = getCardByCategory(state.pendingCategory);
-  setWordCard(card);
+  state.currentCard = card;
+  if (state.pendingCategory === "Quizfrage") {
+    setQuizQuestionCard(card);
+  } else {
+    setWordCard(card);
+  }
   applySwapPenalty();
 }
 
@@ -1142,13 +1242,25 @@ openSettingsButton.addEventListener("click", handleOpenSettings);
 closeSettingsButton.addEventListener("click", handleCloseSettings);
 applySettingsButton.addEventListener("click", applySettingsFromPanel);
 mainMenuButton.addEventListener("click", handleMainMenu);
-turnContinueButton.addEventListener("click", () => finishTurn(false));
+turnContinueButton.addEventListener("click", () => {
+  if (state.phase !== "word") return;
+  if (state.pendingCategory === "Quizfrage" && state.quizPhase === "question") {
+    stopTimer();
+    state.quizPhase = "answer";
+    setQuizAnswerCard(state.currentCard);
+    setTurnButtons({ showCorrect: true, showWrong: true, showSwap: false, showContinue: false });
+    return;
+  }
+  finishTurn(false);
+});
 turnCorrectButton?.addEventListener("click", () => {
   if (state.phase !== "word") return;
+  if (state.pendingCategory === "Quizfrage" && state.quizPhase !== "answer") return;
   finishTurn(true);
 });
 turnWrongButton?.addEventListener("click", () => {
   if (state.phase !== "word") return;
+  if (state.pendingCategory === "Quizfrage" && state.quizPhase !== "answer") return;
   finishTurn(false, false, { returnToPrevious: true });
 });
 turnSwapButton?.addEventListener("click", handleSwapCard);

@@ -551,23 +551,11 @@ function buildBoard(categories = state.categories) {
       const cell = document.createElement("div");
       cell.className = `board-cell path alt-${index % 4}`;
       if (index === 0) {
+        cell.textContent = "Start";
         cell.classList.add("start");
-        const icon = document.createElement("span");
-        icon.className = "cell-icon";
-        icon.textContent = "🚩";
-        const label = document.createElement("span");
-        label.className = "cell-label";
-        label.textContent = "Start";
-        cell.append(icon, label);
       } else if (index === total - 1) {
+        cell.textContent = "Ziel";
         cell.classList.add("goal");
-        const icon = document.createElement("span");
-        icon.className = "cell-icon";
-        icon.textContent = "🏁";
-        const label = document.createElement("span");
-        label.className = "cell-label";
-        label.textContent = "Ziel";
-        cell.append(icon, label);
       } else {
         const number = document.createElement("span");
         number.className = "cell-number";

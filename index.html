@@ -37,7 +37,24 @@
   <div class="app">
 
     <main>
-      <section id="menu" class="panel panel--active" aria-label="Hauptmenü">
+      <section id="intro" class="panel panel--active intro-panel" aria-label="Startseite">
+        <div class="intro-card">
+          <div class="intro-content">
+            <p class="intro-eyebrow">Willkommen bei</p>
+            <h1>Wissivity</h1>
+            <p class="tagline">Scan den QR-Code, um die Website zu öffnen.</p>
+            <div class="intro-qr">
+              <img id="intro-qr" alt="QR-Code zur Wissivity-Website" />
+            </div>
+            <a id="intro-link" class="intro-link" href="https://wissivity.app" target="_blank" rel="noopener">
+              wissivity.app
+            </a>
+            <button id="intro-start" class="primary">Spiel starten</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="menu" class="panel" aria-label="Hauptmenü">
         <div class="panel-grid">
           <div class="card card--teams">
             <h2>Teams</h2>

@@ -808,7 +808,7 @@ body.fullscreen .board {
 }
 
 .card-stack {
-  --card-height: 260px;
+  --card-height: clamp(320px, 55vh, 620px);
   display: flex;
   flex-direction: column;
   gap: 16px;

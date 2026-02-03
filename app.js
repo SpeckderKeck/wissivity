@@ -75,16 +75,16 @@ const CATEGORY_CONFIG = {
 
 const CATEGORY_VISUALS = {
   Erklären: {
-    color: "#ff6b6b",
-    iconColor: "#8d1f1f",
+    color: "#5bc8ac",
+    iconColor: "#2f7c67",
   },
   Zeichnen: {
-    color: "#4cc9f0",
-    iconColor: "#0b567a",
+    color: "#f16d9e",
+    iconColor: "#9a2f5d",
   },
   Pantomime: {
-    color: "#ffd93d",
-    iconColor: "#8a5b00",
+    color: "#e6d72a",
+    iconColor: "#7a6d00",
   },
 };
 

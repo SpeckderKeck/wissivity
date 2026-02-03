@@ -502,15 +502,36 @@ body.fullscreen .board {
   display: grid;
   grid-template-columns: repeat(var(--board-cols, 6), 1fr);
   grid-template-rows: repeat(var(--board-rows, 6), 1fr);
-  --board-gap: clamp(4px, 1.2vw, 12px);
+  --board-gap: clamp(4px, 1.2vmin, 12px);
+  --board-max-width: min(100%, calc(100vw - 32px));
+  --board-max-height: calc(100vh - var(--header-height) - 220px);
+  --board-cell-from-width: calc(
+    (var(--board-max-width) - (var(--board-gap) * (var(--board-cols, 6) + 1))) /
+      var(--board-cols, 6)
+  );
+  --board-cell-from-height: calc(
+    (var(--board-max-height) - (var(--board-gap) * (var(--board-rows, 6) + 1))) /
+      var(--board-rows, 6)
+  );
+  --board-cell: clamp(
+    28px,
+    min(var(--board-cell-from-width), var(--board-cell-from-height)),
+    140px
+  );
   gap: var(--board-gap);
   background: var(--board);
   border-radius: 24px;
   padding: var(--board-gap);
-  aspect-ratio: calc(var(--board-cols, 6) / var(--board-rows, 6));
-  width: min(100%, calc(100vh - var(--header-height) - 220px));
-  max-width: calc(100vh - var(--header-height) - 220px);
-  max-height: calc(100vh - var(--header-height) - 220px);
+  grid-template-columns: repeat(var(--board-cols, 6), var(--board-cell));
+  grid-template-rows: repeat(var(--board-rows, 6), var(--board-cell));
+  width: calc(
+    (var(--board-cell) * var(--board-cols, 6)) +
+      (var(--board-gap) * (var(--board-cols, 6) + 1))
+  );
+  height: calc(
+    (var(--board-cell) * var(--board-rows, 6)) +
+      (var(--board-gap) * (var(--board-rows, 6) + 1))
+  );
   margin: 0 auto;
 }
 
@@ -1359,10 +1380,6 @@ button:disabled {
 }
 
 @media (max-width: 900px) {
-  .board {
-    min-height: 420px;
-  }
-
   .game-bottom {
     grid-template-columns: 1fr;
     justify-items: stretch;

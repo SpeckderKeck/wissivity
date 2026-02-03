@@ -51,20 +51,17 @@ const mainMenuButton = document.getElementById("main-menu");
 const boardSizeInputs = document.querySelectorAll('input[name="board-size"]');
 const teamStatusList = document.getElementById("team-status-list");
 
-let diceOverlayTimeout = null;
-
 function showDiceOverlay(roll) {
   if (!diceOverlay || !diceOverlayValue) return;
   diceOverlayValue.textContent = roll;
   diceOverlay.classList.remove("active");
   void diceOverlay.offsetWidth;
   diceOverlay.classList.add("active");
-  if (diceOverlayTimeout) {
-    window.clearTimeout(diceOverlayTimeout);
-  }
-  diceOverlayTimeout = window.setTimeout(() => {
-    diceOverlay.classList.remove("active");
-  }, 900);
+}
+
+function hideDiceOverlay() {
+  if (!diceOverlay) return;
+  diceOverlay.classList.remove("active");
 }
 
 const CATEGORY_CONFIG = {
@@ -767,7 +764,6 @@ function handleRoll() {
   const roll = Math.floor(Math.random() * 6) + 1;
   state.pendingRoll = roll;
   showDiceOverlay(roll);
-  showOverlay("🎲");
   statusText.textContent = `${formatTeamLabel(state.currentTeam)} würfelt ${roll}.`;
   const previousPositions = [...state.positions];
   state.history.push({
@@ -778,6 +774,7 @@ function handleRoll() {
   setTimeout(() => {
     moveToken(roll).then(() => {
       if (state.positions[state.currentTeam] >= state.boardDimensions.total - 1) {
+        hideDiceOverlay();
         showWinner(formatTeamLabel(state.currentTeam));
         return;
       }
@@ -786,6 +783,7 @@ function handleRoll() {
         const category = state.boardCategories[landingIndex] ?? state.categories[0];
         state.pendingCategory = category;
         setCategory(category);
+        hideDiceOverlay();
         showTurnOverlay();
       }, 2000);
     });

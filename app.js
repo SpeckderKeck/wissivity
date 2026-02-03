@@ -69,7 +69,7 @@ const CATEGORY_CONFIG = {
   Erklären: { id: "explain", iconPath: "assets/icons/explain.svg", fallbackIcon: "💬" },
   Zeichnen: { id: "draw", iconPath: "assets/icons/draw.svg", fallbackIcon: "✏️" },
   Pantomime: { id: "pantomime", iconPath: "assets/icons/pantomime.svg", fallbackIcon: "🎭" },
-  Quizfrage: { id: "quiz", iconPath: "", fallbackIcon: "❓" },
+  Quizfrage: { id: "quiz", iconPath: "assets/icons/quiz.svg", fallbackIcon: "❓" },
 };
 
 const CATEGORY_VISUALS = {
@@ -86,8 +86,8 @@ const CATEGORY_VISUALS = {
     iconColor: "#7a6d00",
   },
   Quizfrage: {
-    color: "#a78bfa",
-    iconColor: "#6d28d9",
+    color: "#38bdf8",
+    iconColor: "#0ea5e9",
   },
 };
 

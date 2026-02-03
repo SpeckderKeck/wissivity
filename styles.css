@@ -502,35 +502,44 @@ body.fullscreen .board {
   display: grid;
   grid-template-columns: repeat(var(--board-cols, 6), 1fr);
   grid-template-rows: repeat(var(--board-rows, 6), 1fr);
-  --board-gap: clamp(2px, 0.9vmin, 10px);
+  --board-gap-ratio: 0.3334;
+  --board-padding-ratio: 0.5;
   --board-max-width: min(100%, calc(100vw - 16px));
   --board-max-height: calc(100vh - var(--header-height) - 190px);
   --board-cell-from-width: calc(
-    (var(--board-max-width) - (var(--board-gap) * (var(--board-cols, 6) + 1))) /
-      var(--board-cols, 6)
+    var(--board-max-width) /
+      (var(--board-cols, 6) +
+        ((var(--board-cols, 6) - 1) * var(--board-gap-ratio)) +
+        (2 * var(--board-padding-ratio)))
   );
   --board-cell-from-height: calc(
-    (var(--board-max-height) - (var(--board-gap) * (var(--board-rows, 6) + 1))) /
-      var(--board-rows, 6)
+    var(--board-max-height) /
+      (var(--board-rows, 6) +
+        ((var(--board-rows, 6) - 1) * var(--board-gap-ratio)) +
+        (2 * var(--board-padding-ratio)))
   );
   --board-cell: clamp(
     28px,
     min(var(--board-cell-from-width), var(--board-cell-from-height)),
     140px
   );
+  --board-gap: calc(var(--board-cell) * var(--board-gap-ratio));
+  --board-padding: calc(var(--board-cell) * var(--board-padding-ratio));
   gap: var(--board-gap);
   background: var(--board);
   border-radius: 24px;
-  padding: var(--board-gap);
+  padding: var(--board-padding);
   grid-template-columns: repeat(var(--board-cols, 6), var(--board-cell));
   grid-template-rows: repeat(var(--board-rows, 6), var(--board-cell));
   width: calc(
     (var(--board-cell) * var(--board-cols, 6)) +
-      (var(--board-gap) * (var(--board-cols, 6) + 1))
+      (var(--board-gap) * (var(--board-cols, 6) - 1)) +
+      (var(--board-padding) * 2)
   );
   height: calc(
     (var(--board-cell) * var(--board-rows, 6)) +
-      (var(--board-gap) * (var(--board-rows, 6) + 1))
+      (var(--board-gap) * (var(--board-rows, 6) - 1)) +
+      (var(--board-padding) * 2)
   );
   margin: 0 auto;
 }
@@ -1195,6 +1204,10 @@ button:disabled {
 #turn-word-title {
   font-size: clamp(2.4rem, 6vw, 4.8rem);
   margin: 0;
+}
+
+.turn-word.is-quiz-question #turn-word-title {
+  color: #47b8d8;
 }
 
 #turn-taboo-list {

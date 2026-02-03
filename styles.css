@@ -526,7 +526,7 @@ body.fullscreen .board {
   position: relative;
   z-index: 1;
   aspect-ratio: 1 / 1;
-  background: #cdcdcd;
+  background: var(--pastel-4);
 }
 
 .board-cell.has-category {
@@ -549,7 +549,7 @@ body.fullscreen .board {
   position: absolute;
   inset: 8px;
   border-radius: 10px;
-  background: #cdcdcd;
+  background: var(--card-color, var(--card));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -581,27 +581,27 @@ body.fullscreen .board {
 }
 
 .board-cell.path {
-  background: #cdcdcd;
+  background: var(--pastel-4);
 }
 
 .board-cell.path.alt-1 {
-  background: #cdcdcd;
+  background: var(--pastel-1);
 }
 
 .board-cell.path.alt-2 {
-  background: #cdcdcd;
+  background: var(--pastel-2);
 }
 
 .board-cell.path.alt-3 {
-  background: #cdcdcd;
+  background: var(--pastel-3);
 }
 
 .board-cell.start {
-  background: #cdcdcd;
+  background: var(--pastel-1);
 }
 
 .board-cell.goal {
-  background: #cdcdcd;
+  background: var(--pastel-3);
 }
 
 .board-cell::after {

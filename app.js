@@ -59,16 +59,16 @@ const CATEGORY_CONFIG = {
 
 const CATEGORY_VISUALS = {
   Erklären: {
-    color: "#f7b6b6",
-    iconColor: "#b45454",
+    color: "#ff6b6b",
+    iconColor: "#8d1f1f",
   },
   Zeichnen: {
-    color: "#bfe3ff",
-    iconColor: "#3b7fb8",
+    color: "#4cc9f0",
+    iconColor: "#0b567a",
   },
   Pantomime: {
-    color: "#f7c4de",
-    iconColor: "#b4557c",
+    color: "#ffd93d",
+    iconColor: "#8a5b00",
   },
 };
 
@@ -452,6 +452,7 @@ function buildBoard(categories = state.categories) {
   const { rows, cols, total } = state.boardDimensions;
   board.style.setProperty("--board-cols", cols);
   board.style.setProperty("--board-rows", rows);
+  const pathPositions = Array.from({ length: total });
   const assignments = [];
   for (let index = 0; index < total; index += 1) {
     if (index === 0 || index === total - 1) {
@@ -468,6 +469,7 @@ function buildBoard(categories = state.categories) {
     for (let col = 0; col < cols; col += 1) {
       const index = row % 2 === 0 ? row * cols + col : row * cols + (cols - 1 - col);
       rowIndices.push(index);
+      pathPositions[index] = { row, col };
     }
     rowIndices.forEach((index) => {
       const cell = document.createElement("div");
@@ -501,6 +503,25 @@ function buildBoard(categories = state.categories) {
         }
       }
       cell.dataset.index = index;
+      const connector = document.createElement("div");
+      connector.className = "path-connector";
+      const current = pathPositions[index];
+      const neighbors = [];
+      if (index > 0) neighbors.push(pathPositions[index - 1]);
+      if (index < total - 1) neighbors.push(pathPositions[index + 1]);
+      neighbors.forEach((neighbor) => {
+        if (!neighbor || !current) return;
+        const rowDiff = neighbor.row - current.row;
+        const colDiff = neighbor.col - current.col;
+        const segment = document.createElement("span");
+        segment.className = "path-connector-segment";
+        if (rowDiff === -1) segment.classList.add("up");
+        if (rowDiff === 1) segment.classList.add("down");
+        if (colDiff === -1) segment.classList.add("left");
+        if (colDiff === 1) segment.classList.add("right");
+        connector.appendChild(segment);
+      });
+      cell.appendChild(connector);
       board.appendChild(cell);
       cells[index] = cell;
     });

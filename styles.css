@@ -78,6 +78,14 @@ body {
   padding: 24px 16px 40px;
 }
 
+body.game-active {
+  overflow: hidden;
+}
+
+body.game-active .app {
+  padding: 16px 16px 24px;
+}
+
 .global-header {
   position: fixed;
   top: 0;
@@ -189,6 +197,13 @@ body.fullscreen .board {
 
 .panel--active {
   display: block;
+}
+
+#game.panel--active {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: calc(100vh - var(--header-height) - 32px);
 }
 
 .panel-grid {
@@ -478,6 +493,8 @@ body.fullscreen .board {
   display: grid;
   grid-template-columns: 1fr;
   gap: 24px;
+  flex: 1;
+  place-items: center;
 }
 
 .board {
@@ -485,12 +502,16 @@ body.fullscreen .board {
   display: grid;
   grid-template-columns: repeat(var(--board-cols, 6), 1fr);
   grid-template-rows: repeat(var(--board-rows, 6), 1fr);
-  --board-gap: 12px;
+  --board-gap: clamp(4px, 1.2vw, 12px);
   gap: var(--board-gap);
   background: var(--board);
   border-radius: 24px;
-  padding: 12px;
+  padding: var(--board-gap);
   aspect-ratio: calc(var(--board-cols, 6) / var(--board-rows, 6));
+  width: min(100%, calc(100vh - var(--header-height) - 220px));
+  max-width: calc(100vh - var(--header-height) - 220px);
+  max-height: calc(100vh - var(--header-height) - 220px);
+  margin: 0 auto;
 }
 
 .board-cell {

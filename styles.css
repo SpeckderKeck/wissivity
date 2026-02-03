@@ -620,6 +620,12 @@ body.fullscreen .board {
 
 .path-connector-segment {
   position: absolute;
+}
+
+.path-connector-segment::before,
+.path-connector-segment::after {
+  content: "";
+  position: absolute;
   background: rgba(16, 24, 40, 0.2);
   border-radius: 999px;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
@@ -627,9 +633,18 @@ body.fullscreen .board {
 
 .path-connector-segment.up,
 .path-connector-segment.down {
-  width: 6px;
+  width: 16px;
   height: 50%;
-  left: calc(50% - 3px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.path-connector-segment.up::before,
+.path-connector-segment.up::after,
+.path-connector-segment.down::before,
+.path-connector-segment.down::after {
+  width: 3px;
+  height: 100%;
 }
 
 .path-connector-segment.up {
@@ -640,11 +655,22 @@ body.fullscreen .board {
   bottom: 0;
 }
 
+.path-connector-segment.up::before,
+.path-connector-segment.down::before {
+  left: 0;
+}
+
+.path-connector-segment.up::after,
+.path-connector-segment.down::after {
+  right: 0;
+}
+
 .path-connector-segment.left,
 .path-connector-segment.right {
   width: 50%;
-  height: 6px;
-  top: calc(50% - 3px);
+  height: 16px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .path-connector-segment.left {
@@ -653,6 +679,24 @@ body.fullscreen .board {
 
 .path-connector-segment.right {
   right: 0;
+}
+
+.path-connector-segment.left::before,
+.path-connector-segment.left::after,
+.path-connector-segment.right::before,
+.path-connector-segment.right::after {
+  height: 3px;
+  width: 100%;
+}
+
+.path-connector-segment.left::before,
+.path-connector-segment.right::before {
+  top: 0;
+}
+
+.path-connector-segment.left::after,
+.path-connector-segment.right::after {
+  bottom: 0;
 }
 
 .token {

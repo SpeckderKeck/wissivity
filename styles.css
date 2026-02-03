@@ -486,7 +486,7 @@ body.fullscreen .board {
   background: var(--board);
   border-radius: 24px;
   padding: 12px;
-  min-height: 520px;
+  aspect-ratio: calc(var(--board-cols, 6) / var(--board-rows, 6));
 }
 
 .board-cell {
@@ -496,10 +496,12 @@ body.fullscreen .board {
   font-size: 1.2rem;
   color: var(--text);
   font-weight: 600;
-  border-radius: 12px;
-  border: 1px solid var(--border);
+  border-radius: 18px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
   position: relative;
   z-index: 1;
+  aspect-ratio: 1 / 1;
+  background: #cdcdcd;
 }
 
 .board-cell.has-category {
@@ -515,13 +517,14 @@ body.fullscreen .board {
   font-weight: 700;
   letter-spacing: 0.02em;
   z-index: 3;
+  color: rgba(24, 24, 24, 0.7);
 }
 
 .category-card {
   position: absolute;
   inset: 8px;
   border-radius: 10px;
-  background: var(--card-color, #ffffff);
+  background: #cdcdcd;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -537,7 +540,7 @@ body.fullscreen .board {
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.9);
   border-radius: 12px;
   padding: 6px;
   box-sizing: border-box;
@@ -553,29 +556,27 @@ body.fullscreen .board {
 }
 
 .board-cell.path {
-  background: rgba(255, 255, 255, 0.12);
+  background: #cdcdcd;
 }
 
 .board-cell.path.alt-1 {
-  background: rgba(255, 216, 89, 0.45);
+  background: #cdcdcd;
 }
 
 .board-cell.path.alt-2 {
-  background: rgba(106, 216, 255, 0.45);
+  background: #cdcdcd;
 }
 
 .board-cell.path.alt-3 {
-  background: rgba(255, 105, 180, 0.38);
+  background: #cdcdcd;
 }
 
 .board-cell.start {
-  background: rgba(78, 255, 142, 0.45);
-  border-color: rgba(78, 255, 142, 0.75);
+  background: #cdcdcd;
 }
 
 .board-cell.goal {
-  background: rgba(255, 130, 64, 0.5);
-  border-color: rgba(255, 130, 64, 0.8);
+  background: #cdcdcd;
 }
 
 .board-cell::after {
@@ -583,7 +584,7 @@ body.fullscreen .board {
   position: absolute;
   inset: 6px;
   border-radius: 10px;
-  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border: 1px dashed rgba(24, 24, 24, 0.18);
   pointer-events: none;
 }
 
@@ -591,19 +592,39 @@ body.fullscreen .board {
   position: absolute;
   inset: calc(var(--board-gap) / -2);
   pointer-events: none;
-  z-index: 0;
+  z-index: 2;
 }
 
 .path-connector-segment {
   position: absolute;
-  background: rgba(16, 24, 40, 0.2);
+  background: rgba(24, 24, 24, 0.45);
   border-radius: 999px;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.board-cell.start,
+.board-cell.goal {
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cell-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+  z-index: 2;
+}
+
+.cell-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(24, 24, 24, 0.75);
+  z-index: 2;
 }
 
 .path-connector-segment.up,
 .path-connector-segment.down {
-  width: 4px;
+  width: 6px;
   height: calc(50% + var(--board-gap) / 2);
   left: 50%;
   transform: translateX(-50%);
@@ -620,7 +641,7 @@ body.fullscreen .board {
 .path-connector-segment.left,
 .path-connector-segment.right {
   width: calc(50% + var(--board-gap) / 2);
-  height: 4px;
+  height: 6px;
   top: 50%;
   transform: translateY(-50%);
 }

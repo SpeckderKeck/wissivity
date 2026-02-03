@@ -111,44 +111,46 @@
             </label>
           </div>
 
-          <div class="card">
-            <div class="card-row">
-              <h2>Kartensatz</h2>
-              <button class="info-button" id="csv-info" aria-label="CSV Info">i</button>
+          <div class="card-stack">
+            <div class="card">
+              <div class="card-row">
+                <h2>Kartensatz</h2>
+                <button class="info-button" id="csv-info" aria-label="CSV Info">i</button>
+              </div>
+              <label class="field">
+                Kartensatz auswählen
+                <select id="dataset-select">
+                  <option value="allgemein">Allgemeinwissen</option>
+                  <option value="kfz">KFZ</option>
+                  <option value="geographie">Geographie</option>
+                </select>
+              </label>
+              <label class="field upload">
+                CSV Upload
+                <input id="csv-upload" type="file" accept=".csv" />
+              </label>
+              <p class="hint" id="csv-status">Standarddatensatz aktiv.</p>
+              <div class="tooltip" id="csv-tooltip" role="dialog" aria-hidden="true">
+                <h3>CSV-Format</h3>
+                <ul>
+                  <li>Spalten: Kategorie;Begriff/Frage;Tabu1/Antwort;Tabu2;Tabu3…</li>
+                  <li>Kategorien: Erklären, Zeichnen, Pantomime, Quizfrage</li>
+                  <li>Quizfrage: Frage + Antwort in Spalte 2/3</li>
+                  <li>Excel: als CSV (UTF-8, Semikolon) exportieren</li>
+                </ul>
+              </div>
             </div>
-            <label class="field">
-              Kartensatz auswählen
-              <select id="dataset-select">
-                <option value="allgemein">Allgemeinwissen</option>
-                <option value="kfz">KFZ</option>
-                <option value="geographie">Geographie</option>
-              </select>
-            </label>
-            <label class="field upload">
-              CSV Upload
-              <input id="csv-upload" type="file" accept=".csv" />
-            </label>
-            <p class="hint" id="csv-status">Standarddatensatz aktiv.</p>
-            <div class="tooltip" id="csv-tooltip" role="dialog" aria-hidden="true">
-              <h3>CSV-Format</h3>
-              <ul>
-                <li>Spalten: Kategorie;Begriff/Frage;Tabu1/Antwort;Tabu2;Tabu3…</li>
-                <li>Kategorien: Erklären, Zeichnen, Pantomime, Quizfrage</li>
-                <li>Quizfrage: Frage + Antwort in Spalte 2/3</li>
-                <li>Excel: als CSV (UTF-8, Semikolon) exportieren</li>
-              </ul>
+            <div class="card">
+              <h2>Spiellänge</h2>
+              <label class="field">
+                Spiellänge
+                <select id="board-size-select">
+                  <option value="short">Kurzes Spiel · 24 Felder (6 × 4)</option>
+                  <option value="normal" selected>Normales Spiel · 30 Felder (6 × 5)</option>
+                  <option value="long">Langes Spiel · 42 Felder (7 × 6)</option>
+                </select>
+              </label>
             </div>
-          </div>
-          <div class="card">
-            <h2>Spiellänge</h2>
-            <label class="field">
-              Spiellänge
-              <select id="board-size-select">
-                <option value="short">Kurzes Spiel · 24 Felder (6 × 4)</option>
-                <option value="normal" selected>Normales Spiel · 30 Felder (6 × 5)</option>
-                <option value="long">Langes Spiel · 42 Felder (7 × 6)</option>
-              </select>
-            </label>
           </div>
         </div>
         <button id="start-game" class="primary">Spiel starten</button>

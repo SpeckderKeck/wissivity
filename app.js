@@ -754,6 +754,7 @@ function getCardByCategory(category) {
 }
 
 function setWordCard(card) {
+  turnWord?.classList.remove("is-quiz-question");
   if (!card) {
     turnWordTitle.textContent = "Keine Karte";
     turnTabooList.innerHTML = "";
@@ -780,6 +781,7 @@ function setWordCard(card) {
 
 function setQuizQuestionCard(card) {
   if (!card) {
+    turnWord?.classList.remove("is-quiz-question");
     turnWordTitle.textContent = "Keine Quizfrage";
     turnTabooList.innerHTML = "";
     turnAnswer?.classList.add("hidden");
@@ -788,6 +790,7 @@ function setQuizQuestionCard(card) {
     }
     return;
   }
+  turnWord?.classList.add("is-quiz-question");
   turnWordTitle.textContent = card.term;
   turnTabooList.innerHTML = "";
   if (turnAnswer) {
@@ -797,6 +800,7 @@ function setQuizQuestionCard(card) {
 }
 
 function setQuizAnswerCard(card) {
+  turnWord?.classList.remove("is-quiz-question");
   if (!card) {
     turnWordTitle.textContent = "Antwort";
     turnTabooList.innerHTML = "";

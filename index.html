@@ -135,17 +135,22 @@
       <section id="game" class="panel" aria-label="Spielfeld">
         <div class="game-top">
           <div class="board" id="board" aria-hidden="true"></div>
+          <div id="dice-overlay" class="dice-overlay" aria-hidden="true">
+            <div class="dice-overlay-die">
+              <span class="dice-overlay-icon" aria-hidden="true">🎲</span>
+              <span id="dice-overlay-value" class="dice-overlay-value">1</span>
+            </div>
+          </div>
         </div>
         <div class="game-bottom">
           <div class="game-controls game-controls-left">
             <button id="roll" class="dice" aria-label="Würfeln">🎲</button>
-            <div id="dice-result" class="dice-result" aria-hidden="true">–</div>
-            <button id="undo" class="ghost">↩️ Zug zurück</button>
+            <button id="undo" class="ghost toolbar-button" aria-label="Zug zurück">↩️</button>
           </div>
           <div id="status" class="status">Würfeln, um zu starten.</div>
           <div class="game-controls game-controls-right">
-            <button id="open-settings" class="ghost">Spieleinstellungen</button>
-            <button id="main-menu" class="ghost">Hauptmenü</button>
+            <button id="open-settings" class="ghost toolbar-button" aria-label="Spieleinstellungen">⚙️</button>
+            <button id="main-menu" class="ghost toolbar-button" aria-label="Hauptmenü">🏠</button>
           </div>
         </div>
         <div id="settings-panel" class="settings-panel hidden" role="dialog" aria-modal="true" aria-label="Spieleinstellungen">

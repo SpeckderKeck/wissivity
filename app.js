@@ -8,7 +8,8 @@ const menuPanel = document.getElementById("menu");
 const gamePanel = document.getElementById("game");
 const board = document.getElementById("board");
 const rollButton = document.getElementById("roll");
-const diceResult = document.getElementById("dice-result");
+const diceOverlay = document.getElementById("dice-overlay");
+const diceOverlayValue = document.getElementById("dice-overlay-value");
 const statusText = document.getElementById("status");
 const undoButton = document.getElementById("undo");
 const overlay = document.getElementById("overlay");
@@ -50,6 +51,22 @@ const mainMenuButton = document.getElementById("main-menu");
 const boardSizeInputs = document.querySelectorAll('input[name="board-size"]');
 const boardSizeGameInputs = document.querySelectorAll('input[name="board-size-game"]');
 const teamStatusList = document.getElementById("team-status-list");
+
+let diceOverlayTimeout = null;
+
+function showDiceOverlay(roll) {
+  if (!diceOverlay || !diceOverlayValue) return;
+  diceOverlayValue.textContent = roll;
+  diceOverlay.classList.remove("active");
+  void diceOverlay.offsetWidth;
+  diceOverlay.classList.add("active");
+  if (diceOverlayTimeout) {
+    window.clearTimeout(diceOverlayTimeout);
+  }
+  diceOverlayTimeout = window.setTimeout(() => {
+    diceOverlay.classList.remove("active");
+  }, 900);
+}
 
 const CATEGORY_CONFIG = {
   Erklären: { id: "explain", iconPath: "assets/icons/explain.svg", fallbackIcon: "💬" },
@@ -676,7 +693,7 @@ function handleRoll() {
   }
   const roll = Math.floor(Math.random() * 6) + 1;
   state.pendingRoll = roll;
-  diceResult.textContent = roll;
+  showDiceOverlay(roll);
   showOverlay("🎲");
   statusText.textContent = `${formatTeamLabel(state.currentTeam)} würfelt ${roll}.`;
   const previousPositions = [...state.positions];

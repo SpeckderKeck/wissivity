@@ -198,6 +198,7 @@ const state = {
   pendingCategory: null,
   timer: null,
   countdownTimer: null,
+  turnStartPositions: null,
   remainingTime: 0,
   timeLimit: 60,
   categoryTimes: {
@@ -586,9 +587,8 @@ function renderTeamStatus() {
 }
 
 function positionTokens() {
-  const cells = [...board.querySelectorAll(".board-cell")];
   state.positions.forEach((pos, index) => {
-    const cell = cells[pos];
+    const cell = board.querySelector(`.board-cell[data-index="${pos}"]`);
     if (!cell) return;
     const rect = cell.getBoundingClientRect();
     const boardRect = board.getBoundingClientRect();
@@ -684,6 +684,7 @@ function handleRoll() {
     positions: previousPositions,
     team: state.currentTeam,
   });
+  state.turnStartPositions = previousPositions;
   setTimeout(() => {
     moveToken(roll).then(() => {
       if (state.positions[state.currentTeam] >= state.boardDimensions.total - 1) {
@@ -732,13 +733,15 @@ function computeMultiplier() {
   return 0.5;
 }
 
-function finishTurn(isCorrect, timedOut = false, { returnToStart = false } = {}) {
+function finishTurn(isCorrect, timedOut = false, { returnToPrevious = false } = {}) {
   if (state.pendingRoll === null) return;
   stopTimer();
   const teamIndex = state.currentTeam;
-  if (returnToStart) {
-    state.pendingReturn = { teamIndex };
+  if (returnToPrevious) {
+    const targetPosition = state.turnStartPositions?.[teamIndex] ?? state.positions[teamIndex];
+    state.pendingReturn = { teamIndex, targetPosition };
   }
+  state.turnStartPositions = null;
   const animationText = timedOut ? "⏱️ Timeout" : isCorrect ? "✅" : "⏭️ Weiter";
   showOverlay(animationText, 900);
   hideTurnOverlay();
@@ -748,11 +751,12 @@ function finishTurn(isCorrect, timedOut = false, { returnToStart = false } = {})
   state.currentTeam = (state.currentTeam + 1) % state.teams.length;
   statusText.textContent = `Nächstes: ${formatTeamLabel(state.currentTeam)} würfelt.`;
   renderTeamStatus();
-  if (returnToStart) {
+  if (returnToPrevious) {
     setTimeout(() => {
       if (state.pendingReturn?.teamIndex !== teamIndex) return;
-      const stepsBack = state.positions[teamIndex];
+      const targetPosition = state.pendingReturn.targetPosition ?? state.positions[teamIndex];
       state.pendingReturn = null;
+      const stepsBack = state.positions[teamIndex] - targetPosition;
       if (stepsBack > 0) {
         moveToken(-stepsBack, teamIndex);
       }
@@ -1051,7 +1055,7 @@ turnCorrectButton?.addEventListener("click", () => {
 });
 turnWrongButton?.addEventListener("click", () => {
   if (state.phase !== "word") return;
-  finishTurn(false, false, { returnToStart: true });
+  finishTurn(false, false, { returnToPrevious: true });
 });
 turnSwapButton?.addEventListener("click", handleSwapCard);
 turnReadyButton.addEventListener("click", () => {

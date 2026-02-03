@@ -245,8 +245,29 @@ const TEAM_COLORS = [
   { label: "Limette", value: "#84cc16" },
   { label: "Beere", value: "#f43f5e" },
   { label: "Schiefer", value: "#64748b" },
+  { label: "Indigo", value: "#6366f1" },
+  { label: "Bernstein", value: "#f59e0b" },
+  { label: "Koralle", value: "#fb7185" },
+  { label: "Moos", value: "#22c55e" },
 ];
-const TEAM_ICONS = ["🐯", "🐼", "🦊", "🐸", "🐙", "🦁", "🐧", "🐨", "🐶", "🐱", "🦉", "🦄"];
+const TEAM_ICONS = [
+  "🐯",
+  "🐼",
+  "🦊",
+  "🐸",
+  "🐙",
+  "🦁",
+  "🐧",
+  "🐨",
+  "🐶",
+  "🐱",
+  "🦉",
+  "🦄",
+  "🦋",
+  "🐢",
+  "🐰",
+  "🦓",
+];
 const DEFAULT_TEAM_NAMES = ["Team A", "Team B", "Team C", "Team D"];
 const THEME_STORAGE_KEY = "wissivity-theme";
 const BOARD_CONFIGS = {
@@ -461,6 +482,44 @@ function toggleTeamPicker(picker, toggleButton) {
     picker.classList.add("open");
     if (toggleButton) {
       toggleButton.setAttribute("aria-expanded", "true");
+    }
+  }
+}
+
+function handleTeamListClick(event) {
+  const colorToggle = event.target.closest("[data-team-color-toggle]");
+  if (colorToggle) {
+    const picker = colorToggle.closest(".team-picker");
+    if (picker) {
+      toggleTeamPicker(picker, colorToggle);
+    }
+    return;
+  }
+  const iconToggle = event.target.closest("[data-team-icon-toggle]");
+  if (iconToggle) {
+    const picker = iconToggle.closest(".team-picker");
+    if (picker) {
+      toggleTeamPicker(picker, iconToggle);
+    }
+    return;
+  }
+  const colorOption = event.target.closest("[data-team-color-option]");
+  if (colorOption) {
+    const picker = colorOption.closest(".team-picker");
+    const value = colorOption.dataset.colorValue;
+    if (picker && value) {
+      updatePickerSelection(picker, value, "color");
+      closeAllTeamPickers();
+    }
+    return;
+  }
+  const iconOption = event.target.closest("[data-team-icon-option]");
+  if (iconOption) {
+    const picker = iconOption.closest(".team-picker");
+    const value = iconOption.dataset.iconValue;
+    if (picker && value) {
+      updatePickerSelection(picker, value, "icon");
+      closeAllTeamPickers();
     }
   }
 }
@@ -1037,6 +1096,12 @@ function setup() {
 }
 
 window.addEventListener("resize", positionTokens);
+teamListContainer.addEventListener("click", handleTeamListClick);
+document.addEventListener("click", (event) => {
+  if (!teamListContainer.contains(event.target)) {
+    closeAllTeamPickers();
+  }
+});
 teamCountInput.addEventListener("change", (event) => {
   syncTeamCountControls(event.target.value);
 });

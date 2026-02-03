@@ -393,15 +393,19 @@ body.fullscreen .board {
 }
 
 .picker-button {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--panel);
   color: var(--text);
   display: grid;
   place-items: center;
   font-size: 1.1rem;
+}
+
+.picker-button--icon {
+  font-size: 0.95rem;
 }
 
 .picker-panel {

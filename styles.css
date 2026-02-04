@@ -188,7 +188,7 @@ body.fullscreen .game-top {
 }
 
 body.fullscreen .board {
-  min-height: clamp(480px, 65vh, 760px);
+  min-height: 0;
 }
 
 .panel {
@@ -264,8 +264,8 @@ body.fullscreen .board {
   flex-direction: column;
   gap: 16px;
   min-height: calc(100vh - var(--header-height));
-  --game-bottom-height: 96px;
-  --board-bottom-gap: clamp(48px, 8vh, 160px);
+  --game-bottom-height: clamp(4.5rem, 12vh, 7.5rem);
+  --board-bottom-gap: clamp(1.5rem, 6vh, 6rem);
 }
 
 .panel-grid {
@@ -557,6 +557,7 @@ body.fullscreen .board {
   gap: 24px;
   flex: 1;
   place-items: center;
+  overflow: hidden;
 }
 
 .board {
@@ -566,13 +567,13 @@ body.fullscreen .board {
   grid-template-rows: repeat(var(--board-rows, 6), 1fr);
   --board-gap-ratio: 0.3334;
   --board-padding-ratio: 0.5;
-  --board-max-width: min(100%, calc(100dvw - 16px));
+  --board-max-width: min(100%, calc(100dvw - 4vmin));
   --board-max-height: calc(
     100dvh -
       var(--header-height) -
       var(--game-bottom-height) -
       var(--board-bottom-gap) -
-      32px
+      4vmin
   );
   --board-cell-from-width: calc(
     var(--board-max-width) /
@@ -587,9 +588,9 @@ body.fullscreen .board {
         (2 * var(--board-padding-ratio)))
   );
   --board-cell: clamp(
-    20px,
+    2.4vmin,
     min(var(--board-cell-from-width), var(--board-cell-from-height)),
-    140px
+    12vmin
   );
   --board-gap: calc(var(--board-cell) * var(--board-gap-ratio));
   --board-padding: calc(var(--board-cell) * var(--board-padding-ratio));

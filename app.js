@@ -55,7 +55,13 @@ const boardSizeInputs = document.querySelectorAll('input[name="board-size"]');
 const teamStatusList = document.getElementById("team-status-list");
 const introStartButton = document.getElementById("intro-start");
 const introQr = document.getElementById("intro-qr");
-const introLink = document.getElementById("intro-link");
+const menuSettingsCard = document.getElementById("menu-settings-card");
+const qrModalToggle = document.getElementById("qr-modal-toggle");
+const qrModal = document.getElementById("qr-modal");
+const qrModalClose = document.getElementById("qr-modal-close");
+const qrModalImage = document.getElementById("qr-modal-image");
+
+const INTRO_QR_URL = "https://speckderkeck.github.io/wissivity/";
 
 function showDiceOverlay(roll) {
   if (!diceOverlay || !diceOverlayValue) return;
@@ -1019,21 +1025,27 @@ function handleMainMenu() {
 function handleIntroStart() {
   setPanelState(introPanel, false);
   setPanelState(menuPanel, true);
+  menuSettingsCard?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const focusTarget = menuSettingsCard?.querySelector("input, select, button");
+  focusTarget?.focus();
 }
 
 function setupIntroPanel() {
-  const fallbackUrl = introLink?.getAttribute("href") ?? "https://wissivity.app";
-  const origin = window.location.origin;
-  const websiteUrl = origin && origin !== "null" ? origin : fallbackUrl;
-  if (introLink) {
-    introLink.href = websiteUrl;
-    introLink.textContent = websiteUrl.replace(/^https?:\/\//, "");
-  }
   if (introQr) {
-    const qrSource = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(websiteUrl)}`;
+    const qrSource = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(INTRO_QR_URL)}`;
     introQr.src = qrSource;
     introQr.loading = "lazy";
   }
+  if (qrModalImage) {
+    qrModalImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(INTRO_QR_URL)}`;
+    qrModalImage.loading = "lazy";
+  }
+}
+
+function setQrModalOpen(isOpen) {
+  if (!qrModal || !qrModalToggle) return;
+  qrModal.classList.toggle("hidden", !isOpen);
+  qrModalToggle.setAttribute("aria-expanded", String(isOpen));
 }
 
 function setOverlayStartFromCell() {
@@ -1219,6 +1231,18 @@ setPanelState(gamePanel, Boolean(gamePanel?.classList.contains("panel--active"))
 
 startButton.addEventListener("click", handleStartGame);
 introStartButton?.addEventListener("click", handleIntroStart);
+qrModalToggle?.addEventListener("click", () => setQrModalOpen(true));
+qrModalClose?.addEventListener("click", () => setQrModalOpen(false));
+qrModal?.addEventListener("click", (event) => {
+  if (event.target === qrModal) {
+    setQrModalOpen(false);
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && qrModal && !qrModal.classList.contains("hidden")) {
+    setQrModalOpen(false);
+  }
+});
 rollButton.addEventListener("click", handleRoll);
 undoButton.addEventListener("click", handleUndo);
 csvUpload.addEventListener("change", handleCsvUpload);

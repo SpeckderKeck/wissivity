@@ -8,6 +8,7 @@ const menuPanel = document.getElementById("menu");
 const introPanel = document.getElementById("intro");
 const gamePanel = document.getElementById("game");
 const board = document.getElementById("board");
+const boardWrap = document.querySelector(".board-wrap");
 const rollButton = document.getElementById("roll");
 const diceOverlay = document.getElementById("dice-overlay");
 const diceOverlayValue = document.getElementById("dice-overlay-value");
@@ -480,6 +481,8 @@ function buildBoard(categories = state.categories) {
   const { rows, cols, total } = state.boardDimensions;
   board.style.setProperty("--board-cols", cols);
   board.style.setProperty("--board-rows", rows);
+  boardWrap?.style.setProperty("--board-cols", cols);
+  boardWrap?.style.setProperty("--board-rows", rows);
   const pathPositions = Array.from({ length: total });
   const assignments = [];
   for (let index = 0; index < total; index += 1) {

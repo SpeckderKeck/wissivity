@@ -70,6 +70,13 @@ function hideDiceOverlay() {
   diceOverlay.classList.remove("active");
 }
 
+function setPanelState(panel, isActive) {
+  if (!panel) return;
+  panel.classList.toggle("panel--active", isActive);
+  panel.toggleAttribute("hidden", !isActive);
+  panel.setAttribute("aria-hidden", String(!isActive));
+}
+
 const CATEGORY_CONFIG = {
   Erklären: { id: "explain", iconPath: "assets/icons/explain.svg", fallbackIcon: "💬" },
   Zeichnen: { id: "draw", iconPath: "assets/icons/draw.svg", fallbackIcon: "✏️" },
@@ -886,8 +893,8 @@ function handleStartGame() {
     return { name, icon, color };
   });
   createTokens(teams);
-  menuPanel.classList.remove("panel--active");
-  gamePanel.classList.add("panel--active");
+  setPanelState(menuPanel, false);
+  setPanelState(gamePanel, true);
   document.body.classList.add("game-active");
   positionTokens();
   state.currentTeam = 0;
@@ -1003,15 +1010,15 @@ function handleCloseSettings() {
 function handleMainMenu() {
   stopTimer();
   hideTurnOverlay();
-  introPanel?.classList.remove("panel--active");
-  menuPanel.classList.add("panel--active");
-  gamePanel.classList.remove("panel--active");
+  setPanelState(introPanel, false);
+  setPanelState(menuPanel, true);
+  setPanelState(gamePanel, false);
   document.body.classList.remove("game-active");
 }
 
 function handleIntroStart() {
-  introPanel?.classList.remove("panel--active");
-  menuPanel.classList.add("panel--active");
+  setPanelState(introPanel, false);
+  setPanelState(menuPanel, true);
 }
 
 function setupIntroPanel() {
@@ -1205,6 +1212,10 @@ boardSizeSelect?.addEventListener("change", () => {
   syncBoardSizeControls(selectedBoardSize);
   applyBoardSize(selectedBoardSize);
 });
+
+setPanelState(introPanel, Boolean(introPanel?.classList.contains("panel--active")));
+setPanelState(menuPanel, Boolean(menuPanel?.classList.contains("panel--active")));
+setPanelState(gamePanel, Boolean(gamePanel?.classList.contains("panel--active")));
 
 startButton.addEventListener("click", handleStartGame);
 introStartButton?.addEventListener("click", handleIntroStart);

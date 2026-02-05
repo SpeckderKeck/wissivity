@@ -125,6 +125,7 @@
                 </label>
               </div>
             </div>
+            <p class="hint hidden" id="category-hint">Bitte aktiviere mindestens eine Kategorie, um das Spiel zu starten.</p>
             <label class="field">
               Strafzeit beim Tauschen
               <select id="swap-select">
@@ -168,13 +169,16 @@
               </div>
             </div>
             <div class="card">
-              <h2>Spiellänge</h2>
+              <h2>Spielfeld</h2>
               <label class="field">
-                Spiellänge
-                <select id="board-size-select">
-                  <option value="short">Kurzes Spiel · 24 Felder (6 × 4)</option>
-                  <option value="normal" selected>Normales Spiel · 30 Felder (6 × 5)</option>
-                  <option value="long">Langes Spiel · 42 Felder (7 × 6)</option>
+                Streckenlänge
+                <select id="track-length-select">
+                  <option value="10">10 Felder</option>
+                  <option value="15" selected>15 Felder</option>
+                  <option value="20">20 Felder</option>
+                  <option value="25">25 Felder</option>
+                  <option value="30">30 Felder</option>
+                  <option value="42">42 Felder</option>
                 </select>
               </label>
             </div>
@@ -185,19 +189,21 @@
 
       <section id="game" class="panel" aria-label="Spielfeld" aria-hidden="true" hidden>
         <div class="game-top">
-          <div class="board" id="board" aria-hidden="true"></div>
-          <div id="dice-overlay" class="dice-overlay" aria-hidden="true">
-            <div class="dice-overlay-die">
-              <span class="dice-overlay-icon" aria-hidden="true">🎲</span>
-              <span id="dice-overlay-value" class="dice-overlay-value">1</span>
+          <div class="current-team" id="current-team-display">Team am Zug</div>
+          <div class="wheel-layout">
+            <div class="wheel-wrap">
+              <div class="wheel-pointer" aria-hidden="true"></div>
+              <div class="wheel" id="wheel"></div>
             </div>
+            <div id="wheel-result" class="wheel-result">Kategorie wird gedreht…</div>
           </div>
+          <div class="board" id="board" aria-hidden="true"></div>
           <div class="game-bottom">
             <div class="game-controls game-controls-left">
-              <button id="roll" class="dice" aria-label="Würfeln">🎲</button>
+              <button id="roll" class="dice" aria-label="Drehen">🎡 Drehen</button>
               <button id="undo" class="ghost toolbar-button" aria-label="Zug zurück">↩️</button>
             </div>
-            <div id="status" class="status">Würfeln, um zu starten.</div>
+            <div id="status" class="status">Drehen, um zu starten.</div>
             <div class="game-controls game-controls-right">
               <button id="open-settings" class="ghost toolbar-button" aria-label="Spieleinstellungen">⚙️</button>
               <button id="main-menu" class="ghost toolbar-button" aria-label="Hauptmenü">🏠</button>
@@ -262,11 +268,14 @@
               </select>
             </label>
             <label class="field">
-              Spiellänge
-              <select id="board-size-select-game">
-                <option value="short">Kurzes Spiel · 24 Felder (6 × 4)</option>
-                <option value="normal" selected>Normales Spiel · 30 Felder (6 × 5)</option>
-                <option value="long">Langes Spiel · 42 Felder (7 × 6)</option>
+              Streckenlänge
+              <select id="track-length-select-game">
+                <option value="10">10 Felder</option>
+                <option value="15" selected>15 Felder</option>
+                <option value="20">20 Felder</option>
+                <option value="25">25 Felder</option>
+                <option value="30">30 Felder</option>
+                <option value="42">42 Felder</option>
               </select>
             </label>
             <button id="apply-settings" class="primary">Einstellungen speichern</button>

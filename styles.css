@@ -83,11 +83,6 @@ body.game-active {
   overflow: hidden;
 }
 
-body.game-active main {
-  height: calc(100dvh - var(--header-height));
-  overflow: hidden;
-}
-
 body.game-active .app {
   padding: 8px 8px 16px;
 }
@@ -277,8 +272,7 @@ body.fullscreen .board {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  min-height: 0;
-  height: 100%;
+  min-height: calc(100vh - var(--header-height));
   --game-bottom-height: clamp(4.5rem, 12vh, 7.5rem);
   --board-bottom-gap: clamp(1.5rem, 6vh, 6rem);
 }
@@ -572,7 +566,7 @@ body.fullscreen .board {
   flex: 1;
   place-items: center;
   overflow: visible;
-  min-height: 0;
+  padding-bottom: calc(var(--game-bottom-height) + 16px);
 }
 
 body.fullscreen #game.panel--active {
@@ -580,7 +574,16 @@ body.fullscreen #game.panel--active {
 }
 
 body.fullscreen .game-top {
-  min-height: 0;
+  padding-bottom: calc(var(--game-bottom-height) + 8px);
+}
+
+body.fullscreen.game-active .game-bottom {
+  position: fixed;
+  left: 50%;
+  bottom: max(8px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(100dvw - 16px, calc(var(--board-max-width) + 2rem));
+  z-index: 45;
 }
 
 body.card-view-active {
@@ -592,10 +595,6 @@ body.card-view-active .global-header {
 }
 
 body.card-view-active .game-bottom {
-  display: none;
-}
-
-body.fullscreen.card-view-active .game-bottom {
   display: none;
 }
 
@@ -1116,9 +1115,12 @@ button:disabled {
 }
 
 .game-bottom {
-  position: relative;
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
   z-index: 6;
-  width: 100%;
+  width: min(100%, calc(var(--board-max-width) + 2rem));
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;

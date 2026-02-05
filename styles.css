@@ -594,6 +594,14 @@ body.card-view-active .global-header {
   display: none;
 }
 
+body.card-view-active .game-bottom {
+  display: none;
+}
+
+body.card-view-active .game-top {
+  padding-bottom: 0;
+}
+
 .board {
   position: relative;
   display: grid;

@@ -1072,6 +1072,7 @@ function setOverlayCategorySize() {
 
 function showTurnOverlay() {
   state.phase = "ready";
+  document.body.classList.remove("card-view-active");
   setOverlayStartFromCell();
   setOverlayCategorySize();
   turnCategory.classList.remove("hidden");
@@ -1087,6 +1088,7 @@ function showTurnOverlay() {
 }
 
 function hideTurnOverlay() {
+  document.body.classList.remove("card-view-active");
   turnOverlay.classList.remove("expanded");
   turnOverlay.classList.remove("category");
   turnOverlay.classList.remove("active");
@@ -1117,6 +1119,7 @@ function startCountdown() {
 }
 
 function showWordCard() {
+  document.body.classList.add("card-view-active");
   turnCategory.classList.add("hidden");
   turnWord.classList.remove("hidden");
   turnOverlay.classList.remove("category");

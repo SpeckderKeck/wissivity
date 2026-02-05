@@ -577,6 +577,23 @@ body.fullscreen .game-top {
   padding-bottom: calc(var(--game-bottom-height) + 8px);
 }
 
+body.fullscreen.game-active .game-bottom {
+  position: fixed;
+  left: 50%;
+  bottom: max(8px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(100dvw - 16px, calc(var(--board-max-width) + 2rem));
+  z-index: 45;
+}
+
+body.card-view-active {
+  padding-top: 0;
+}
+
+body.card-view-active .global-header {
+  display: none;
+}
+
 .board {
   position: relative;
   display: grid;

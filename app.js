@@ -83,6 +83,12 @@ function setPanelState(panel, isActive) {
   panel.setAttribute("aria-hidden", String(!isActive));
 }
 
+function resetScrollPosition() {
+  window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
 const CATEGORY_CONFIG = {
   Erklären: { id: "explain", iconPath: "assets/icons/explain.svg", fallbackIcon: "💬" },
   Zeichnen: { id: "draw", iconPath: "assets/icons/draw.svg", fallbackIcon: "✏️" },
@@ -916,6 +922,7 @@ function handleStartGame() {
   setPanelState(menuPanel, false);
   setPanelState(gamePanel, true);
   document.body.classList.add("game-active");
+  resetScrollPosition();
   positionTokens();
   state.currentTeam = 0;
   state.pendingRoll = null;
@@ -1034,12 +1041,13 @@ function handleMainMenu() {
   setPanelState(menuPanel, true);
   setPanelState(gamePanel, false);
   document.body.classList.remove("game-active");
+  resetScrollPosition();
 }
 
 function handleIntroStart() {
   setPanelState(introPanel, false);
   setPanelState(menuPanel, true);
-  menuSettingsCard?.scrollIntoView({ behavior: "smooth", block: "start" });
+  resetScrollPosition();
   const focusTarget = menuSettingsCard?.querySelector("input, select, button");
   focusTarget?.focus();
 }

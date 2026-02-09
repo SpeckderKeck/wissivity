@@ -179,6 +179,7 @@ const state = {
   pendingReturn: null,
   currentCard: null,
   quizPhase: null,
+  masterQuiz: false,
 };
 
 const TEAM_COLORS = [
@@ -764,9 +765,13 @@ function setTurnButtons({ showCorrect = true, showWrong = true, showSwap = true,
   turnContinueButton?.classList.toggle("hidden", !showContinue);
 }
 
-function setCategory(category) {
-  turnCategoryLabel.textContent = category;
+function setCategoryLabel(label, category = label) {
+  turnCategoryLabel.textContent = label;
   applyCategoryIcon(turnCategoryIcon, category, { allowFallback: true });
+}
+
+function setCategory(category) {
+  setCategoryLabel(category, category);
 }
 
 function handleRoll() {
@@ -787,7 +792,10 @@ function handleRoll() {
     moveToken(roll).then(() => {
       if (state.positions[state.currentTeam] >= state.boardDimensions.total - 1) {
         hideDiceOverlay();
-        showWinner(formatTeamLabel(state.currentTeam));
+        state.masterQuiz = true;
+        state.pendingCategory = "Quizfrage";
+        setCategoryLabel("Masterquizfrage", "Quizfrage");
+        showTurnOverlay();
         return;
       }
       setTimeout(() => {
@@ -837,6 +845,8 @@ function finishTurn(isCorrect, timedOut = false, { returnToPrevious = false } = 
   if (state.pendingRoll === null) return;
   stopTimer();
   const teamIndex = state.currentTeam;
+  const wasMasterQuiz = state.masterQuiz;
+  state.masterQuiz = false;
   if (returnToPrevious) {
     const targetPosition = state.turnStartPositions?.[teamIndex] ?? state.positions[teamIndex];
     state.pendingReturn = { teamIndex, targetPosition };
@@ -849,6 +859,10 @@ function finishTurn(isCorrect, timedOut = false, { returnToPrevious = false } = 
   state.pendingCategory = null;
   state.currentCard = null;
   state.quizPhase = null;
+  if (wasMasterQuiz && isCorrect) {
+    showWinner(formatTeamLabel(teamIndex));
+    return;
+  }
   statusText.textContent = `${formatTeamLabel(state.currentTeam)} beendet den Zug.`;
   state.currentTeam = (state.currentTeam + 1) % state.teams.length;
   statusText.textContent = `Nächstes: ${formatTeamLabel(state.currentTeam)} würfelt.`;
@@ -1172,7 +1186,10 @@ function showWinner(teamName) {
   state.phase = "winner";
   state.pendingRoll = null;
   state.pendingCategory = null;
-  winnerLabel.textContent = `${teamName} hat gewonnen!`;
+  winnerLabel.textContent = `${teamName} gewinnt`;
+  if (winnerRestartButton) {
+    winnerRestartButton.textContent = "Neues Spiel";
+  }
   winnerScreen.classList.remove("hidden");
 }
 

@@ -913,6 +913,7 @@ function handleStartGame() {
     return { name, icon, color };
   });
   createTokens(teams);
+  setPanelState(introPanel, false);
   setPanelState(menuPanel, false);
   setPanelState(gamePanel, true);
   document.body.classList.add("game-active");

@@ -577,7 +577,7 @@ body.fullscreen .game-top {
   padding-bottom: calc(var(--game-bottom-height) + 8px);
 }
 
-body.fullscreen.game-active .game-bottom {
+body.game-active .game-bottom {
   position: fixed;
   left: 50%;
   bottom: max(8px, env(safe-area-inset-bottom));

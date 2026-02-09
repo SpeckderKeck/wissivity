@@ -44,17 +44,14 @@ const themeToggle = document.getElementById("theme-toggle");
 const themeToggleWrapper = themeToggle?.closest(".theme-switch");
 const fullscreenToggle = document.getElementById("fullscreen-toggle");
 const swapSelectGame = document.getElementById("swap-select-game");
-const trackLengthSelect = document.getElementById("track-length-select");
-const trackLengthSelectGame = document.getElementById("track-length-select-game");
+const boardSizeSelect = document.getElementById("board-size-select");
+const boardSizeSelectGame = document.getElementById("board-size-select-game");
 const settingsPanel = document.getElementById("settings-panel");
 const openSettingsButton = document.getElementById("open-settings");
 const closeSettingsButton = document.getElementById("close-settings");
 const applySettingsButton = document.getElementById("apply-settings");
 const mainMenuButton = document.getElementById("main-menu");
-const categoryHint = document.getElementById("category-hint");
-const currentTeamDisplay = document.getElementById("current-team-display");
-const wheel = document.getElementById("wheel");
-const wheelResult = document.getElementById("wheel-result");
+const boardSizeInputs = document.querySelectorAll('input[name="board-size"]');
 const teamStatusList = document.getElementById("team-status-list");
 const introStartButton = document.getElementById("intro-start");
 const introQr = document.getElementById("intro-qr");
@@ -157,9 +154,10 @@ const state = {
   teams: [],
   currentTeam: 0,
   positions: [],
-  trackLength: 15,
-  enabledCategories: ["Erklären", "Zeichnen", "Pantomime", "Quizfrage"],
-  currentCategory: null,
+  boardSize: "normal",
+  boardDimensions: { rows: 5, cols: 6, total: 30 },
+  pendingRoll: null,
+  pendingCategory: null,
   timer: null,
   countdownTimer: null,
   turnStartPositions: null,
@@ -172,11 +170,13 @@ const state = {
     Quizfrage: 60,
   },
   swapPenalty: 10,
-
+  categories: ["Erklären", "Zeichnen", "Pantomime", "Quizfrage"],
   cards: [...DEFAULT_DATA],
   history: [],
+  boardCategories: [],
   phase: "idle",
   gameOver: false,
+  pendingReturn: null,
   currentCard: null,
   quizPhase: null,
 };
@@ -219,8 +219,11 @@ const TEAM_ICONS = [
 ];
 const DEFAULT_TEAM_NAMES = ["Team A", "Team B", "Team C", "Team D"];
 const THEME_STORAGE_KEY = "wissivity-theme";
-const GAME_SETTINGS_STORAGE_KEY = "wissivity-game-settings";
-const TRACK_LENGTH_OPTIONS = [10, 15, 20, 25, 30, 42];
+const BOARD_CONFIGS = {
+  short: { rows: 4, cols: 6, total: 24 },
+  normal: { rows: 5, cols: 6, total: 30 },
+  long: { rows: 6, cols: 7, total: 42 },
+};
 
 function applyTheme(theme) {
   if (theme === "light") {
@@ -354,30 +357,34 @@ function syncTeamCountControls(value) {
   renderTeams(clamped);
 }
 
-function getSelectedTrackLength(source) {
-  if (!source) return 15;
-  const parsed = Number.parseInt(source.value, 10);
-  return Number.isFinite(parsed) ? parsed : 15;
+function getSelectedBoardSize(source) {
+  if (!source) return "normal";
+  if (source instanceof HTMLSelectElement) {
+    return source.value || "normal";
+  }
+  const selected = [...source].find((input) => input.checked);
+  return selected?.value ?? "normal";
 }
 
-function applyTrackLength(length, { resetPositions = false } = {}) {
-  const parsed = Number.parseInt(length, 10);
-  const nextLength = Number.isFinite(parsed) ? parsed : 15;
-  const changed = state.trackLength !== nextLength;
-  state.trackLength = nextLength;
-  if (resetPositions || changed) {
-    state.positions = state.positions.map(() => 0);
-  } else {
-    state.positions = state.positions.map((pos) => Math.min(pos, nextLength));
-  }
+function applyBoardSize(size) {
+  const config = BOARD_CONFIGS[size] ?? BOARD_CONFIGS.normal;
+  state.boardSize = size;
+  state.boardDimensions = { rows: config.rows, cols: config.cols, total: config.total };
+  state.positions = state.positions.map((pos) => Math.min(pos, config.total - 1));
   buildBoard();
   positionTokens();
 }
 
-function syncTrackLengthControls(length) {
-  const value = String(length);
-  if (trackLengthSelect) trackLengthSelect.value = value;
-  if (trackLengthSelectGame) trackLengthSelectGame.value = value;
+function syncBoardSizeControls(size) {
+  boardSizeInputs.forEach((input) => {
+    input.checked = input.value === size;
+  });
+  if (boardSizeSelectGame) {
+    boardSizeSelectGame.value = size;
+  }
+  if (boardSizeSelect) {
+    boardSizeSelect.value = size;
+  }
 }
 
 function closeAllTeamPickers() {
@@ -466,31 +473,101 @@ function handleTeamListClick(event) {
   }
 }
 
-function buildBoard() {
-  if (!board) return;
+function buildBoard(categories = state.categories) {
   const existingTokens = [...board.querySelectorAll(".token")];
   board.innerHTML = "";
-  board.classList.add("race-track");
-  const total = state.trackLength;
-  for (let index = 0; index <= total; index += 1) {
-    const cell = document.createElement("div");
-    cell.className = "board-cell track-cell";
-    cell.dataset.index = String(index);
-    const number = document.createElement("span");
-    number.className = "track-cell-number";
-    if (index === 0) {
-      cell.classList.add("start");
-      number.textContent = "Start";
-    } else if (index === total) {
-      cell.classList.add("goal");
-      number.textContent = "Ziel";
+  const cells = [];
+  const { rows, cols, total } = state.boardDimensions;
+  board.style.setProperty("--board-cols", cols);
+  board.style.setProperty("--board-rows", rows);
+  const pathPositions = Array.from({ length: total });
+  const assignments = [];
+  for (let index = 0; index < total; index += 1) {
+    if (index === 0 || index === total - 1) {
+      assignments[index] = null;
+    } else if (categories.length > 0) {
+      assignments[index] = categories[(index - 1) % categories.length];
     } else {
-      number.textContent = String(index);
+      assignments[index] = null;
     }
-    cell.appendChild(number);
-    board.appendChild(cell);
+  }
+  state.boardCategories = assignments;
+  for (let row = 0; row < rows; row += 1) {
+    const rowIndices = [];
+    for (let col = 0; col < cols; col += 1) {
+      const index = row % 2 === 0 ? row * cols + col : row * cols + (cols - 1 - col);
+      rowIndices.push(index);
+      pathPositions[index] = { row, col };
+    }
+    rowIndices.forEach((index) => {
+      const cell = document.createElement("div");
+      cell.className = `board-cell path alt-${index % 4}`;
+      if (index === 0) {
+        cell.classList.add("start");
+        const icon = document.createElement("span");
+        icon.className = "cell-icon";
+        icon.textContent = "🚩";
+        const label = document.createElement("span");
+        label.className = "cell-label";
+        label.textContent = "Start";
+        cell.append(icon, label);
+      } else if (index === total - 1) {
+        cell.classList.add("goal");
+        const icon = document.createElement("span");
+        icon.className = "cell-icon";
+        icon.textContent = "🏁";
+        const label = document.createElement("span");
+        label.className = "cell-label";
+        label.textContent = "Ziel";
+        cell.append(icon, label);
+      } else {
+        const number = document.createElement("span");
+        number.className = "cell-number";
+        number.textContent = `${index + 1}`;
+        const category = assignments[index];
+        if (category) {
+          const visuals = CATEGORY_VISUALS[category];
+          const card = document.createElement("div");
+          card.className = "category-card";
+          card.style.setProperty("--card-color", visuals?.color ?? "#ffffff");
+          const icon = document.createElement("span");
+          icon.className = "category-icon";
+          icon.setAttribute("aria-hidden", "true");
+          applyCategoryIcon(icon, category, { allowFallback: true });
+          card.appendChild(icon);
+          cell.append(number, card);
+          cell.dataset.category = category;
+          cell.classList.add("has-category");
+        } else {
+          cell.append(number);
+        }
+      }
+      cell.dataset.index = index;
+      const connector = document.createElement("div");
+      connector.className = "path-connector";
+      const current = pathPositions[index];
+      const neighbors = [];
+      if (index > 0) neighbors.push(pathPositions[index - 1]);
+      if (index < total - 1) neighbors.push(pathPositions[index + 1]);
+      neighbors.forEach((neighbor) => {
+        if (!neighbor || !current) return;
+        const rowDiff = neighbor.row - current.row;
+        const colDiff = neighbor.col - current.col;
+        const segment = document.createElement("span");
+        segment.className = "path-connector-segment";
+        if (rowDiff === -1) segment.classList.add("up");
+        if (rowDiff === 1) segment.classList.add("down");
+        if (colDiff === -1) segment.classList.add("left");
+        if (colDiff === 1) segment.classList.add("right");
+        connector.appendChild(segment);
+      });
+      cell.appendChild(connector);
+      board.appendChild(cell);
+      cells[index] = cell;
+    });
   }
   existingTokens.forEach((token) => board.appendChild(token));
+  return cells;
 }
 
 function createTokens(teamData) {
@@ -542,7 +619,7 @@ function renderTeamStatus() {
     info.append(swatch, label);
     const position = document.createElement("div");
     position.className = "team-status-position";
-    position.textContent = `Feld ${state.positions[index]} / ${state.trackLength}`;
+    position.textContent = `Feld ${state.positions[index] + 1}`;
     item.append(info, position);
     teamStatusList.appendChild(item);
   });
@@ -556,11 +633,12 @@ function positionTokens() {
     const boardRect = board.getBoundingClientRect();
     const token = board.querySelector(`.token[data-team="${index}"]`);
     if (!token) return;
-    token.style.left = `${rect.left - boardRect.left + rect.width / 2}px`;
-    token.style.top = `${rect.top - boardRect.top + rect.height / 2}px`;
+    const quadrantX = index % 2 === 0 ? 0.28 : 0.72;
+    const quadrantY = index < 2 ? 0.28 : 0.72;
+    token.style.left = `${rect.left - boardRect.left + rect.width * quadrantX}px`;
+    token.style.top = `${rect.top - boardRect.top + rect.height * quadrantY}px`;
   });
   renderTeamStatus();
-  updateCurrentTeamDisplay();
 }
 
 function showOverlay(content, duration = 800) {
@@ -686,135 +764,65 @@ function setTurnButtons({ showCorrect = true, showWrong = true, showSwap = true,
   turnContinueButton?.classList.toggle("hidden", !showContinue);
 }
 
-
-function updateCurrentTeamDisplay() {
-  if (!currentTeamDisplay) return;
-  const team = state.teams[state.currentTeam];
-  if (!team) return;
-  currentTeamDisplay.textContent = `Am Zug: ${formatTeamLabel(state.currentTeam)}`;
-  currentTeamDisplay.style.borderColor = team.color;
-}
-
-function renderWheel(categories = state.enabledCategories) {
-  if (!wheel) return;
-  const safeCategories = categories.length > 0 ? categories : ["-"];
-  const segmentAngle = 360 / safeCategories.length;
-  const parts = safeCategories.map((category, index) => {
-    const start = index * segmentAngle;
-    const end = start + segmentAngle;
-    const color = CATEGORY_VISUALS[category]?.color ?? "#94a3b8";
-    return `${color} ${start}deg ${end}deg`;
-  });
-  wheel.style.background = `conic-gradient(${parts.join(",")})`;
-  wheel.innerHTML = "";
-  safeCategories.forEach((category, index) => {
-    const label = document.createElement("span");
-    label.className = "wheel-label";
-    label.textContent = category;
-    label.style.setProperty("--angle", `${index * segmentAngle + segmentAngle / 2}deg`);
-    wheel.appendChild(label);
-  });
-}
-
-function pickCategoryFromWheel() {
-  const categories = state.enabledCategories;
-  if (categories.length === 0) return null;
-  const turns = 5 + Math.floor(Math.random() * 3);
-  const winningIndex = Math.floor(Math.random() * categories.length);
-  const segment = 360 / categories.length;
-  const target = turns * 360 + winningIndex * segment + segment / 2;
-  wheel?.style.setProperty("--wheel-rotation", `${target}deg`);
-  return categories[winningIndex];
-}
-
-function updateStartButtonState() {
-  const selected = getSelectedCategories(menuCategoryControls);
-  const disabled = selected.length === 0;
-  startButton.disabled = disabled;
-  categoryHint?.classList.toggle("hidden", !disabled);
-}
-
-function saveGameSettings() {
-  const payload = {
-    trackLength: state.trackLength,
-    enabledCategories: state.enabledCategories,
-    teams: [...teamListContainer.querySelectorAll(".team-row")].map((row) => ({
-      name: row.querySelector("[data-team-name]")?.value ?? "",
-      icon: row.querySelector("[data-team-icon]")?.value ?? "",
-      color: row.querySelector("[data-team-color]")?.value ?? "",
-    })),
-  };
-  localStorage.setItem(GAME_SETTINGS_STORAGE_KEY, JSON.stringify(payload));
-}
-
-function restoreGameSettings() {
-  const raw = localStorage.getItem(GAME_SETTINGS_STORAGE_KEY);
-  if (!raw) return;
-  try {
-    const parsed = JSON.parse(raw);
-    if (TRACK_LENGTH_OPTIONS.includes(parsed.trackLength)) {
-      state.trackLength = parsed.trackLength;
-      syncTrackLengthControls(parsed.trackLength);
-    }
-    if (Array.isArray(parsed.enabledCategories) && parsed.enabledCategories.length) {
-      state.enabledCategories = parsed.enabledCategories.filter((cat) => CATEGORY_CONFIG[cat]);
-      syncCategoryControls(menuCategoryControls, state.enabledCategories, state.categoryTimes);
-      syncCategoryControls(gameCategoryControls, state.enabledCategories, state.categoryTimes);
-    }
-    if (Array.isArray(parsed.teams) && parsed.teams.length) {
-      syncTeamCountControls(parsed.teams.length);
-      const rows = [...teamListContainer.querySelectorAll('.team-row')];
-      parsed.teams.forEach((team, index) => {
-        const row = rows[index];
-        if (!row) return;
-        row.querySelector('[data-team-name]').value = team.name || row.querySelector('[data-team-name]').value;
-        if (team.color) updatePickerSelection(row.querySelector('[data-picker="color"]'), team.color, 'color');
-        if (team.icon) updatePickerSelection(row.querySelector('[data-picker="icon"]'), team.icon, 'icon');
-      });
-    }
-  } catch (_error) {
-    localStorage.removeItem(GAME_SETTINGS_STORAGE_KEY);
-  }
-}
-
 function setCategory(category) {
-  state.currentCategory = category;
   turnCategoryLabel.textContent = category;
-  wheelResult.textContent = `Kategorie: ${category}`;
   applyCategoryIcon(turnCategoryIcon, category, { allowFallback: true });
 }
 
 function handleRoll() {
-  if (state.timer || state.phase !== "idle" || state.gameOver) {
+  if (state.pendingRoll !== null || state.timer || state.phase !== "idle" || state.gameOver) {
     return;
   }
-  const category = pickCategoryFromWheel();
-  if (!category) return;
-  statusText.textContent = `${formatTeamLabel(state.currentTeam)} dreht das Glücksrad…`;
-  rollButton.disabled = true;
+  const roll = Math.floor(Math.random() * 6) + 1;
+  state.pendingRoll = roll;
+  showDiceOverlay(roll);
+  statusText.textContent = `${formatTeamLabel(state.currentTeam)} würfelt ${roll}.`;
+  const previousPositions = [...state.positions];
+  state.history.push({
+    positions: previousPositions,
+    team: state.currentTeam,
+  });
+  state.turnStartPositions = previousPositions;
   setTimeout(() => {
-    setCategory(category);
-    statusText.textContent = `${formatTeamLabel(state.currentTeam)} spielt ${category}.`;
-    showTurnOverlay();
-    rollButton.disabled = false;
-  }, 3200);
+    moveToken(roll).then(() => {
+      if (state.positions[state.currentTeam] >= state.boardDimensions.total - 1) {
+        hideDiceOverlay();
+        showWinner(formatTeamLabel(state.currentTeam));
+        return;
+      }
+      setTimeout(() => {
+        const landingIndex = state.positions[state.currentTeam];
+        const category = state.boardCategories[landingIndex] ?? state.categories[0];
+        state.pendingCategory = category;
+        setCategory(category);
+        hideDiceOverlay();
+        showTurnOverlay();
+      }, 2000);
+    });
+  }, 600);
 }
 
 function moveToken(steps, teamIndex = state.currentTeam) {
   return new Promise((resolve) => {
+    const token = board.querySelector(`.token[data-team="${teamIndex}"]`);
     let remaining = Math.abs(steps);
     const direction = steps >= 0 ? 1 : -1;
-    const tick = () => {
+    const moveStep = () => {
       if (remaining === 0) {
+        token.classList.remove("moving");
         resolve();
         return;
       }
-      state.positions[teamIndex] = Math.max(0, Math.min(state.trackLength, state.positions[teamIndex] + direction));
+      token.classList.add("moving");
+      state.positions[teamIndex] = Math.max(
+        0,
+        Math.min(state.boardDimensions.total - 1, state.positions[teamIndex] + direction)
+      );
       positionTokens();
       remaining -= 1;
-      setTimeout(tick, 220);
+      setTimeout(moveStep, 250);
     };
-    tick();
+    moveStep();
   });
 }
 
@@ -825,31 +833,37 @@ function computeMultiplier() {
   return 0.5;
 }
 
-function finishTurn(isCorrect, timedOut = false) {
+function finishTurn(isCorrect, timedOut = false, { returnToPrevious = false } = {}) {
+  if (state.pendingRoll === null) return;
   stopTimer();
   const teamIndex = state.currentTeam;
-  const animationText = timedOut ? "⏱️ Timeout" : isCorrect ? "✅ Richtig" : "❌ Falsch";
+  if (returnToPrevious) {
+    const targetPosition = state.turnStartPositions?.[teamIndex] ?? state.positions[teamIndex];
+    state.pendingReturn = { teamIndex, targetPosition };
+  }
+  state.turnStartPositions = null;
+  const animationText = timedOut ? "⏱️ Timeout" : isCorrect ? "✅" : "⏭️ Weiter";
   showOverlay(animationText, 900);
   hideTurnOverlay();
+  state.pendingRoll = null;
+  state.pendingCategory = null;
   state.currentCard = null;
   state.quizPhase = null;
-  if (isCorrect) {
-    moveToken(1, teamIndex).then(() => {
-      if (state.positions[teamIndex] >= state.trackLength) {
-        showWinner(formatTeamLabel(teamIndex));
-        return;
-      }
-      state.currentCategory = null;
-      state.currentTeam = (state.currentTeam + 1) % state.teams.length;
-      statusText.textContent = `Nächstes: ${formatTeamLabel(state.currentTeam)} dreht.`;
-      positionTokens();
-    });
-    return;
-  }
-  state.currentCategory = null;
+  statusText.textContent = `${formatTeamLabel(state.currentTeam)} beendet den Zug.`;
   state.currentTeam = (state.currentTeam + 1) % state.teams.length;
-  statusText.textContent = `Nächstes: ${formatTeamLabel(state.currentTeam)} dreht.`;
-  positionTokens();
+  statusText.textContent = `Nächstes: ${formatTeamLabel(state.currentTeam)} würfelt.`;
+  renderTeamStatus();
+  if (returnToPrevious) {
+    setTimeout(() => {
+      if (state.pendingReturn?.teamIndex !== teamIndex) return;
+      const targetPosition = state.pendingReturn.targetPosition ?? state.positions[teamIndex];
+      state.pendingReturn = null;
+      const stepsBack = state.positions[teamIndex] - targetPosition;
+      if (stepsBack > 0) {
+        moveToken(-stepsBack, teamIndex);
+      }
+    }, 750);
+  }
 }
 
 function handleUndo() {
@@ -868,11 +882,13 @@ function handleStartGame() {
     alert("Bitte mindestens eine Kategorie wählen.");
     return;
   }
-  state.enabledCategories = selectedCategories;
+  const selectedBoardSize = getSelectedBoardSize(boardSizeSelect ?? boardSizeInputs);
+  syncBoardSizeControls(selectedBoardSize);
+  state.categories = selectedCategories;
   state.categoryTimes = readCategoryTimes(menuCategoryControls);
   state.timeLimit = state.categoryTimes[selectedCategories[0]] ?? 60;
   state.swapPenalty = Number.parseInt(swapSelect.value, 10);
-  applyTrackLength(getSelectedTrackLength(trackLengthSelect), { resetPositions: true });
+  applyBoardSize(selectedBoardSize);
   const teams = [...teamListContainer.querySelectorAll(".team-row")].map((row, index) => {
     const nameInput = row.querySelector("[data-team-name]");
     const iconSelect = row.querySelector("[data-team-icon]");
@@ -888,15 +904,14 @@ function handleStartGame() {
   document.body.classList.add("game-active");
   positionTokens();
   state.currentTeam = 0;
-  state.currentCategory = null;
+  state.pendingRoll = null;
+  state.pendingCategory = null;
   state.gameOver = false;
   state.phase = "idle";
   winnerScreen.classList.add("hidden");
   turnOverlay.classList.add("hidden");
   turnOverlay.classList.remove("active", "expanded", "category");
-  statusText.textContent = `Nächstes: ${formatTeamLabel(state.currentTeam)} dreht.`;
-  renderWheel(state.enabledCategories);
-  saveGameSettings();
+  statusText.textContent = `Nächstes: ${formatTeamLabel(state.currentTeam)} würfelt.`;
 }
 
 function parseCsv(text) {
@@ -963,8 +978,8 @@ function handleCsvUpload(event) {
 
 function syncSettingsPanel() {
   swapSelectGame.value = swapSelect.value;
-  syncCategoryControls(gameCategoryControls, state.enabledCategories, state.categoryTimes);
-  syncTrackLengthControls(state.trackLength);
+  syncCategoryControls(gameCategoryControls, state.categories, state.categoryTimes);
+  syncBoardSizeControls(state.boardSize);
 }
 
 function applySettingsFromPanel() {
@@ -973,19 +988,15 @@ function applySettingsFromPanel() {
     alert("Bitte mindestens eine Kategorie wählen.");
     return;
   }
-  state.enabledCategories = selectedCategories;
+  const selectedBoardSize = getSelectedBoardSize(boardSizeSelectGame);
+  syncBoardSizeControls(selectedBoardSize);
+  state.categories = selectedCategories;
   state.categoryTimes = readCategoryTimes(gameCategoryControls);
   state.timeLimit = state.categoryTimes[selectedCategories[0]] ?? 60;
   state.swapPenalty = Number.parseInt(swapSelectGame.value, 10);
   swapSelect.value = swapSelectGame.value;
-  syncCategoryControls(menuCategoryControls, state.enabledCategories, state.categoryTimes);
-  const nextTrackLength = getSelectedTrackLength(trackLengthSelectGame);
-  const changedTrack = nextTrackLength !== state.trackLength;
-  applyTrackLength(nextTrackLength, { resetPositions: changedTrack });
-  if (changedTrack) statusText.textContent = "Streckenlänge geändert – Positionen wurden zurückgesetzt.";
-  renderWheel(state.enabledCategories);
-  updateStartButtonState();
-  saveGameSettings();
+  syncCategoryControls(menuCategoryControls, state.categories, state.categoryTimes);
+  applyBoardSize(selectedBoardSize);
   if (!state.timer) {
     updateTimerDisplay(state.timeLimit);
   }
@@ -1114,15 +1125,15 @@ function showWordCard() {
   turnOverlay.classList.remove("category");
   turnOverlay.classList.add("expanded");
   state.phase = "word";
-  const card = getCardByCategory(state.currentCategory);
+  const card = getCardByCategory(state.pendingCategory);
   state.currentCard = card;
-  state.timeLimit = state.categoryTimes[state.currentCategory] ?? 60;
-  if (state.currentCategory === "Quizfrage") {
+  state.timeLimit = state.categoryTimes[state.pendingCategory] ?? 60;
+  if (state.pendingCategory === "Quizfrage") {
     state.quizPhase = "question";
     setQuizQuestionCard(card);
     setTurnButtons({ showCorrect: false, showWrong: false, showSwap: true, showContinue: true });
     startTimer({
-      onTimeout: () => finishTurn(false, true),
+      onTimeout: () => finishTurn(false, true, { returnToPrevious: true }),
     });
   } else {
     state.quizPhase = null;
@@ -1146,9 +1157,9 @@ function applySwapPenalty() {
 function handleSwapCard() {
   if (state.phase !== "word") return;
   if (state.quizPhase === "answer") return;
-  const card = getCardByCategory(state.currentCategory);
+  const card = getCardByCategory(state.pendingCategory);
   state.currentCard = card;
-  if (state.currentCategory === "Quizfrage") {
+  if (state.pendingCategory === "Quizfrage") {
     setQuizQuestionCard(card);
   } else {
     setWordCard(card);
@@ -1159,7 +1170,8 @@ function handleSwapCard() {
 function showWinner(teamName) {
   state.gameOver = true;
   state.phase = "winner";
-  state.currentCategory = null;
+  state.pendingRoll = null;
+  state.pendingCategory = null;
   winnerLabel.textContent = `${teamName} hat gewonnen!`;
   winnerScreen.classList.remove("hidden");
 }
@@ -1173,11 +1185,9 @@ function setup() {
   menuCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
   gameCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
   syncTeamCountControls(teamCountInput.value);
-  restoreGameSettings();
-  syncTrackLengthControls(state.trackLength);
-  applyTrackLength(state.trackLength, { resetPositions: true });
-  renderWheel(state.enabledCategories);
-  updateStartButtonState();
+  const selectedBoardSize = getSelectedBoardSize(boardSizeSelect ?? boardSizeInputs);
+  syncBoardSizeControls(selectedBoardSize);
+  applyBoardSize(selectedBoardSize);
   positionTokens();
   updateTimerDisplay(state.timeLimit);
   updateFullscreenState();
@@ -1189,10 +1199,8 @@ function setup() {
   applyPresetDataset(DEFAULT_DATASET_KEY);
 }
 
-
 window.addEventListener("resize", positionTokens);
 teamListContainer.addEventListener("click", handleTeamListClick);
-teamListContainer.addEventListener("input", () => saveGameSettings());
 document.addEventListener("click", (event) => {
   if (!teamListContainer.contains(event.target)) {
     closeAllTeamPickers();
@@ -1207,24 +1215,17 @@ teamCountDecrease.addEventListener("click", () => {
 teamCountIncrease.addEventListener("click", () => {
   syncTeamCountControls(Number.parseInt(teamCountInput.value, 10) + 1);
 });
-
-trackLengthSelect?.addEventListener("change", () => {
-  const nextTrackLength = getSelectedTrackLength(trackLengthSelect);
-  const changedTrack = nextTrackLength !== state.trackLength;
-  syncTrackLengthControls(nextTrackLength);
-  applyTrackLength(nextTrackLength, { resetPositions: changedTrack });
-  if (changedTrack) statusText.textContent = "Streckenlänge geändert – Positionen wurden zurückgesetzt.";
-  saveGameSettings();
-});
-
-menuCategoryControls.forEach((control) => {
-  control.checkbox.addEventListener("change", () => {
-    state.enabledCategories = getSelectedCategories(menuCategoryControls);
-    syncCategoryControls(gameCategoryControls, state.enabledCategories, state.categoryTimes);
-    renderWheel(state.enabledCategories);
-    updateStartButtonState();
-    saveGameSettings();
+boardSizeInputs.forEach((input) => {
+  input.addEventListener("change", () => {
+    const selectedBoardSize = getSelectedBoardSize(boardSizeInputs);
+    syncBoardSizeControls(selectedBoardSize);
+    applyBoardSize(selectedBoardSize);
   });
+});
+boardSizeSelect?.addEventListener("change", () => {
+  const selectedBoardSize = getSelectedBoardSize(boardSizeSelect);
+  syncBoardSizeControls(selectedBoardSize);
+  applyBoardSize(selectedBoardSize);
 });
 
 setPanelState(introPanel, Boolean(introPanel?.classList.contains("panel--active")));
@@ -1257,7 +1258,7 @@ applySettingsButton.addEventListener("click", applySettingsFromPanel);
 mainMenuButton.addEventListener("click", handleMainMenu);
 turnContinueButton.addEventListener("click", () => {
   if (state.phase !== "word") return;
-  if (state.currentCategory === "Quizfrage" && state.quizPhase === "question") {
+  if (state.pendingCategory === "Quizfrage" && state.quizPhase === "question") {
     stopTimer();
     state.quizPhase = "answer";
     setQuizAnswerCard(state.currentCard);
@@ -1268,13 +1269,13 @@ turnContinueButton.addEventListener("click", () => {
 });
 turnCorrectButton?.addEventListener("click", () => {
   if (state.phase !== "word") return;
-  if (state.currentCategory === "Quizfrage" && state.quizPhase !== "answer") return;
+  if (state.pendingCategory === "Quizfrage" && state.quizPhase !== "answer") return;
   finishTurn(true);
 });
 turnWrongButton?.addEventListener("click", () => {
   if (state.phase !== "word") return;
-  if (state.currentCategory === "Quizfrage" && state.quizPhase !== "answer") return;
-  finishTurn(false);
+  if (state.pendingCategory === "Quizfrage" && state.quizPhase !== "answer") return;
+  finishTurn(false, false, { returnToPrevious: true });
 });
 turnSwapButton?.addEventListener("click", handleSwapCard);
 turnReadyButton.addEventListener("click", () => {

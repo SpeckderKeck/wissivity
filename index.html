@@ -138,26 +138,25 @@
           <div class="card-stack">
             <div class="card">
               <div class="card-row">
-                <h2>Kartensatz</h2>
-                <button class="info-button" id="csv-info" aria-label="CSV Info">i</button>
+              <h2>Kartensatz</h2>
+              <button class="info-button" id="csv-info" aria-label="CSV Info">i</button>
+            </div>
+              <div class="field">
+                Kartensatz hinzufügen
+                <div id="dataset-select-list" class="dataset-select-list" aria-live="polite"></div>
+                <button
+                id="dataset-add"
+                class="dataset-add-button"
+                type="button"
+                aria-label="Kartensatz hinzufügen"
+                title="Kartensatz hinzufügen"
+              >
+                +
+                </button>
               </div>
-              <label class="field">
-                Kartensatz auswählen
-                <select id="dataset-select">
-                  <option value="allgemein">Allgemeinwissen</option>
-                  <option value="kfz">KFZ</option>
-                  <option value="kfz_werkstoffe">KFZ Werkstoffe</option>
-                  <option value="kfz_einfach">KFZ einfach</option>
-                  <option value="geographie">Geographie</option>
-                  <option value="um_nachruesten_mk10">Um- und Nachrüsten MK10</option>
-                  <option value="mfm10_ish">MFM10 Ish</option>
-                  <option value="industriemechanik_allgemein">Industriemechanik – Grundlagen</option>
-                  <option value="gesellschaft_kunst_geo_sport_geschichte_mathe_grammatik">Soziales · Kunst · Deutschland · Sport · Geschichte · Mathe · Grammatik (50er)</option>
-                </select>
-              </label>
               <label class="field upload">
-                CSV Upload
-                <input id="csv-upload" type="file" accept=".csv" />
+              CSV Upload
+              <input id="csv-upload" type="file" accept=".csv" />
               </label>
               <p class="hint" id="csv-status">Standarddatensatz aktiv.</p>
               <div class="tooltip" id="csv-tooltip" role="dialog" aria-hidden="true">

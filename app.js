@@ -20,6 +20,7 @@ const turnOverlayPanel = document.getElementById("turn-overlay-panel");
 const turnCategory = document.getElementById("turn-category");
 const turnCategoryIcon = document.getElementById("turn-category-icon");
 const turnCategoryLabel = document.getElementById("turn-category-label");
+const turnCountdownCard = document.getElementById("turn-countdown-card");
 const turnCountdown = document.getElementById("turn-countdown");
 const turnWord = document.getElementById("turn-word");
 const turnTimer = document.getElementById("turn-timer");
@@ -1075,8 +1076,8 @@ function setOverlayStartFromCell() {
 }
 
 function setOverlayCategorySize() {
-  const width = Math.round(window.innerWidth / 3);
-  const height = Math.round(window.innerHeight / 3);
+  const width = Math.min(680, Math.max(360, Math.round(window.innerWidth * 0.45)));
+  const height = Math.min(560, Math.max(420, Math.round(window.innerHeight * 0.5)));
   const x = Math.round(window.innerWidth / 2 - width / 2);
   const y = Math.round(window.innerHeight / 2 - height / 2);
   turnOverlayPanel.style.setProperty("--panel-category-width", `${width}px`);
@@ -1091,6 +1092,7 @@ function showTurnOverlay() {
   setOverlayStartFromCell();
   setOverlayCategorySize();
   turnCategory.classList.remove("hidden");
+  turnCountdownCard.classList.add("hidden");
   turnWord.classList.add("hidden");
   turnCountdown.classList.add("hidden");
   turnReadyButton.classList.remove("hidden");
@@ -1118,6 +1120,8 @@ function startCountdown() {
   state.countdownTimer = null;
   let countdown = 3;
   turnCountdown.textContent = `${countdown}`;
+  turnCategory.classList.add("hidden");
+  turnCountdownCard.classList.remove("hidden");
   turnCountdown.classList.remove("hidden");
   turnReadyButton.classList.add("hidden");
   state.phase = "countdown";
@@ -1136,6 +1140,7 @@ function startCountdown() {
 function showWordCard() {
   document.body.classList.add("card-view-active");
   turnCategory.classList.add("hidden");
+  turnCountdownCard.classList.add("hidden");
   turnWord.classList.remove("hidden");
   turnOverlay.classList.remove("category");
   turnOverlay.classList.add("expanded");

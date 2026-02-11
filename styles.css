@@ -1338,6 +1338,11 @@ button:disabled {
   max-width: 520px;
 }
 
+.turn-category {
+  align-content: center;
+  height: 100%;
+}
+
 .turn-category-icon {
   width: clamp(80px, 18vw, 140px);
   height: clamp(80px, 18vw, 140px);

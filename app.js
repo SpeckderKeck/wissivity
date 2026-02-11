@@ -1076,8 +1076,8 @@ function setOverlayStartFromCell() {
 }
 
 function setOverlayCategorySize() {
-  const width = Math.round(window.innerWidth / 3);
-  const height = Math.round(window.innerHeight / 3);
+  const width = Math.min(680, Math.max(360, Math.round(window.innerWidth * 0.45)));
+  const height = Math.min(560, Math.max(420, Math.round(window.innerHeight * 0.5)));
   const x = Math.round(window.innerWidth / 2 - width / 2);
   const y = Math.round(window.innerHeight / 2 - height / 2);
   turnOverlayPanel.style.setProperty("--panel-category-width", `${width}px`);

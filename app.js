@@ -973,11 +973,6 @@ function createDatasetSelect(currentKey = "") {
   const select = document.createElement("select");
   select.className = "dataset-select";
 
-  const placeholderOption = document.createElement("option");
-  placeholderOption.value = "";
-  placeholderOption.textContent = "Bitte Kartensatz wählen";
-  select.append(placeholderOption);
-
   Object.entries(PRESET_DATASETS).forEach(([key, dataset]) => {
     const option = document.createElement("option");
     option.value = key;
@@ -987,6 +982,8 @@ function createDatasetSelect(currentKey = "") {
 
   if (PRESET_DATASETS[currentKey]) {
     select.value = currentKey;
+  } else {
+    select.selectedIndex = -1;
   }
 
   return select;

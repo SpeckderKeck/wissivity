@@ -895,6 +895,13 @@ function handleUndo() {
 }
 
 function handleStartGame() {
+  const selectedDatasetKeys = readSelectedDatasetKeys();
+  if (selectedDatasetKeys.length === 0) {
+    alert("Bitte mindestens einen Kartensatz wählen.");
+    return;
+  }
+  applySelectedDatasets();
+
   const selectedCategories = getSelectedCategories(menuCategoryControls);
   if (selectedCategories.length === 0) {
     alert("Bitte mindestens eine Kategorie wählen.");
@@ -973,6 +980,11 @@ function createDatasetSelect(currentKey = "") {
   const select = document.createElement("select");
   select.className = "dataset-select";
 
+  const placeholderOption = document.createElement("option");
+  placeholderOption.value = "";
+  placeholderOption.textContent = "Kartensatz wählen";
+  select.append(placeholderOption);
+
   Object.entries(PRESET_DATASETS).forEach(([key, dataset]) => {
     const option = document.createElement("option");
     option.value = key;
@@ -983,7 +995,7 @@ function createDatasetSelect(currentKey = "") {
   if (PRESET_DATASETS[currentKey]) {
     select.value = currentKey;
   } else {
-    select.selectedIndex = -1;
+    select.value = "";
   }
 
   return select;
@@ -1019,11 +1031,10 @@ function applySelectedDatasets() {
     return dataset ? cloneCards(dataset.cards) : [];
   });
 
-  state.cards = mergedCards.length > 0 ? mergedCards : cloneCards(DEFAULT_DATA);
+  state.cards = mergedCards;
 
   if (selectedKeys.length === 0) {
-    state.cards = cloneCards(DEFAULT_DATA);
-    csvStatus.textContent = "Standarddatensatz aktiv.";
+    csvStatus.textContent = "Bitte mindestens einen Kartensatz wählen.";
   } else {
     const labels = selectedKeys
       .map((key) => PRESET_DATASETS[key]?.label)
@@ -1060,6 +1071,11 @@ function addDatasetSelect(initialKey = "") {
 function setupDatasetSelects() {
   if (!datasetSelectList) return;
   datasetSelectList.innerHTML = "";
+
+  if (state.selectedDatasets.length === 0) {
+    addDatasetSelect("");
+    return;
+  }
 
   state.selectedDatasets.forEach((key) => {
     addDatasetSelect(key);

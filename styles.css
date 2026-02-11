@@ -364,6 +364,35 @@ body.fullscreen .board {
   justify-content: flex-end;
 }
 
+
+.dataset-select-list {
+  display: grid;
+  gap: 10px;
+}
+
+.dataset-select {
+  width: 100%;
+}
+
+.dataset-add-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 1.25rem;
+  font-weight: 700;
+  display: inline-grid;
+  place-items: center;
+  line-height: 1;
+  padding: 0;
+}
+
+.dataset-add-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 .info-button {
   background: var(--accent);
   border: none;

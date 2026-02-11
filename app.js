@@ -40,7 +40,8 @@ const csvUpload = document.getElementById("csv-upload");
 const csvStatus = document.getElementById("csv-status");
 const csvInfo = document.getElementById("csv-info");
 const csvTooltip = document.getElementById("csv-tooltip");
-const datasetSelect = document.getElementById("dataset-select");
+const datasetSelectList = document.getElementById("dataset-select-list");
+const datasetAddButton = document.getElementById("dataset-add");
 const themeToggle = document.getElementById("theme-toggle");
 const themeToggleWrapper = themeToggle?.closest(".theme-switch");
 const fullscreenToggle = document.getElementById("fullscreen-toggle");
@@ -150,6 +151,7 @@ const gameCategoryControls = Object.entries(CATEGORY_CONFIG).map(([category, con
 const PRESET_DATASETS = globalThis.CARD_DATABASES ?? {};
 const DEFAULT_DATASET_KEY = "allgemein";
 const DEFAULT_DATA = PRESET_DATASETS[DEFAULT_DATASET_KEY]?.cards ?? [];
+const MAX_DATASET_SELECTIONS = 5;
 
 const state = {
   teams: [],
@@ -181,6 +183,7 @@ const state = {
   currentCard: null,
   quizPhase: null,
   masterQuiz: false,
+  selectedDatasets: [],
 };
 
 const TEAM_COLORS = [
@@ -966,14 +969,103 @@ function cloneCards(cards) {
   }));
 }
 
-function applyPresetDataset(datasetKey) {
-  const dataset = PRESET_DATASETS[datasetKey];
-  if (!dataset) return;
-  state.cards = cloneCards(dataset.cards);
-  csvStatus.textContent = `${dataset.label}: ${state.cards.length} Karten.`;
+function createDatasetSelect(currentKey = "") {
+  const select = document.createElement("select");
+  select.className = "dataset-select";
+
+  Object.entries(PRESET_DATASETS).forEach(([key, dataset]) => {
+    const option = document.createElement("option");
+    option.value = key;
+    option.textContent = dataset.label;
+    select.append(option);
+  });
+
+  if (PRESET_DATASETS[currentKey]) {
+    select.value = currentKey;
+  } else {
+    select.selectedIndex = -1;
+  }
+
+  return select;
+}
+
+function updateDatasetAddButtonVisibility() {
+  if (!datasetAddButton || !datasetSelectList) return;
+  const hasCapacity = datasetSelectList.querySelectorAll("select").length < MAX_DATASET_SELECTIONS;
+  const allSelected = [...datasetSelectList.querySelectorAll("select")].every((select) => PRESET_DATASETS[select.value]);
+  const canAdd = hasCapacity && allSelected;
+  datasetAddButton.disabled = !canAdd;
+  datasetAddButton.style.display = canAdd ? "inline-grid" : "none";
+}
+
+function readSelectedDatasetKeys() {
+  if (!datasetSelectList) {
+    return [DEFAULT_DATASET_KEY];
+  }
+
+  const keys = [...datasetSelectList.querySelectorAll("select")]
+    .map((select) => select.value)
+    .filter((key) => PRESET_DATASETS[key]);
+
+  return keys;
+}
+
+function applySelectedDatasets() {
+  const selectedKeys = readSelectedDatasetKeys();
+  state.selectedDatasets = [...selectedKeys];
+
+  const mergedCards = selectedKeys.flatMap((key) => {
+    const dataset = PRESET_DATASETS[key];
+    return dataset ? cloneCards(dataset.cards) : [];
+  });
+
+  state.cards = mergedCards.length > 0 ? mergedCards : cloneCards(DEFAULT_DATA);
+
+  if (selectedKeys.length === 0) {
+    state.cards = cloneCards(DEFAULT_DATA);
+    csvStatus.textContent = "Standarddatensatz aktiv.";
+  } else {
+    const labels = selectedKeys
+      .map((key) => PRESET_DATASETS[key]?.label)
+      .filter(Boolean)
+      .join(" + ");
+    csvStatus.textContent = `${labels}: ${state.cards.length} Karten.`;
+  }
+
   if (csvUpload) {
     csvUpload.value = "";
   }
+}
+
+function addDatasetSelect(initialKey = "") {
+  if (!datasetSelectList) {
+    return;
+  }
+
+  const currentCount = datasetSelectList.querySelectorAll("select").length;
+  if (currentCount >= MAX_DATASET_SELECTIONS) {
+    return;
+  }
+
+  const select = createDatasetSelect(initialKey);
+  select.addEventListener("change", () => {
+    applySelectedDatasets();
+    updateDatasetAddButtonVisibility();
+  });
+  datasetSelectList.append(select);
+  applySelectedDatasets();
+  updateDatasetAddButtonVisibility();
+}
+
+function setupDatasetSelects() {
+  if (!datasetSelectList) return;
+  datasetSelectList.innerHTML = "";
+
+  state.selectedDatasets.forEach((key) => {
+    addDatasetSelect(key);
+  });
+
+  updateDatasetAddButtonVisibility();
 }
 
 function handleCsvUpload(event) {
@@ -1216,10 +1308,8 @@ function setup() {
   updateFullscreenState();
   syncSettingsPanel();
   setupIntroPanel();
-  if (datasetSelect) {
-    datasetSelect.value = DEFAULT_DATASET_KEY;
-  }
-  applyPresetDataset(DEFAULT_DATASET_KEY);
+  setupDatasetSelects();
+  applySelectedDatasets();
 }
 
 window.addEventListener("resize", positionTokens);
@@ -1272,8 +1362,8 @@ document.addEventListener("keydown", (event) => {
 rollButton.addEventListener("click", handleRoll);
 undoButton.addEventListener("click", handleUndo);
 csvUpload.addEventListener("change", handleCsvUpload);
-datasetSelect?.addEventListener("change", (event) => {
-  applyPresetDataset(event.target.value);
+datasetAddButton?.addEventListener("click", () => {
+  addDatasetSelect("");
 });
 openSettingsButton.addEventListener("click", handleOpenSettings);
 closeSettingsButton.addEventListener("click", handleCloseSettings);

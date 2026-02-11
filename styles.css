@@ -1332,11 +1332,17 @@ button:disabled {
 }
 
 .turn-category,
+.turn-countdown-card,
 .turn-word {
   display: grid;
   gap: 20px;
   justify-items: center;
   max-width: 520px;
+}
+
+.turn-category {
+  align-content: center;
+  height: 100%;
 }
 
 .turn-category-icon {
@@ -1355,6 +1361,12 @@ button:disabled {
   font-size: 4rem;
   display: grid;
   place-items: center;
+}
+
+.turn-countdown-card h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  color: var(--muted);
 }
 
 .turn-countdown {

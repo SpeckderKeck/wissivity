@@ -183,7 +183,7 @@ const state = {
   currentCard: null,
   quizPhase: null,
   masterQuiz: false,
-  selectedDatasets: [DEFAULT_DATASET_KEY],
+  selectedDatasets: [],
 };
 
 const TEAM_COLORS = [
@@ -1010,7 +1010,7 @@ function readSelectedDatasetKeys() {
     .map((select) => select.value)
     .filter((key) => PRESET_DATASETS[key]);
 
-  return keys.length > 0 ? keys : [DEFAULT_DATASET_KEY];
+  return keys;
 }
 
 function applySelectedDatasets() {
@@ -1024,11 +1024,16 @@ function applySelectedDatasets() {
 
   state.cards = mergedCards.length > 0 ? mergedCards : cloneCards(DEFAULT_DATA);
 
-  const labels = selectedKeys
-    .map((key) => PRESET_DATASETS[key]?.label)
-    .filter(Boolean)
-    .join(" + ");
-  csvStatus.textContent = `${labels}: ${state.cards.length} Karten.`;
+  if (selectedKeys.length === 0) {
+    state.cards = cloneCards(DEFAULT_DATA);
+    csvStatus.textContent = "Standarddatensatz aktiv.";
+  } else {
+    const labels = selectedKeys
+      .map((key) => PRESET_DATASETS[key]?.label)
+      .filter(Boolean)
+      .join(" + ");
+    csvStatus.textContent = `${labels}: ${state.cards.length} Karten.`;
+  }
 
   if (csvUpload) {
     csvUpload.value = "";

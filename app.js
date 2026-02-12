@@ -70,7 +70,11 @@ const boardSizeInputs = document.querySelectorAll('input[name="board-size"]');
 const teamStatusList = document.getElementById("team-status-list");
 const introStartButton = document.getElementById("intro-start");
 const introQr = document.getElementById("intro-qr");
-const menuSettingsCard = document.getElementById("menu-settings-card");
+const menuSteps = Array.from(document.querySelectorAll(".menu-step"));
+const menuStepButtons = Array.from(document.querySelectorAll(".menu-stepper-button"));
+const menuStepBackButton = document.getElementById("menu-step-back");
+const menuStepNextButton = document.getElementById("menu-step-next");
+
 const qrModalToggle = document.getElementById("qr-modal-toggle");
 const qrModal = document.getElementById("qr-modal");
 const qrModalClose = document.getElementById("qr-modal-close");
@@ -1698,12 +1702,18 @@ function handleCloseSettings() {
 function handleMainMenu() {
   stopTimer();
   hideTurnOverlay();
-  navigateTo("menu");
+  setPanelState(introPanel, false);
+  setPanelState(menuPanel, true);
+  setPanelState(gamePanel, false);
+  setMenuStep(0);
+  document.body.classList.remove("game-active");
 }
 
 function handleIntroStart() {
-  navigateTo("menu");
-  const focusTarget = menuSettingsCard?.querySelector("input, select, button");
+  setPanelState(introPanel, false);
+  setPanelState(menuPanel, true);
+  setMenuStep(0);
+  const focusTarget = menuPanel?.querySelector("input, select, button");
   focusTarget?.focus();
 }
 
@@ -1879,6 +1889,7 @@ function setup() {
   updateFullscreenState();
   syncSettingsPanel();
   setupIntroPanel();
+  setupMenuStepper();
   setupDatasetSelects();
   applySelectedDatasets();
 }

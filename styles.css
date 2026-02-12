@@ -1573,7 +1573,10 @@ button:disabled {
 }
 
 #turn-word-title {
-  font-size: clamp(2.4rem, 6vw, 4.8rem);
+  font-size: clamp(1.6rem, 4.8vw, 4.2rem);
+  line-height: 1.15;
+  max-inline-size: min(28ch, 100%);
+  overflow-wrap: anywhere;
   margin: 0;
 }
 
@@ -1784,5 +1787,14 @@ button:disabled {
 
   .status {
     font-size: 0.95rem;
+  }
+
+  #turn-word-title {
+    font-size: clamp(1.25rem, 6.2vw, 2.4rem);
+    max-inline-size: min(22ch, 100%);
+  }
+
+  .turn-word {
+    gap: 14px;
   }
 }

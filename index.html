@@ -48,7 +48,7 @@
   <div class="app">
 
     <main>
-      <section id="intro" class="panel panel--active intro-panel" aria-label="Startseite">
+      <section id="intro" class="panel panel--active intro-panel viewport-panel" aria-label="Startseite">
         <div class="intro-card">
           <div class="intro-content">
             <h1>Actilab</h1>
@@ -61,8 +61,14 @@
         </div>
       </section>
 
-      <section id="menu" class="panel" aria-label="Hauptmenü" aria-hidden="true" hidden>
-        <div class="panel-grid">
+      <section id="menu" class="panel viewport-panel menu-panel" aria-label="Hauptmenü" aria-hidden="true" hidden>
+        <div class="menu-stepper" role="tablist" aria-label="Menüabschnitte">
+          <button class="menu-stepper-button is-active" type="button" data-step-target="teams" role="tab" aria-selected="true">1 · Teams</button>
+          <button class="menu-stepper-button" type="button" data-step-target="settings" role="tab" aria-selected="false">2 · Spiel</button>
+          <button class="menu-stepper-button" type="button" data-step-target="cards" role="tab" aria-selected="false">3 · Karten</button>
+        </div>
+
+        <div class="menu-step is-active" data-step="teams" role="tabpanel">
           <div class="card card--teams">
             <h2>Teams</h2>
             <label class="field">
@@ -79,7 +85,9 @@
             </label>
             <div id="team-list" class="team-list"></div>
           </div>
+        </div>
 
+        <div class="menu-step" data-step="settings" role="tabpanel" aria-hidden="true">
           <div class="card" id="menu-settings-card">
             <h2>Spieleinstellungen</h2>
             <div class="field-group category-settings">
@@ -134,7 +142,9 @@
               </select>
             </label>
           </div>
+        </div>
 
+        <div class="menu-step" data-step="cards" role="tabpanel" aria-hidden="true">
           <div class="card-stack">
             <div class="card">
               <div class="card-row">
@@ -185,10 +195,14 @@
             </div>
           </div>
         </div>
-        <button id="start-game" class="primary">Spiel starten</button>
+        <div class="menu-footer-actions">
+          <button type="button" class="ghost" id="menu-step-back">Zurück</button>
+          <button type="button" class="ghost" id="menu-step-next">Weiter</button>
+          <button id="start-game" class="primary">Spiel starten</button>
+        </div>
       </section>
 
-      <section id="game" class="panel" aria-label="Spielfeld" aria-hidden="true" hidden>
+      <section id="game" class="panel viewport-panel" aria-label="Spielfeld" aria-hidden="true" hidden>
         <div class="game-top">
           <div class="board" id="board" aria-hidden="true"></div>
           <div id="dice-overlay" class="dice-overlay" aria-hidden="true">

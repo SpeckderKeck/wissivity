@@ -1576,11 +1576,16 @@ button:disabled {
   font-size: clamp(1.6rem, 4.8vw, 4.2rem);
   line-height: 1.15;
   max-inline-size: min(28ch, 100%);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: auto;
   margin: 0;
 }
 
 .turn-word.is-quiz-question #turn-word-title {
+  font-size: clamp(1.35rem, 3.9vw, 3.2rem);
+  line-height: 1.2;
+  max-inline-size: min(32ch, 100%);
   color: #47b8d8;
 }
 

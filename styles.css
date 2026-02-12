@@ -200,11 +200,11 @@ body.fullscreen .board {
   --board-cell-max: 18vmin;
 }
 
-.panel {
+.route-view {
   display: none;
 }
 
-.panel--active {
+.route-view--active {
   display: block;
 }
 
@@ -268,7 +268,7 @@ body.fullscreen .board {
   text-decoration: underline;
 }
 
-#game.panel--active {
+#game.route-view--active {
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -601,7 +601,7 @@ body.fullscreen .board {
   padding: 0 0 var(--game-bottom-total-space);
 }
 
-body.fullscreen #game.panel--active {
+body.fullscreen #game.route-view--active {
   --game-bottom-height: clamp(4rem, 10vh, 6.5rem);
 }
 

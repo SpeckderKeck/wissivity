@@ -48,6 +48,7 @@ const closeCardEditorButton = document.getElementById("close-card-editor");
 const cardEditorBody = document.getElementById("card-editor-body");
 const cardEditorAddRowButton = document.getElementById("card-editor-add-row");
 const cardEditorSaveButton = document.getElementById("card-editor-save");
+const cardEditorErrors = document.getElementById("card-editor-errors");
 const themeToggle = document.getElementById("theme-toggle");
 const themeToggleWrapper = themeToggle?.closest(".theme-switch");
 const fullscreenToggle = document.getElementById("fullscreen-toggle");
@@ -948,33 +949,47 @@ function handleStartGame() {
   statusText.textContent = `Nächstes: ${formatTeamLabel(state.currentTeam)} würfelt.`;
 }
 
+function normalizeCardInput(rawRow = {}) {
+  const category = String(rawRow.category ?? "").trim();
+  const term = String(rawRow.term ?? "").trim();
+
+  if (category === "Quizfrage") {
+    const answer = String(rawRow.answer ?? rawRow.taboo?.[0] ?? "").trim();
+    return {
+      category,
+      term,
+      answer,
+      taboo: [],
+    };
+  }
+
+  const tabooCandidates = Array.isArray(rawRow.taboo)
+    ? rawRow.taboo
+    : [rawRow.answer, rawRow.tabu2, rawRow.tabu3, rawRow.tabu4];
+
+  return {
+    category,
+    term,
+    taboo: tabooCandidates.map((entry) => String(entry ?? "").trim()).filter(Boolean),
+  };
+}
+
 function parseCsv(text) {
   const lines = text
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean);
-  const cards = [];
-  lines.forEach((line) => {
-    const parts = line.split(";").map((part) => part.trim());
-    const [category, term, ...taboos] = parts;
-    if (!category || !term) return;
-    if (category === "Quizfrage") {
-      const [answer] = taboos;
-      cards.push({
-        category,
-        term,
-        answer: answer || "",
-        taboo: [],
-      });
-      return;
-    }
-    cards.push({
+
+  return lines.map((line) => {
+    const parts = line.split(";");
+    const [category = "", term = "", ...rest] = parts;
+    return {
       category,
       term,
-      taboo: taboos.filter(Boolean),
-    });
+      answer: rest[0] ?? "",
+      taboo: rest,
+    };
   });
-  return cards;
 }
 
 function cloneCards(cards) {
@@ -984,46 +999,74 @@ function cloneCards(cards) {
   }));
 }
 
-
-
 let cardEditorRowCounter = 0;
 
-function normalizeCardFromEditor(values) {
-  const category = ALLOWED_CARD_CATEGORIES.includes(values.category) ? values.category : "Erklären";
-  const term = values.term.trim();
-  if (!term) return null;
+function validateEditorCards(rows) {
+  const cards = [];
+  const errors = [];
 
-  if (category === "Quizfrage") {
-    return {
-      category,
-      term,
-      answer: values.answer.trim(),
-      taboo: [],
-    };
-  }
+  rows.forEach((rawRow, index) => {
+    const normalized = normalizeCardInput(rawRow);
+    const rowErrors = [];
 
-  return {
-    category,
-    term,
-    taboo: [values.answer, values.tabu2, values.tabu3, values.tabu4]
-      .map((entry) => entry.trim())
-      .filter(Boolean),
-  };
+    if (!normalized.category) {
+      rowErrors.push("Kategorie ist erforderlich");
+    } else if (!ALLOWED_CARD_CATEGORIES.includes(normalized.category)) {
+      rowErrors.push(`Ungültige Kategorie "${normalized.category}"`);
+    }
+
+    if (!normalized.term) {
+      rowErrors.push("Begriff/Frage ist erforderlich");
+    }
+
+    if (normalized.category === "Quizfrage" && !normalized.answer) {
+      rowErrors.push("Antwort ist für Quizfrage erforderlich");
+    }
+
+    if (rowErrors.length > 0) {
+      errors.push({ row: index + 1, messages: rowErrors });
+      return;
+    }
+
+    cards.push(normalized);
+  });
+
+  return { cards, errors };
 }
 
-function collectCardsFromEditor() {
+function collectRawCardsFromEditor() {
   if (!cardEditorBody) return [];
-  return [...cardEditorBody.querySelectorAll("tr[data-row-id]")]
-    .map((row) => {
-      const category = row.querySelector('[data-field="category"]')?.value ?? "";
-      const term = row.querySelector('[data-field="term"]')?.value ?? "";
-      const answer = row.querySelector('[data-field="answer"]')?.value ?? "";
-      const tabu2 = row.querySelector('[data-field="tabu2"]')?.value ?? "";
-      const tabu3 = row.querySelector('[data-field="tabu3"]')?.value ?? "";
-      const tabu4 = row.querySelector('[data-field="tabu4"]')?.value ?? "";
-      return normalizeCardFromEditor({ category, term, answer, tabu2, tabu3, tabu4 });
-    })
-    .filter(Boolean);
+  return [...cardEditorBody.querySelectorAll("tr[data-row-id]")].map((row) => ({
+    category: row.querySelector('[data-field="category"]')?.value ?? "",
+    term: row.querySelector('[data-field="term"]')?.value ?? "",
+    answer: row.querySelector('[data-field="answer"]')?.value ?? "",
+    tabu2: row.querySelector('[data-field="tabu2"]')?.value ?? "",
+    tabu3: row.querySelector('[data-field="tabu3"]')?.value ?? "",
+    tabu4: row.querySelector('[data-field="tabu4"]')?.value ?? "",
+  }));
+}
+
+function renderEditorValidationErrors(errors) {
+  if (cardEditorSaveButton) {
+    cardEditorSaveButton.disabled = errors.length > 0;
+  }
+  if (!cardEditorErrors) return;
+
+  if (errors.length === 0) {
+    cardEditorErrors.innerHTML = "";
+    cardEditorErrors.classList.add("hidden");
+    return;
+  }
+
+  const errorList = errors.map((error) => `<li>Zeile ${error.row}: ${error.messages.join(", ")}</li>`).join("");
+  cardEditorErrors.innerHTML = `<ul>${errorList}</ul>`;
+  cardEditorErrors.classList.remove("hidden");
+}
+
+function updateEditorValidationState() {
+  const { cards, errors } = validateEditorCards(collectRawCardsFromEditor());
+  renderEditorValidationErrors(errors);
+  return { cards, errors };
 }
 
 function createCategorySelect(selectedCategory = "Erklären") {
@@ -1097,6 +1140,7 @@ function renderCardEditorRows(cards) {
 function addEditorRow() {
   if (!cardEditorBody) return;
   cardEditorBody.append(createEditorRow({ category: "Erklären", term: "", taboo: [] }));
+  updateEditorValidationState();
 }
 
 function removeEditorRow(rowId) {
@@ -1105,24 +1149,32 @@ function removeEditorRow(rowId) {
   row?.remove();
   if (!cardEditorBody.querySelector("tr[data-row-id]")) {
     addEditorRow();
+    return;
   }
+  updateEditorValidationState();
 }
 
 function openCardEditor() {
   if (!cardEditorModal) return;
   renderCardEditorRows(cloneCards(state.cards));
+  updateEditorValidationState();
   cardEditorModal.classList.remove("hidden");
 }
 
 function closeCardEditor() {
   if (!cardEditorModal) return;
   cardEditorModal.classList.add("hidden");
+  renderEditorValidationErrors([]);
 }
 
 function saveCardEditor() {
-  const editedCards = collectCardsFromEditor();
-  state.cards = editedCards;
-  csvStatus.textContent = `Editor: ${editedCards.length} Karten.`;
+  const { cards, errors } = updateEditorValidationState();
+  if (errors.length > 0) {
+    csvStatus.textContent = "Editor enthält ungültige Zeilen.";
+    return;
+  }
+  state.cards = cards;
+  csvStatus.textContent = `Editor: ${cards.length} Karten.`;
   closeCardEditor();
 }
 function createDatasetSelect(currentKey = "") {
@@ -1238,13 +1290,22 @@ function handleCsvUpload(event) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
-    const cards = parseCsv(reader.result);
-    if (cards.length > 0) {
+    const parsedRows = parseCsv(reader.result);
+    const { cards, errors } = validateEditorCards(parsedRows);
+
+    if (cards.length > 0 && errors.length === 0) {
       state.cards = cards;
       csvStatus.textContent = `CSV geladen: ${cards.length} Karten.`;
-    } else {
-      csvStatus.textContent = "CSV leer oder ungültig.";
+      return;
     }
+
+    if (errors.length > 0) {
+      const firstError = errors[0];
+      csvStatus.textContent = `CSV ungültig (Zeile ${firstError.row}: ${firstError.messages.join(", ")}).`;
+      return;
+    }
+
+    csvStatus.textContent = "CSV leer oder ungültig.";
   };
   reader.readAsText(file, "utf-8");
 }
@@ -1535,6 +1596,8 @@ openCardEditorButton?.addEventListener("click", openCardEditor);
 closeCardEditorButton?.addEventListener("click", closeCardEditor);
 cardEditorAddRowButton?.addEventListener("click", addEditorRow);
 cardEditorSaveButton?.addEventListener("click", saveCardEditor);
+cardEditorBody?.addEventListener("input", updateEditorValidationState);
+cardEditorBody?.addEventListener("change", updateEditorValidationState);
 cardEditorModal?.addEventListener("click", (event) => {
   if (event.target === cardEditorModal) {
     closeCardEditor();

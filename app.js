@@ -48,6 +48,12 @@ const closeCardEditorButton = document.getElementById("close-card-editor");
 const cardEditorBody = document.getElementById("card-editor-body");
 const cardEditorAddRowButton = document.getElementById("card-editor-add-row");
 const cardEditorSaveButton = document.getElementById("card-editor-save");
+const cardEditorExportButton = document.getElementById("card-editor-export");
+const cardEditorDatasetLabelInput = document.getElementById("card-editor-dataset-label");
+const cardEditorSaveNewButton = document.getElementById("card-editor-save-new");
+const cardEditorDatasetSelect = document.getElementById("card-editor-dataset-select");
+const cardEditorOverwriteButton = document.getElementById("card-editor-overwrite");
+const cardEditorDeleteButton = document.getElementById("card-editor-delete");
 const cardEditorErrors = document.getElementById("card-editor-errors");
 const themeToggle = document.getElementById("theme-toggle");
 const themeToggleWrapper = themeToggle?.closest(".theme-switch");
@@ -161,6 +167,7 @@ const PRESET_DATASETS = globalThis.CARD_DATABASES ?? {};
 const DEFAULT_DATASET_KEY = "allgemein";
 const DEFAULT_DATA = PRESET_DATASETS[DEFAULT_DATASET_KEY]?.cards ?? [];
 const MAX_DATASET_SELECTIONS = 5;
+const CUSTOM_DATASETS_STORAGE_KEY = "wissivity.customDatasets";
 
 const state = {
   teams: [],
@@ -193,6 +200,7 @@ const state = {
   quizPhase: null,
   masterQuiz: false,
   selectedDatasets: [],
+  customDatasets: {},
 };
 
 const TEAM_COLORS = [
@@ -238,6 +246,100 @@ const BOARD_CONFIGS = {
   normal: { rows: 5, cols: 6, total: 30 },
   long: { rows: 6, cols: 7, total: 42 },
 };
+
+function toCustomDatasetKey(id) {
+  return `custom:${id}`;
+}
+
+function fromCustomDatasetKey(key) {
+  if (!key?.startsWith("custom:")) return null;
+  return key.slice(7);
+}
+
+function normalizeStoredCustomDataset(rawDataset) {
+  if (!rawDataset || typeof rawDataset !== "object") return null;
+  const id = typeof rawDataset.id === "string" ? rawDataset.id.trim() : "";
+  const label = typeof rawDataset.label === "string" ? rawDataset.label.trim() : "";
+  if (!id || !label) return null;
+  const cards = Array.isArray(rawDataset.cards)
+    ? rawDataset.cards.map((card) => normalizeCardInput(card)).filter((card) => card.term)
+    : [];
+
+  return {
+    id,
+    label,
+    cards,
+    createdAt: rawDataset.createdAt || new Date().toISOString(),
+    updatedAt: rawDataset.updatedAt || new Date().toISOString(),
+  };
+}
+
+function readCustomDatasetsFromStorage() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_DATASETS_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return {};
+    return parsed.reduce((accumulator, rawDataset) => {
+      const dataset = normalizeStoredCustomDataset(rawDataset);
+      if (dataset) {
+        accumulator[dataset.id] = dataset;
+      }
+      return accumulator;
+    }, {});
+  } catch {
+    return {};
+  }
+}
+
+function persistCustomDatasets() {
+  const datasets = Object.values(state.customDatasets)
+    .map((dataset) => normalizeStoredCustomDataset(dataset))
+    .filter(Boolean)
+    .sort((a, b) => String(a.label).localeCompare(String(b.label), "de"));
+
+  localStorage.setItem(CUSTOM_DATASETS_STORAGE_KEY, JSON.stringify(datasets));
+}
+
+function getAllDatasetEntries() {
+  const presetEntries = Object.entries(PRESET_DATASETS).map(([key, dataset]) => ({
+    key,
+    label: dataset.label,
+    cards: dataset.cards,
+    isCustom: false,
+  }));
+  const customEntries = Object.values(state.customDatasets).map((dataset) => ({
+    key: toCustomDatasetKey(dataset.id),
+    label: `${dataset.label} (Eigen)`,
+    cards: dataset.cards,
+    isCustom: true,
+    id: dataset.id,
+  }));
+  return [...presetEntries, ...customEntries];
+}
+
+function getDatasetEntryByKey(key) {
+  if (PRESET_DATASETS[key]) {
+    const dataset = PRESET_DATASETS[key];
+    return { key, label: dataset.label, cards: dataset.cards, isCustom: false };
+  }
+  const customId = fromCustomDatasetKey(key);
+  if (!customId) return null;
+  const dataset = state.customDatasets[customId];
+  if (!dataset) return null;
+  return {
+    key,
+    label: `${dataset.label} (Eigen)`,
+    cards: dataset.cards,
+    isCustom: true,
+    id: dataset.id,
+  };
+}
+
+function refreshDatasetSelections() {
+  setupDatasetSelects();
+  applySelectedDatasets();
+}
 
 function applyTheme(theme) {
   if (theme === "light") {
@@ -1158,6 +1260,7 @@ function openCardEditor() {
   if (!cardEditorModal) return;
   renderCardEditorRows(cloneCards(state.cards));
   updateEditorValidationState();
+  refreshEditorCustomDatasetSelect(cardEditorDatasetSelect?.value ?? "");
   cardEditorModal.classList.remove("hidden");
 }
 
@@ -1177,6 +1280,157 @@ function saveCardEditor() {
   csvStatus.textContent = `Editor: ${cards.length} Karten.`;
   closeCardEditor();
 }
+
+function refreshEditorCustomDatasetSelect(selectedId = "") {
+  if (!cardEditorDatasetSelect) return;
+  cardEditorDatasetSelect.innerHTML = "";
+
+  const placeholderOption = document.createElement("option");
+  placeholderOption.value = "";
+  placeholderOption.textContent = "Eigenen Kartensatz auswählen";
+  cardEditorDatasetSelect.append(placeholderOption);
+
+  Object.values(state.customDatasets)
+    .sort((a, b) => a.label.localeCompare(b.label, "de"))
+    .forEach((dataset) => {
+      const option = document.createElement("option");
+      option.value = dataset.id;
+      option.textContent = dataset.label;
+      cardEditorDatasetSelect.append(option);
+    });
+
+  cardEditorDatasetSelect.value = state.customDatasets[selectedId] ? selectedId : "";
+}
+
+function createCustomDatasetId() {
+  if (globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID();
+  }
+  return `dataset-${Date.now()}-${Math.round(Math.random() * 100000)}`;
+}
+
+function saveEditorAsNewDataset() {
+  const { cards, errors } = updateEditorValidationState();
+  if (errors.length > 0) {
+    csvStatus.textContent = "Editor enthält ungültige Zeilen.";
+    return;
+  }
+
+  const label = cardEditorDatasetLabelInput?.value?.trim();
+  if (!label) {
+    csvStatus.textContent = "Bitte einen Namen für den neuen Kartensatz eingeben.";
+    return;
+  }
+
+  const now = new Date().toISOString();
+  const dataset = {
+    id: createCustomDatasetId(),
+    label,
+    cards,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  state.customDatasets[dataset.id] = dataset;
+  persistCustomDatasets();
+  refreshEditorCustomDatasetSelect(dataset.id);
+  if (cardEditorDatasetLabelInput) {
+    cardEditorDatasetLabelInput.value = dataset.label;
+  }
+  refreshDatasetSelections();
+  csvStatus.textContent = `Eigener Kartensatz gespeichert: ${dataset.label} (${cards.length} Karten).`;
+}
+
+function overwriteSelectedCustomDataset() {
+  const { cards, errors } = updateEditorValidationState();
+  if (errors.length > 0) {
+    csvStatus.textContent = "Editor enthält ungültige Zeilen.";
+    return;
+  }
+
+  const selectedId = cardEditorDatasetSelect?.value ?? "";
+  const existingDataset = state.customDatasets[selectedId];
+  if (!existingDataset) {
+    csvStatus.textContent = "Bitte zuerst einen vorhandenen eigenen Kartensatz auswählen.";
+    return;
+  }
+
+  const nextLabel = cardEditorDatasetLabelInput?.value?.trim() || existingDataset.label;
+  state.customDatasets[selectedId] = {
+    id: existingDataset.id,
+    label: nextLabel,
+    cards,
+    createdAt: existingDataset.createdAt,
+    updatedAt: new Date().toISOString(),
+  };
+
+  persistCustomDatasets();
+  refreshEditorCustomDatasetSelect(selectedId);
+  if (cardEditorDatasetLabelInput) {
+    cardEditorDatasetLabelInput.value = nextLabel;
+  }
+  refreshDatasetSelections();
+  csvStatus.textContent = `Kartensatz überschrieben: ${nextLabel} (${cards.length} Karten).`;
+}
+
+function deleteSelectedCustomDataset() {
+  const selectedId = cardEditorDatasetSelect?.value ?? "";
+  const dataset = state.customDatasets[selectedId];
+  if (!dataset) {
+    csvStatus.textContent = "Bitte zuerst einen eigenen Kartensatz auswählen.";
+    return;
+  }
+
+  const shouldDelete = window.confirm(`Kartensatz „${dataset.label}“ wirklich löschen?`);
+  if (!shouldDelete) {
+    return;
+  }
+
+  delete state.customDatasets[selectedId];
+  persistCustomDatasets();
+  refreshEditorCustomDatasetSelect("");
+  if (cardEditorDatasetLabelInput) {
+    cardEditorDatasetLabelInput.value = "";
+  }
+  refreshDatasetSelections();
+  csvStatus.textContent = `Kartensatz gelöscht: ${dataset.label}.`;
+}
+
+function escapeCsvValue(value) {
+  const normalized = String(value ?? "").replace(/\r?\n/g, " ").trim();
+  if (/[;"\n]/.test(normalized)) {
+    return `"${normalized.replaceAll('"', '""')}"`;
+  }
+  return normalized;
+}
+
+function exportEditorCardsAsCsv() {
+  const { cards, errors } = updateEditorValidationState();
+  if (errors.length > 0) {
+    csvStatus.textContent = "Export nicht möglich: Editor enthält ungültige Zeilen.";
+    return;
+  }
+
+  const lines = cards.map((card) => {
+    const taboos = Array.isArray(card.taboo) ? [...card.taboo] : [];
+    const firstTabooOrAnswer = card.category === "Quizfrage" ? card.answer ?? "" : taboos[0] ?? "";
+    const values = [card.category, card.term, firstTabooOrAnswer, taboos[1] ?? "", taboos[2] ?? "", taboos[3] ?? ""];
+    return values.map(escapeCsvValue).join(";");
+  });
+
+  const csvContent = `\uFEFF${lines.join("\n")}`;
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  const filenameBase = cardEditorDatasetLabelInput?.value?.trim() || "wissivity-kartensatz";
+  link.download = `${filenameBase.replace(/\s+/g, "-").toLowerCase()}.csv`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(link.href);
+  csvStatus.textContent = `CSV exportiert: ${cards.length} Karten.`;
+}
+
 function createDatasetSelect(currentKey = "") {
   const select = document.createElement("select");
   select.className = "dataset-select";
@@ -1186,14 +1440,14 @@ function createDatasetSelect(currentKey = "") {
   placeholderOption.textContent = "Kartensatz wählen";
   select.append(placeholderOption);
 
-  Object.entries(PRESET_DATASETS).forEach(([key, dataset]) => {
+  getAllDatasetEntries().forEach(({ key, label }) => {
     const option = document.createElement("option");
     option.value = key;
-    option.textContent = dataset.label;
+    option.textContent = label;
     select.append(option);
   });
 
-  if (PRESET_DATASETS[currentKey]) {
+  if (getDatasetEntryByKey(currentKey)) {
     select.value = currentKey;
   } else {
     select.value = "";
@@ -1205,7 +1459,7 @@ function createDatasetSelect(currentKey = "") {
 function updateDatasetAddButtonVisibility() {
   if (!datasetAddButton || !datasetSelectList) return;
   const hasCapacity = datasetSelectList.querySelectorAll("select").length < MAX_DATASET_SELECTIONS;
-  const allSelected = [...datasetSelectList.querySelectorAll("select")].every((select) => PRESET_DATASETS[select.value]);
+  const allSelected = [...datasetSelectList.querySelectorAll("select")].every((select) => getDatasetEntryByKey(select.value));
   const canAdd = hasCapacity && allSelected;
   datasetAddButton.disabled = !canAdd;
   datasetAddButton.style.display = canAdd ? "inline-grid" : "none";
@@ -1218,7 +1472,7 @@ function readSelectedDatasetKeys() {
 
   const keys = [...datasetSelectList.querySelectorAll("select")]
     .map((select) => select.value)
-    .filter((key) => PRESET_DATASETS[key]);
+    .filter((key) => getDatasetEntryByKey(key));
 
   return keys;
 }
@@ -1228,8 +1482,8 @@ function applySelectedDatasets() {
   state.selectedDatasets = [...selectedKeys];
 
   const mergedCards = selectedKeys.flatMap((key) => {
-    const dataset = PRESET_DATASETS[key];
-    return dataset ? cloneCards(dataset.cards) : [];
+    const datasetEntry = getDatasetEntryByKey(key);
+    return datasetEntry ? cloneCards(datasetEntry.cards) : [];
   });
 
   state.cards = mergedCards;
@@ -1238,7 +1492,7 @@ function applySelectedDatasets() {
     csvStatus.textContent = "Bitte mindestens einen Kartensatz wählen.";
   } else {
     const labels = selectedKeys
-      .map((key) => PRESET_DATASETS[key]?.label)
+      .map((key) => getDatasetEntryByKey(key)?.label)
       .filter(Boolean)
       .join(" + ");
     csvStatus.textContent = `${labels}: ${state.cards.length} Karten.`;
@@ -1523,6 +1777,7 @@ function handleWinnerRestart() {
 }
 
 function setup() {
+  state.customDatasets = readCustomDatasetsFromStorage();
   menuCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
   gameCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
   syncTeamCountControls(teamCountInput.value);
@@ -1596,6 +1851,17 @@ openCardEditorButton?.addEventListener("click", openCardEditor);
 closeCardEditorButton?.addEventListener("click", closeCardEditor);
 cardEditorAddRowButton?.addEventListener("click", addEditorRow);
 cardEditorSaveButton?.addEventListener("click", saveCardEditor);
+cardEditorExportButton?.addEventListener("click", exportEditorCardsAsCsv);
+cardEditorSaveNewButton?.addEventListener("click", saveEditorAsNewDataset);
+cardEditorOverwriteButton?.addEventListener("click", overwriteSelectedCustomDataset);
+cardEditorDeleteButton?.addEventListener("click", deleteSelectedCustomDataset);
+cardEditorDatasetSelect?.addEventListener("change", () => {
+  const selectedId = cardEditorDatasetSelect.value;
+  const dataset = state.customDatasets[selectedId];
+  if (cardEditorDatasetLabelInput) {
+    cardEditorDatasetLabelInput.value = dataset?.label ?? "";
+  }
+});
 cardEditorBody?.addEventListener("input", updateEditorValidationState);
 cardEditorBody?.addEventListener("change", updateEditorValidationState);
 cardEditorModal?.addEventListener("click", (event) => {

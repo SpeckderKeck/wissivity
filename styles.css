@@ -195,8 +195,8 @@ body.fullscreen .game-top {
 
 body.fullscreen .board {
   min-height: 0;
-  --board-max-width: min(100%, 100dvw);
-  --board-max-height: calc(100dvh - var(--header-height) - var(--game-bottom-total-space));
+  --board-max-width: min(100%, calc(100dvw - 2vmin));
+  --board-max-height: calc(100dvh - var(--header-height) - var(--game-bottom-total-space) - 2vmin);
   --board-cell-max: 18vmin;
 }
 
@@ -273,7 +273,6 @@ body.fullscreen .board {
   flex-direction: column;
   gap: 0;
   min-height: calc(100dvh - var(--header-height));
-  height: calc(100dvh - var(--header-height));
   --game-bottom-height: clamp(4.5rem, 12vh, 7.5rem);
   --game-bottom-offset: max(8px, env(safe-area-inset-bottom));
   --game-bottom-total-space: calc(var(--game-bottom-height) + var(--game-bottom-offset) + 8px);
@@ -595,10 +594,9 @@ body.fullscreen .board {
   display: grid;
   grid-template-columns: 1fr;
   flex: 1;
-  height: 100%;
   place-items: center;
   overflow: visible;
-  padding: 0 0 var(--game-bottom-total-space);
+  padding: 8px 0 calc(var(--game-bottom-total-space) + 8px);
 }
 
 body.fullscreen #game.panel--active {
@@ -606,7 +604,7 @@ body.fullscreen #game.panel--active {
 }
 
 body.fullscreen .game-top {
-  padding-bottom: var(--game-bottom-total-space);
+  padding-bottom: calc(var(--game-bottom-total-space) + 4px);
 }
 
 body.game-active .game-bottom {
@@ -641,8 +639,8 @@ body.card-view-active .game-top {
   grid-template-rows: repeat(var(--board-rows, 6), 1fr);
   --board-gap-ratio: 0.3334;
   --board-padding-ratio: 0.5;
-  --board-max-width: min(100%, 100dvw);
-  --board-max-height: calc(100dvh - var(--header-height) - var(--game-bottom-total-space));
+  --board-max-width: min(100%, calc(100dvw - 16px));
+  --board-max-height: calc(100dvh - var(--header-height) - var(--game-bottom-total-space) - 16px);
   --board-cell-from-width: calc(
     var(--board-max-width) /
       (var(--board-cols, 6) +

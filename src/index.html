@@ -9,17 +9,6 @@
 <body>
   <header class="global-header">
     <div class="global-header-inner">
-      <button
-        id="qr-modal-toggle"
-        class="icon-button"
-        type="button"
-        aria-label="QR-Code anzeigen"
-        aria-haspopup="dialog"
-        aria-expanded="false"
-        title="QR-Code anzeigen"
-      >
-        📱
-      </button>
       <label class="theme-switch" title="Helles Design aktivieren">
         <input
           id="theme-toggle"
@@ -48,27 +37,8 @@
   <div class="app">
 
     <main>
-      <section id="intro" class="panel panel--active intro-panel viewport-panel" aria-label="Startseite">
-        <div class="intro-card">
-          <div class="intro-content">
-            <h1>Actilab</h1>
-            <p class="tagline">Die interaktive Lernapp</p>
-            <div class="intro-qr">
-              <img id="intro-qr" alt="QR-Code zur Actilab-Website" />
-            </div>
-            <button id="intro-start" class="primary">Spiel starten</button>
-          </div>
-        </div>
-      </section>
-
-      <section id="menu" class="panel viewport-panel menu-panel" aria-label="Hauptmenü" aria-hidden="true" hidden>
-        <div class="menu-stepper" role="tablist" aria-label="Menüabschnitte">
-          <button class="menu-stepper-button is-active" type="button" data-step-target="teams" role="tab" aria-selected="true">1 · Teams</button>
-          <button class="menu-stepper-button" type="button" data-step-target="settings" role="tab" aria-selected="false">2 · Spiel</button>
-          <button class="menu-stepper-button" type="button" data-step-target="cards" role="tab" aria-selected="false">3 · Karten</button>
-        </div>
-
-        <div class="menu-step is-active" data-step="teams" role="tabpanel">
+      <section id="menu" class="panel panel--active" aria-label="Hauptmenü">
+        <div class="panel-grid">
           <div class="card card--teams">
             <h2>Teams</h2>
             <label class="field">
@@ -85,10 +55,8 @@
             </label>
             <div id="team-list" class="team-list"></div>
           </div>
-        </div>
 
-        <div class="menu-step" data-step="settings" role="tabpanel" aria-hidden="true">
-          <div class="card" id="menu-settings-card">
+          <div class="card">
             <h2>Spieleinstellungen</h2>
             <div class="field-group category-settings">
               <p>Kategorien</p>
@@ -142,67 +110,52 @@
               </select>
             </label>
           </div>
-        </div>
 
-        <div class="menu-step" data-step="cards" role="tabpanel" aria-hidden="true">
-          <div class="card-stack">
-            <div class="card">
-              <div class="card-row">
+          <div class="card">
+            <div class="card-row">
               <h2>Kartensatz</h2>
               <button class="info-button" id="csv-info" aria-label="CSV Info">i</button>
             </div>
-              <div class="field">
-                Kartensatz hinzufügen
-                <div id="dataset-select-list" class="dataset-select-list" aria-live="polite"></div>
-                <button
-                id="dataset-add"
-                class="dataset-add-button"
-                type="button"
-                aria-label="Kartensatz hinzufügen"
-                title="Kartensatz hinzufügen"
-              >
-                +
-                </button>
-              </div>
-              <label class="field upload">
+            <label class="field">
+              Kartensatz auswählen
+              <select id="dataset-select">
+                <option value="allgemein">Allgemeinwissen</option>
+                <option value="kfz">KFZ</option>
+                <option value="kfz_einfach">KFZ einfach</option>
+                <option value="geographie">Geographie</option>
+              </select>
+            </label>
+            <label class="field upload">
               CSV Upload
               <input id="csv-upload" type="file" accept=".csv" />
-              </label>
-              <button id="open-card-editor" class="ghost" type="button">Karten bearbeiten</button>
-              <p class="hint" id="csv-status">Standarddatensatz aktiv.</p>
-              <div class="tooltip" id="csv-tooltip" role="dialog" aria-hidden="true">
-                <h3>CSV-Format</h3>
-                <ul>
-                  <li>Spalten: Kategorie;Begriff/Frage;Tabu1/Antwort;Tabu2;Tabu3…</li>
-                  <li>Kategorien: Erklären, Zeichnen, Pantomime, Quizfrage</li>
-                  <li>Quizfrage: Frage + Antwort in Spalte 2/3</li>
-                  <li>Editor-Workflow: Karten bearbeiten → als neuen Kartensatz speichern oder bestehenden überschreiben</li>
-                  <li>Eigene Kartensätze werden lokal im Browser gespeichert (localStorage)</li>
-                  <li>Optional: Editor-Inhalt als CSV (UTF-8, Semikolon) exportieren</li>
-                </ul>
-              </div>
-            </div>
-            <div class="card">
-              <h2>Spiellänge</h2>
-              <label class="field">
-                Spiellänge
-                <select id="board-size-select">
-                  <option value="short">Kurzes Spiel · 24 Felder (6 × 4)</option>
-                  <option value="normal" selected>Normales Spiel · 30 Felder (6 × 5)</option>
-                  <option value="long">Langes Spiel · 42 Felder (7 × 6)</option>
-                </select>
-              </label>
+            </label>
+            <p class="hint" id="csv-status">Standarddatensatz aktiv.</p>
+            <div class="tooltip" id="csv-tooltip" role="dialog" aria-hidden="true">
+              <h3>CSV-Format</h3>
+              <ul>
+                <li>Spalten: Kategorie;Begriff/Frage;Tabu1/Antwort;Tabu2;Tabu3…</li>
+                <li>Kategorien: Erklären, Zeichnen, Pantomime, Quizfrage</li>
+                <li>Quizfrage: Frage + Antwort in Spalte 2/3</li>
+                <li>Excel: als CSV (UTF-8, Semikolon) exportieren</li>
+              </ul>
             </div>
           </div>
+          <div class="card">
+            <h2>Spiellänge</h2>
+            <label class="field">
+              Spiellänge
+              <select id="board-size-select">
+                <option value="short">Kurzes Spiel · 24 Felder (6 × 4)</option>
+                <option value="normal" selected>Normales Spiel · 30 Felder (6 × 5)</option>
+                <option value="long">Langes Spiel · 42 Felder (7 × 6)</option>
+              </select>
+            </label>
+          </div>
         </div>
-        <div class="menu-footer-actions">
-          <button type="button" class="ghost" id="menu-step-back">Zurück</button>
-          <button type="button" class="ghost" id="menu-step-next">Weiter</button>
-          <button id="start-game" class="primary">Spiel starten</button>
-        </div>
+        <button id="start-game" class="primary">Spiel starten</button>
       </section>
 
-      <section id="game" class="panel viewport-panel" aria-label="Spielfeld" aria-hidden="true" hidden>
+      <section id="game" class="panel" aria-label="Spielfeld">
         <div class="game-top">
           <div class="board" id="board" aria-hidden="true"></div>
           <div id="dice-overlay" class="dice-overlay" aria-hidden="true">
@@ -270,6 +223,30 @@
                 </label>
               </div>
             </div>
+            <div class="field-group board-size-group">
+              <p>Spiellänge</p>
+              <label class="option-card">
+                <input type="radio" name="board-size-game" value="short" />
+                <span>
+                  <strong>Kurzes Spiel</strong>
+                  <small>24 Felder · Raster 6 × 4</small>
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="board-size-game" value="normal" checked />
+                <span>
+                  <strong>Normales Spiel</strong>
+                  <small>30 Felder · Raster 6 × 5</small>
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="board-size-game" value="long" />
+                <span>
+                  <strong>Langes Spiel</strong>
+                  <small>42 Felder · Raster 7 × 6</small>
+                </span>
+              </label>
+            </div>
             <label class="field">
               Strafzeit beim Tauschen
               <select id="swap-select-game">
@@ -296,66 +273,14 @@
   <div id="overlay" class="overlay hidden" aria-live="polite">
     <div class="overlay-content" id="overlay-content">🎲</div>
   </div>
-  <div id="qr-modal" class="qr-modal hidden" role="dialog" aria-modal="true" aria-label="QR-Code zur Website">
-    <div class="qr-modal-card">
-      <div class="qr-modal-header">
-        <h2>QR-Code</h2>
-        <button id="qr-modal-close" class="ghost" type="button">Schließen</button>
-      </div>
-      <img id="qr-modal-image" alt="QR-Code zur Actilab-Website" />
-    </div>
-  </div>
-
-  <div id="card-editor-modal" class="card-editor-modal hidden" role="dialog" aria-modal="true" aria-label="Karteneditor">
-    <div class="card-editor-card">
-      <div class="card-editor-header">
-        <h2>Karteneditor</h2>
-        <button id="close-card-editor" class="ghost" type="button">Schließen</button>
-      </div>
-      <div class="card-editor-table-wrap">
-        <table class="card-editor-table">
-          <thead>
-            <tr>
-              <th>Kategorie</th>
-              <th>Begriff/Frage</th>
-              <th>Antwort/Tabu1</th>
-              <th>Tabu2</th>
-              <th>Tabu3</th>
-              <th>Tabu4</th>
-              <th>Aktion</th>
-            </tr>
-          </thead>
-          <tbody id="card-editor-body"></tbody>
-        </table>
-      </div>
-      <div id="card-editor-errors" class="card-editor-errors hidden" aria-live="polite"></div>
-      <div class="card-editor-actions">
-        <div class="card-editor-actions-left">
-          <button id="card-editor-add-row" class="ghost" type="button">+ Zeile</button>
-          <button id="card-editor-save" class="primary" type="button">Übernehmen</button>
-          <button id="card-editor-export" class="ghost" type="button">Als CSV exportieren</button>
-        </div>
-        <div class="card-editor-actions-right">
-          <input id="card-editor-dataset-label" type="text" placeholder="Name für neuen Kartensatz" />
-          <button id="card-editor-save-new" class="ghost" type="button">Als neuen Kartensatz speichern</button>
-          <select id="card-editor-dataset-select" aria-label="Eigenen Kartensatz auswählen"></select>
-          <button id="card-editor-overwrite" class="ghost" type="button">Bestehenden Kartensatz überschreiben</button>
-          <button id="card-editor-delete" class="ghost" type="button">Kartensatz löschen</button>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <div id="turn-overlay" class="turn-overlay hidden" aria-live="polite">
     <div class="turn-overlay-panel" id="turn-overlay-panel">
       <div class="turn-category" id="turn-category">
         <div class="turn-category-icon" id="turn-category-icon">?</div>
         <h2 id="turn-category-label">Kategorie</h2>
+        <div class="turn-countdown hidden" id="turn-countdown">3</div>
         <button id="turn-ready" class="primary">Bereit</button>
-      </div>
-      <div class="turn-countdown-card hidden" id="turn-countdown-card">
-        <h2>Start in</h2>
-        <div class="turn-countdown" id="turn-countdown">3</div>
       </div>
       <div class="turn-word hidden" id="turn-word">
         <div class="turn-timer" id="turn-timer">00</div>
@@ -386,20 +311,15 @@
         <span></span><span></span><span></span><span></span><span></span>
         <span></span><span></span><span></span><span></span><span></span>
       </div>
-      <h2 id="winner-label">Team hat gewonnen</h2>
-      <button id="winner-restart" class="ghost">Zurück zum Menü</button>
+      <h2 id="winner-label">Team gewinnt</h2>
+      <button id="winner-restart" class="ghost">Neues Spiel</button>
     </div>
   </div>
 
   <script src="../data/allgemein.js"></script>
   <script src="../data/kfz.js"></script>
-  <script src="../data/kfz_werkstoffe.js"></script>
   <script src="../data/kfz_einfach.js"></script>
   <script src="../data/geographie.js"></script>
-  <script src="../data/um_nachruesten_mk10.js"></script>
-  <script src="../data/mfm10_ish.js"></script>
-  <script src="../data/industriemechanik_allgemein.js"></script>
-  <script src="../data/gesellschaft_kunst_geo_sport_geschichte_mathe_grammatik.js"></script>
   <script src="../app.js"></script>
 </body>
 </html>

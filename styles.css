@@ -1276,6 +1276,104 @@ button:disabled {
   word-break: break-all;
 }
 
+.card-editor-modal {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  display: grid;
+  place-items: center;
+  z-index: 16;
+  padding: 24px;
+}
+
+.card-editor-card {
+  width: min(1120px, 100%);
+  max-height: min(82dvh, 900px);
+  background: var(--panel);
+  border-radius: 20px;
+  box-shadow: 0 16px 40px var(--shadow);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 16px;
+  padding: 20px;
+}
+
+.card-editor-header,
+.card-editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card-editor-table-wrap {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: auto;
+  max-height: min(56dvh, 620px);
+  background: var(--card);
+}
+
+.card-editor-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.card-editor-table th,
+.card-editor-table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.card-editor-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface-alt);
+  text-align: left;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.card-editor-table td select,
+.card-editor-table td input {
+  width: 100%;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.card-editor-remove {
+  white-space: nowrap;
+}
+
+@media (max-width: 780px) {
+  .card-editor-modal {
+    padding: 12px;
+  }
+
+  .card-editor-card {
+    width: 100%;
+    max-height: 92dvh;
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .card-editor-actions {
+    flex-wrap: wrap;
+  }
+
+  .card-editor-actions .primary,
+  .card-editor-actions .ghost {
+    width: 100%;
+  }
+}
+
 .settings-card {
   width: min(520px, 100%);
   background: var(--panel);

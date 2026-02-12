@@ -158,6 +158,7 @@
               CSV Upload
               <input id="csv-upload" type="file" accept=".csv" />
               </label>
+              <button id="open-card-editor" class="ghost" type="button">Karten bearbeiten</button>
               <p class="hint" id="csv-status">Standarddatensatz aktiv.</p>
               <div class="tooltip" id="csv-tooltip" role="dialog" aria-hidden="true">
                 <h3>CSV-Format</h3>
@@ -286,6 +287,35 @@
         <button id="qr-modal-close" class="ghost" type="button">Schließen</button>
       </div>
       <img id="qr-modal-image" alt="QR-Code zur Actilab-Website" />
+    </div>
+  </div>
+
+  <div id="card-editor-modal" class="card-editor-modal hidden" role="dialog" aria-modal="true" aria-label="Karteneditor">
+    <div class="card-editor-card">
+      <div class="card-editor-header">
+        <h2>Karteneditor</h2>
+        <button id="close-card-editor" class="ghost" type="button">Schließen</button>
+      </div>
+      <div class="card-editor-table-wrap">
+        <table class="card-editor-table">
+          <thead>
+            <tr>
+              <th>Kategorie</th>
+              <th>Begriff/Frage</th>
+              <th>Antwort/Tabu1</th>
+              <th>Tabu2</th>
+              <th>Tabu3</th>
+              <th>Tabu4</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="card-editor-body"></tbody>
+        </table>
+      </div>
+      <div class="card-editor-actions">
+        <button id="card-editor-add-row" class="ghost" type="button">+ Zeile</button>
+        <button id="card-editor-save" class="primary" type="button">Übernehmen</button>
+      </div>
     </div>
   </div>
 

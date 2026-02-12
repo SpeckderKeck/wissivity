@@ -42,6 +42,12 @@ const csvInfo = document.getElementById("csv-info");
 const csvTooltip = document.getElementById("csv-tooltip");
 const datasetSelectList = document.getElementById("dataset-select-list");
 const datasetAddButton = document.getElementById("dataset-add");
+const openCardEditorButton = document.getElementById("open-card-editor");
+const cardEditorModal = document.getElementById("card-editor-modal");
+const closeCardEditorButton = document.getElementById("close-card-editor");
+const cardEditorBody = document.getElementById("card-editor-body");
+const cardEditorAddRowButton = document.getElementById("card-editor-add-row");
+const cardEditorSaveButton = document.getElementById("card-editor-save");
 const themeToggle = document.getElementById("theme-toggle");
 const themeToggleWrapper = themeToggle?.closest(".theme-switch");
 const fullscreenToggle = document.getElementById("fullscreen-toggle");
@@ -110,6 +116,8 @@ const CATEGORY_VISUALS = {
     iconColor: "#0ea5e9",
   },
 };
+
+const ALLOWED_CARD_CATEGORIES = ["Erklären", "Zeichnen", "Pantomime", "Quizfrage"];
 
 function getCategoryIconPath(category) {
   return CATEGORY_CONFIG[category]?.iconPath ?? "";
@@ -976,6 +984,147 @@ function cloneCards(cards) {
   }));
 }
 
+
+
+let cardEditorRowCounter = 0;
+
+function normalizeCardFromEditor(values) {
+  const category = ALLOWED_CARD_CATEGORIES.includes(values.category) ? values.category : "Erklären";
+  const term = values.term.trim();
+  if (!term) return null;
+
+  if (category === "Quizfrage") {
+    return {
+      category,
+      term,
+      answer: values.answer.trim(),
+      taboo: [],
+    };
+  }
+
+  return {
+    category,
+    term,
+    taboo: [values.answer, values.tabu2, values.tabu3, values.tabu4]
+      .map((entry) => entry.trim())
+      .filter(Boolean),
+  };
+}
+
+function collectCardsFromEditor() {
+  if (!cardEditorBody) return [];
+  return [...cardEditorBody.querySelectorAll("tr[data-row-id]")]
+    .map((row) => {
+      const category = row.querySelector('[data-field="category"]')?.value ?? "";
+      const term = row.querySelector('[data-field="term"]')?.value ?? "";
+      const answer = row.querySelector('[data-field="answer"]')?.value ?? "";
+      const tabu2 = row.querySelector('[data-field="tabu2"]')?.value ?? "";
+      const tabu3 = row.querySelector('[data-field="tabu3"]')?.value ?? "";
+      const tabu4 = row.querySelector('[data-field="tabu4"]')?.value ?? "";
+      return normalizeCardFromEditor({ category, term, answer, tabu2, tabu3, tabu4 });
+    })
+    .filter(Boolean);
+}
+
+function createCategorySelect(selectedCategory = "Erklären") {
+  const select = document.createElement("select");
+  select.dataset.field = "category";
+  ALLOWED_CARD_CATEGORIES.forEach((category) => {
+    const option = document.createElement("option");
+    option.value = category;
+    option.textContent = category;
+    if (category === selectedCategory) {
+      option.selected = true;
+    }
+    select.append(option);
+  });
+  return select;
+}
+
+function createEditorInput(field, value = "") {
+  const input = document.createElement("input");
+  input.type = "text";
+  input.dataset.field = field;
+  input.value = value;
+  return input;
+}
+
+function createEditorRow(card = {}) {
+  const rowId = `card-row-${cardEditorRowCounter++}`;
+  const row = document.createElement("tr");
+  row.dataset.rowId = rowId;
+
+  const category = ALLOWED_CARD_CATEGORIES.includes(card.category) ? card.category : "Erklären";
+  const taboos = Array.isArray(card.taboo) ? card.taboo : [];
+  const answerOrTabu = category === "Quizfrage" ? card.answer ?? "" : taboos[0] ?? "";
+
+  const columns = [
+    createCategorySelect(category),
+    createEditorInput("term", card.term ?? ""),
+    createEditorInput("answer", answerOrTabu),
+    createEditorInput("tabu2", taboos[1] ?? ""),
+    createEditorInput("tabu3", taboos[2] ?? ""),
+    createEditorInput("tabu4", taboos[3] ?? ""),
+  ];
+
+  columns.forEach((element) => {
+    const cell = document.createElement("td");
+    cell.append(element);
+    row.append(cell);
+  });
+
+  const actionCell = document.createElement("td");
+  const removeButton = document.createElement("button");
+  removeButton.type = "button";
+  removeButton.className = "ghost card-editor-remove";
+  removeButton.textContent = "Entfernen";
+  removeButton.addEventListener("click", () => removeEditorRow(rowId));
+  actionCell.append(removeButton);
+  row.append(actionCell);
+
+  return row;
+}
+
+function renderCardEditorRows(cards) {
+  if (!cardEditorBody) return;
+  cardEditorBody.innerHTML = "";
+  const normalizedCards = cards.length > 0 ? cards : [{ category: "Erklären", term: "", taboo: [] }];
+  normalizedCards.forEach((card) => {
+    cardEditorBody.append(createEditorRow(card));
+  });
+}
+
+function addEditorRow() {
+  if (!cardEditorBody) return;
+  cardEditorBody.append(createEditorRow({ category: "Erklären", term: "", taboo: [] }));
+}
+
+function removeEditorRow(rowId) {
+  if (!cardEditorBody) return;
+  const row = cardEditorBody.querySelector(`[data-row-id="${rowId}"]`);
+  row?.remove();
+  if (!cardEditorBody.querySelector("tr[data-row-id]")) {
+    addEditorRow();
+  }
+}
+
+function openCardEditor() {
+  if (!cardEditorModal) return;
+  renderCardEditorRows(cloneCards(state.cards));
+  cardEditorModal.classList.remove("hidden");
+}
+
+function closeCardEditor() {
+  if (!cardEditorModal) return;
+  cardEditorModal.classList.add("hidden");
+}
+
+function saveCardEditor() {
+  const editedCards = collectCardsFromEditor();
+  state.cards = editedCards;
+  csvStatus.textContent = `Editor: ${editedCards.length} Karten.`;
+  closeCardEditor();
+}
 function createDatasetSelect(currentKey = "") {
   const select = document.createElement("select");
   select.className = "dataset-select";
@@ -1371,13 +1520,26 @@ qrModal?.addEventListener("click", (event) => {
   }
 });
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && qrModal && !qrModal.classList.contains("hidden")) {
+  if (event.key !== "Escape") return;
+  if (qrModal && !qrModal.classList.contains("hidden")) {
     setQrModalOpen(false);
+  }
+  if (cardEditorModal && !cardEditorModal.classList.contains("hidden")) {
+    closeCardEditor();
   }
 });
 rollButton.addEventListener("click", handleRoll);
 undoButton.addEventListener("click", handleUndo);
 csvUpload.addEventListener("change", handleCsvUpload);
+openCardEditorButton?.addEventListener("click", openCardEditor);
+closeCardEditorButton?.addEventListener("click", closeCardEditor);
+cardEditorAddRowButton?.addEventListener("click", addEditorRow);
+cardEditorSaveButton?.addEventListener("click", saveCardEditor);
+cardEditorModal?.addEventListener("click", (event) => {
+  if (event.target === cardEditorModal) {
+    closeCardEditor();
+  }
+});
 datasetAddButton?.addEventListener("click", () => {
   addDatasetSelect("");
 });

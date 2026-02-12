@@ -166,7 +166,9 @@
                   <li>Spalten: Kategorie;Begriff/Frage;Tabu1/Antwort;Tabu2;Tabu3…</li>
                   <li>Kategorien: Erklären, Zeichnen, Pantomime, Quizfrage</li>
                   <li>Quizfrage: Frage + Antwort in Spalte 2/3</li>
-                  <li>Excel: als CSV (UTF-8, Semikolon) exportieren</li>
+                  <li>Editor-Workflow: Karten bearbeiten → als neuen Kartensatz speichern oder bestehenden überschreiben</li>
+                  <li>Eigene Kartensätze werden lokal im Browser gespeichert (localStorage)</li>
+                  <li>Optional: Editor-Inhalt als CSV (UTF-8, Semikolon) exportieren</li>
                 </ul>
               </div>
             </div>
@@ -314,8 +316,18 @@
       </div>
       <div id="card-editor-errors" class="card-editor-errors hidden" aria-live="polite"></div>
       <div class="card-editor-actions">
-        <button id="card-editor-add-row" class="ghost" type="button">+ Zeile</button>
-        <button id="card-editor-save" class="primary" type="button">Übernehmen</button>
+        <div class="card-editor-actions-left">
+          <button id="card-editor-add-row" class="ghost" type="button">+ Zeile</button>
+          <button id="card-editor-save" class="primary" type="button">Übernehmen</button>
+          <button id="card-editor-export" class="ghost" type="button">Als CSV exportieren</button>
+        </div>
+        <div class="card-editor-actions-right">
+          <input id="card-editor-dataset-label" type="text" placeholder="Name für neuen Kartensatz" />
+          <button id="card-editor-save-new" class="ghost" type="button">Als neuen Kartensatz speichern</button>
+          <select id="card-editor-dataset-select" aria-label="Eigenen Kartensatz auswählen"></select>
+          <button id="card-editor-overwrite" class="ghost" type="button">Bestehenden Kartensatz überschreiben</button>
+          <button id="card-editor-delete" class="ghost" type="button">Kartensatz löschen</button>
+        </div>
       </div>
     </div>
   </div>

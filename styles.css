@@ -1306,6 +1306,36 @@ button:disabled {
   gap: 12px;
 }
 
+.card-editor-actions-left,
+.card-editor-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.card-editor-actions-right {
+  justify-content: flex-end;
+}
+
+.card-editor-actions-right input,
+.card-editor-actions-right select {
+  min-height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  padding: 8px 10px;
+}
+
+#card-editor-dataset-label {
+  min-width: 240px;
+}
+
+#card-editor-dataset-select {
+  min-width: 240px;
+}
+
 .card-editor-table-wrap {
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -1386,8 +1416,18 @@ button:disabled {
     flex-wrap: wrap;
   }
 
+  .card-editor-actions-left,
+  .card-editor-actions-right {
+    width: 100%;
+  }
+
   .card-editor-actions .primary,
   .card-editor-actions .ghost {
+    width: 100%;
+  }
+
+  .card-editor-actions-right input,
+  .card-editor-actions-right select {
     width: 100%;
   }
 }

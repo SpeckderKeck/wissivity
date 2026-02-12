@@ -70,11 +70,7 @@ const boardSizeInputs = document.querySelectorAll('input[name="board-size"]');
 const teamStatusList = document.getElementById("team-status-list");
 const introStartButton = document.getElementById("intro-start");
 const introQr = document.getElementById("intro-qr");
-const menuSteps = Array.from(document.querySelectorAll(".menu-step"));
-const menuStepButtons = Array.from(document.querySelectorAll(".menu-stepper-button"));
-const menuStepBackButton = document.getElementById("menu-step-back");
-const menuStepNextButton = document.getElementById("menu-step-next");
-
+const menuSettingsCard = document.getElementById("menu-settings-card");
 const qrModalToggle = document.getElementById("qr-modal-toggle");
 const qrModal = document.getElementById("qr-modal");
 const qrModalClose = document.getElementById("qr-modal-close");
@@ -91,45 +87,6 @@ const routeState = {
 };
 
 const INTRO_QR_URL = "https://speckderkeck.github.io/wissivity/";
-
-let menuStepIndex = 0;
-
-function setMenuStep(index) {
-  if (!menuSteps.length) return;
-  menuStepIndex = Math.min(Math.max(index, 0), menuSteps.length - 1);
-
-  menuSteps.forEach((step, stepIndex) => {
-    const isActive = stepIndex === menuStepIndex;
-    step.classList.toggle("is-active", isActive);
-    step.setAttribute("aria-hidden", String(!isActive));
-  });
-
-  menuStepButtons.forEach((button, stepIndex) => {
-    const isActive = stepIndex === menuStepIndex;
-    button.classList.toggle("is-active", isActive);
-    button.setAttribute("aria-selected", String(isActive));
-  });
-
-  if (menuStepBackButton) {
-    menuStepBackButton.disabled = menuStepIndex === 0;
-  }
-
-  if (menuStepNextButton) {
-    menuStepNextButton.disabled = menuStepIndex === menuSteps.length - 1;
-  }
-}
-
-function setupMenuStepper() {
-  if (!menuSteps.length) return;
-
-  menuStepButtons.forEach((button, index) => {
-    button.addEventListener("click", () => setMenuStep(index));
-  });
-
-  menuStepBackButton?.addEventListener("click", () => setMenuStep(menuStepIndex - 1));
-  menuStepNextButton?.addEventListener("click", () => setMenuStep(menuStepIndex + 1));
-  setMenuStep(0);
-}
 
 function showDiceOverlay(roll) {
   if (!diceOverlay || !diceOverlayValue) return;
@@ -1704,18 +1661,12 @@ function handleCloseSettings() {
 function handleMainMenu() {
   stopTimer();
   hideTurnOverlay();
-  setPanelState(introPanel, false);
-  setPanelState(menuPanel, true);
-  setPanelState(gamePanel, false);
-  setMenuStep(0);
-  document.body.classList.remove("game-active");
+  navigateTo("menu");
 }
 
 function handleIntroStart() {
-  setPanelState(introPanel, false);
-  setPanelState(menuPanel, true);
-  setMenuStep(0);
-  const focusTarget = menuPanel?.querySelector("input, select, button");
+  navigateTo("menu");
+  const focusTarget = menuSettingsCard?.querySelector("input, select, button");
   focusTarget?.focus();
 }
 
@@ -1890,7 +1841,6 @@ function setup() {
   updateFullscreenState();
   syncSettingsPanel();
   setupIntroPanel();
-  setupMenuStepper();
   setupDatasetSelects();
   applySelectedDatasets();
 }

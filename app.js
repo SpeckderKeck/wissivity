@@ -88,6 +88,43 @@ const routeState = {
 
 const INTRO_QR_URL = "https://speckderkeck.github.io/wissivity/";
 
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function updateViewportLayout() {
+  const root = document.documentElement;
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const headerHeight = Number.parseFloat(
+    getComputedStyle(root).getPropertyValue("--header-height"),
+  ) || 64;
+
+  const compactLayout = viewportWidth <= 920 || viewportHeight <= 760;
+  const tightLayout = viewportWidth <= 640 || viewportHeight <= 620;
+  const uiScale = clamp(Math.min(viewportWidth / 1280, viewportHeight / 900), 0.78, 1.1);
+  const contentHeight = Math.max(360, viewportHeight - headerHeight);
+  const gameBottomHeight = clamp(contentHeight * (tightLayout ? 0.14 : 0.12), 64, 118);
+  const gameBottomOffset = clamp(Math.round(viewportHeight * 0.012), 8, 18);
+  const gameBottomTotalSpace = gameBottomHeight + gameBottomOffset + 8;
+  const statusHeight = clamp(contentHeight * (tightLayout ? 0.09 : 0.075), 38, 72);
+  const boardMaxHeight = Math.max(220, contentHeight - gameBottomTotalSpace - statusHeight - 18);
+  const boardMaxWidth = Math.max(260, viewportWidth - 16);
+
+  root.style.setProperty("--ui-scale", uiScale.toFixed(3));
+  root.style.setProperty("--content-height", `${Math.round(contentHeight)}px`);
+  root.style.setProperty("--game-bottom-height", `${Math.round(gameBottomHeight)}px`);
+  root.style.setProperty("--game-bottom-offset", `${Math.round(gameBottomOffset)}px`);
+  root.style.setProperty("--game-bottom-total-space", `${Math.round(gameBottomTotalSpace)}px`);
+  root.style.setProperty("--status-height", `${Math.round(statusHeight)}px`);
+  root.style.setProperty("--board-max-height", `${Math.round(boardMaxHeight)}px`);
+  root.style.setProperty("--board-max-width", `${Math.round(boardMaxWidth)}px`);
+  root.style.setProperty("--menu-card-min", compactLayout ? "minmax(0, 1fr)" : "minmax(220px, 1fr)");
+  root.style.setProperty("--team-row-columns", tightLayout ? "1fr" : "minmax(130px, 1fr) auto auto");
+  document.body.classList.toggle("compact-layout", compactLayout);
+  document.body.classList.toggle("compact-layout-tight", tightLayout);
+}
+
 function showDiceOverlay(roll) {
   if (!diceOverlay || !diceOverlayValue) return;
   diceOverlayValue.textContent = roll;
@@ -1836,6 +1873,7 @@ function setup() {
   const selectedBoardSize = getSelectedBoardSize(boardSizeSelect ?? boardSizeInputs);
   syncBoardSizeControls(selectedBoardSize);
   applyBoardSize(selectedBoardSize);
+  updateViewportLayout();
   positionTokens();
   updateTimerDisplay(state.timeLimit);
   updateFullscreenState();
@@ -1845,7 +1883,14 @@ function setup() {
   applySelectedDatasets();
 }
 
-window.addEventListener("resize", positionTokens);
+window.addEventListener("resize", () => {
+  updateViewportLayout();
+  positionTokens();
+});
+window.addEventListener("orientationchange", () => {
+  updateViewportLayout();
+  positionTokens();
+});
 teamListContainer.addEventListener("click", handleTeamListClick);
 document.addEventListener("click", (event) => {
   if (!teamListContainer.contains(event.target)) {
@@ -1998,11 +2043,13 @@ fullscreenToggle.addEventListener("click", () => {
 
 document.addEventListener("fullscreenchange", () => {
   updateFullscreenState();
+  updateViewportLayout();
   positionTokens();
 });
 
 const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
 applyTheme(storedTheme === "light" ? "light" : "default");
+updateViewportLayout();
 setup();
 const initialRoute = getRouteFromHash();
 if (!window.location.hash) {

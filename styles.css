@@ -28,7 +28,19 @@
   --pastel-3: rgba(255, 165, 2, 0.18);
   --pastel-4: rgba(30, 30, 30, 0.7);
   --board-cell-max: 12vmin;
+  --ui-scale: 1;
+  --content-height: calc(100dvh - var(--header-height));
+  --menu-card-min: minmax(220px, 1fr);
+  --team-row-columns: minmax(130px, 1fr) auto auto;
+  --team-list-gap: clamp(8px, calc(12px * var(--ui-scale)), 12px);
+  --status-height: clamp(38px, 7.5dvh, 72px);
+  --game-bottom-height: clamp(72px, 12dvh, 118px);
+  --game-bottom-offset: max(8px, env(safe-area-inset-bottom));
+  --game-bottom-total-space: calc(var(--game-bottom-height) + var(--game-bottom-offset) + 8px);
+  --board-max-width: min(100%, calc(100dvw - 16px));
+  --board-max-height: calc(var(--content-height) - var(--game-bottom-total-space) - var(--status-height));
 }
+
 
 body[data-theme="light"] {
   color-scheme: light;
@@ -195,8 +207,6 @@ body.fullscreen .game-top {
 
 body.fullscreen .board {
   min-height: 0;
-  --board-max-width: min(100%, 100dvw);
-  --board-max-height: calc(100dvh - var(--header-height) - var(--game-bottom-total-space));
   --board-cell-max: 18vmin;
 }
 
@@ -272,29 +282,26 @@ body.fullscreen .board {
   display: flex;
   flex-direction: column;
   gap: 0;
-  min-height: calc(100dvh - var(--header-height));
-  height: calc(100dvh - var(--header-height));
-  --game-bottom-height: clamp(4.5rem, 12vh, 7.5rem);
-  --game-bottom-offset: max(8px, env(safe-area-inset-bottom));
-  --game-bottom-total-space: calc(var(--game-bottom-height) + var(--game-bottom-offset) + 8px);
+  min-height: var(--content-height);
+  height: var(--content-height);
 }
 
 .panel-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, var(--menu-card-min));
   gap: 20px;
   margin-bottom: 24px;
 }
 
 .card {
   background: var(--panel);
-  padding: 20px;
+  padding: clamp(14px, calc(20px * var(--ui-scale)), 20px);
   border-radius: 16px;
   box-shadow: 0 10px 30px var(--shadow);
 }
 
 .card--teams {
-  min-width: 260px;
+  min-width: 0;
 }
 
 .card-row {
@@ -434,12 +441,12 @@ body.fullscreen .board {
 
 .team-list {
   display: grid;
-  gap: 12px;
+  gap: var(--team-list-gap);
 }
 
 .team-count-control {
   display: grid;
-  grid-template-columns: auto minmax(60px, 80px) auto;
+  grid-template-columns: auto minmax(56px, 72px) auto;
   align-items: center;
   gap: 10px;
 }
@@ -484,7 +491,7 @@ body.fullscreen .board {
 
 .team-row-fields {
   display: grid;
-  grid-template-columns: minmax(160px, 1fr) auto auto;
+  grid-template-columns: var(--team-row-columns);
   gap: 12px;
   align-items: end;
 }
@@ -601,10 +608,6 @@ body.fullscreen .board {
   padding: 0 0 var(--game-bottom-total-space);
 }
 
-body.fullscreen #game.route-view--active {
-  --game-bottom-height: clamp(4rem, 10vh, 6.5rem);
-}
-
 body.fullscreen .game-top {
   padding-bottom: var(--game-bottom-total-space);
 }
@@ -641,8 +644,6 @@ body.card-view-active .game-top {
   grid-template-rows: repeat(var(--board-rows, 6), 1fr);
   --board-gap-ratio: 0.3334;
   --board-padding-ratio: 0.5;
-  --board-max-width: min(100%, 100dvw);
-  --board-max-height: calc(100dvh - var(--header-height) - var(--game-bottom-total-space));
   --board-cell-from-width: calc(
     var(--board-max-width) /
       (var(--board-cols, 6) +
@@ -1128,13 +1129,13 @@ button:disabled {
   background: var(--panel);
   border-radius: 12px;
   border: 1px solid var(--border);
-  width: 72px;
-  height: 72px;
+  width: clamp(56px, calc(72px * var(--ui-scale)), 72px);
+  height: clamp(56px, calc(72px * var(--ui-scale)), 72px);
 }
 
 .toolbar-button {
-  width: 72px;
-  height: 72px;
+  width: clamp(56px, calc(72px * var(--ui-scale)), 72px);
+  height: clamp(56px, calc(72px * var(--ui-scale)), 72px);
   padding: 0;
   display: grid;
   place-items: center;
@@ -1147,6 +1148,8 @@ button:disabled {
 }
 
 .game-bottom {
+  --toolbar-padding-y: clamp(8px, calc(10px * var(--ui-scale)), 12px);
+  --toolbar-padding-x: clamp(10px, calc(14px * var(--ui-scale)), 16px);
   position: absolute;
   left: 50%;
   bottom: 0;
@@ -1157,7 +1160,7 @@ button:disabled {
   align-items: center;
   justify-content: center;
   min-height: var(--game-bottom-height);
-  padding: 10px 14px;
+  padding: var(--toolbar-padding-y) var(--toolbar-padding-x);
   border-radius: 20px;
   border: 1px solid var(--border);
   background: var(--panel);
@@ -1166,7 +1169,10 @@ button:disabled {
 .status {
   position: absolute;
   left: 50%;
-  bottom: calc(var(--game-bottom-total-space) + 8px);
+  bottom: calc(var(--game-bottom-total-space) + max(8px, 1.2dvh));
+  min-height: var(--status-height);
+  display: grid;
+  place-items: center;
   transform: translateX(-50%);
   width: min(100%, calc(100dvw - 32px));
   color: var(--muted);
@@ -1787,4 +1793,17 @@ button:disabled {
   .status {
     font-size: 0.95rem;
   }
+}
+
+
+body.compact-layout .game-controls {
+  gap: clamp(6px, 1.8vw, 10px);
+}
+
+body.compact-layout-tight .game-controls {
+  gap: 6px;
+}
+
+body.compact-layout-tight .status {
+  font-size: 0.92rem;
 }

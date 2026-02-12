@@ -1702,16 +1702,12 @@ function handleCloseSettings() {
 function handleMainMenu() {
   stopTimer();
   hideTurnOverlay();
-  setPanelState(introPanel, false);
-  setPanelState(menuPanel, true);
-  setPanelState(gamePanel, false);
+  navigateTo("menu");
   setMenuStep(0);
-  document.body.classList.remove("game-active");
 }
 
 function handleIntroStart() {
-  setPanelState(introPanel, false);
-  setPanelState(menuPanel, true);
+  navigateTo("menu");
   setMenuStep(0);
   const focusTarget = menuPanel?.querySelector("input, select, button");
   focusTarget?.focus();

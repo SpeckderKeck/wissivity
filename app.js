@@ -98,6 +98,27 @@ function setPanelState(panel, isActive) {
   panel.setAttribute("aria-hidden", String(!isActive));
 }
 
+function showIntroPanel() {
+  setPanelState(introPanel, true);
+  setPanelState(menuPanel, false);
+  setPanelState(gamePanel, false);
+  document.body.classList.remove("game-active");
+}
+
+function showMenuPanel() {
+  setPanelState(introPanel, false);
+  setPanelState(menuPanel, true);
+  setPanelState(gamePanel, false);
+  document.body.classList.remove("game-active");
+}
+
+function showGamePanel() {
+  setPanelState(introPanel, false);
+  setPanelState(menuPanel, false);
+  setPanelState(gamePanel, true);
+  document.body.classList.add("game-active");
+}
+
 const CATEGORY_CONFIG = {
   Erklären: { id: "explain", iconPath: "assets/icons/explain.svg", fallbackIcon: "💬" },
   Zeichnen: { id: "draw", iconPath: "assets/icons/draw.svg", fallbackIcon: "✏️" },
@@ -1035,10 +1056,7 @@ function handleStartGame() {
     return { name, icon, color };
   });
   createTokens(teams);
-  setPanelState(introPanel, false);
-  setPanelState(menuPanel, false);
-  setPanelState(gamePanel, true);
-  document.body.classList.add("game-active");
+  showGamePanel();
   positionTokens();
   state.currentTeam = 0;
   state.pendingRoll = null;
@@ -1604,15 +1622,11 @@ function handleCloseSettings() {
 function handleMainMenu() {
   stopTimer();
   hideTurnOverlay();
-  setPanelState(introPanel, false);
-  setPanelState(menuPanel, true);
-  setPanelState(gamePanel, false);
-  document.body.classList.remove("game-active");
+  showMenuPanel();
 }
 
 function handleIntroStart() {
-  setPanelState(introPanel, false);
-  setPanelState(menuPanel, true);
+  showMenuPanel();
   menuSettingsCard?.scrollIntoView({ behavior: "smooth", block: "start" });
   const focusTarget = menuSettingsCard?.querySelector("input, select, button");
   focusTarget?.focus();
@@ -1822,9 +1836,7 @@ boardSizeSelect?.addEventListener("change", () => {
   applyBoardSize(selectedBoardSize);
 });
 
-setPanelState(introPanel, Boolean(introPanel?.classList.contains("panel--active")));
-setPanelState(menuPanel, Boolean(menuPanel?.classList.contains("panel--active")));
-setPanelState(gamePanel, Boolean(gamePanel?.classList.contains("panel--active")));
+showIntroPanel();
 
 startButton.addEventListener("click", handleStartGame);
 introStartButton?.addEventListener("click", handleIntroStart);

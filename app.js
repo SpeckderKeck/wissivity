@@ -80,6 +80,16 @@ const qrModal = document.getElementById("qr-modal");
 const qrModalClose = document.getElementById("qr-modal-close");
 const qrModalImage = document.getElementById("qr-modal-image");
 
+const VIEWS = {
+  landing: introPanel,
+  menu: menuPanel,
+  game: gamePanel,
+};
+
+const routeState = {
+  currentRoute: "landing",
+};
+
 const INTRO_QR_URL = "https://speckderkeck.github.io/wissivity/";
 
 let menuStepIndex = 0;
@@ -134,11 +144,61 @@ function hideDiceOverlay() {
   diceOverlay.classList.remove("active");
 }
 
-function setPanelState(panel, isActive) {
+function getRouteFromHash() {
+  const raw = window.location.hash.replace(/^#\/?/, "").trim();
+  if (raw === "menu" || raw === "game" || raw === "landing") {
+    return raw;
+  }
+  return "landing";
+}
+
+function navigateTo(route, { replace = false } = {}) {
+  const targetRoute = VIEWS[route] ? route : "landing";
+  const nextHash = `#/${targetRoute}`;
+  if (replace) {
+    history.replaceState({ route: targetRoute }, "", nextHash);
+  } else if (window.location.hash !== nextHash) {
+    history.pushState({ route: targetRoute }, "", nextHash);
+  }
+  applyRoute(targetRoute);
+}
+
+function focusView(route) {
+  const panel = VIEWS[route];
   if (!panel) return;
-  panel.classList.toggle("panel--active", isActive);
-  panel.toggleAttribute("hidden", !isActive);
-  panel.setAttribute("aria-hidden", String(!isActive));
+  const focusTarget = panel.querySelector("h1, h2, button, input, select, [tabindex]:not([tabindex='-1'])");
+  focusTarget?.focus({ preventScroll: true });
+}
+
+function initLandingView() {
+  setupIntroPanel();
+}
+
+function initMenuView() {
+  closeAllTeamPickers();
+}
+
+function initGameView() {
+  settingsPanel?.classList.add("hidden");
+}
+
+function applyRoute(route) {
+  routeState.currentRoute = route;
+  Object.entries(VIEWS).forEach(([name, panel]) => {
+    if (!panel) return;
+    const isActive = name === route;
+    panel.classList.toggle("route-view--active", isActive);
+    panel.classList.toggle("route-view", true);
+    panel.toggleAttribute("inert", !isActive);
+    panel.setAttribute("aria-hidden", String(!isActive));
+  });
+  document.body.classList.toggle("game-active", route === "game");
+
+  if (route === "landing") initLandingView();
+  if (route === "menu") initMenuView();
+  if (route === "game") initGameView();
+
+  focusView(route);
 }
 
 const CATEGORY_CONFIG = {
@@ -1078,10 +1138,7 @@ function handleStartGame() {
     return { name, icon, color };
   });
   createTokens(teams);
-  setPanelState(introPanel, false);
-  setPanelState(menuPanel, false);
-  setPanelState(gamePanel, true);
-  document.body.classList.add("game-active");
+  navigateTo("game");
   positionTokens();
   state.currentTeam = 0;
   state.pendingRoll = null;
@@ -1867,9 +1924,13 @@ boardSizeSelect?.addEventListener("change", () => {
   applyBoardSize(selectedBoardSize);
 });
 
-setPanelState(introPanel, Boolean(introPanel?.classList.contains("panel--active")));
-setPanelState(menuPanel, Boolean(menuPanel?.classList.contains("panel--active")));
-setPanelState(gamePanel, Boolean(gamePanel?.classList.contains("panel--active")));
+window.addEventListener("hashchange", () => {
+  applyRoute(getRouteFromHash());
+});
+
+window.addEventListener("popstate", () => {
+  applyRoute(getRouteFromHash());
+});
 
 startButton.addEventListener("click", handleStartGame);
 introStartButton?.addEventListener("click", handleIntroStart);
@@ -1993,3 +2054,9 @@ document.addEventListener("fullscreenchange", () => {
 const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
 applyTheme(storedTheme === "light" ? "light" : "default");
 setup();
+const initialRoute = getRouteFromHash();
+if (!window.location.hash) {
+  navigateTo(initialRoute, { replace: true });
+} else {
+  applyRoute(initialRoute);
+}

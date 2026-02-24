@@ -9,17 +9,6 @@
 <body>
   <header class="global-header">
     <div class="global-header-inner">
-      <button
-        id="qr-modal-toggle"
-        class="icon-button"
-        type="button"
-        aria-label="QR-Code anzeigen"
-        aria-haspopup="dialog"
-        aria-expanded="false"
-        title="QR-Code anzeigen"
-      >
-        📱
-      </button>
       <label class="theme-switch" title="Helles Design aktivieren">
         <input
           id="theme-toggle"
@@ -48,20 +37,7 @@
   <div class="app">
 
     <main>
-      <section id="intro" class="panel panel--active intro-panel" aria-label="Startseite">
-        <div class="intro-card">
-          <div class="intro-content">
-            <h1>Actilab</h1>
-            <p class="tagline">Die interaktive Lernapp</p>
-            <div class="intro-qr">
-              <img id="intro-qr" alt="QR-Code zur Actilab-Website" />
-            </div>
-            <button id="intro-start" class="primary">Spiel starten</button>
-          </div>
-        </div>
-      </section>
-
-      <section id="menu" class="panel" aria-label="Hauptmenü" aria-hidden="true" hidden>
+      <section id="menu" class="panel panel--active" aria-label="Hauptmenü" aria-hidden="false">
         <div class="panel-grid">
           <div class="card card--teams">
             <h2>Teams</h2>
@@ -282,16 +258,6 @@
   <div id="overlay" class="overlay hidden" aria-live="polite">
     <div class="overlay-content" id="overlay-content">🎲</div>
   </div>
-  <div id="qr-modal" class="qr-modal hidden" role="dialog" aria-modal="true" aria-label="QR-Code zur Website">
-    <div class="qr-modal-card">
-      <div class="qr-modal-header">
-        <h2>QR-Code</h2>
-        <button id="qr-modal-close" class="ghost" type="button">Schließen</button>
-      </div>
-      <img id="qr-modal-image" alt="QR-Code zur Actilab-Website" />
-    </div>
-  </div>
-
   <div id="card-editor-modal" class="card-editor-modal hidden" role="dialog" aria-modal="true" aria-label="Karteneditor">
     <div class="card-editor-card">
       <div class="card-editor-header">

@@ -5,7 +5,6 @@ const teamCountIncrease = document.getElementById("team-count-increase");
 const teamListContainer = document.getElementById("team-list");
 const startButton = document.getElementById("start-game");
 const menuPanel = document.getElementById("menu");
-const introPanel = document.getElementById("intro");
 const gamePanel = document.getElementById("game");
 const board = document.getElementById("board");
 const rollButton = document.getElementById("roll");
@@ -68,15 +67,6 @@ const applySettingsButton = document.getElementById("apply-settings");
 const mainMenuButton = document.getElementById("main-menu");
 const boardSizeInputs = document.querySelectorAll('input[name="board-size"]');
 const teamStatusList = document.getElementById("team-status-list");
-const introStartButton = document.getElementById("intro-start");
-const introQr = document.getElementById("intro-qr");
-const menuSettingsCard = document.getElementById("menu-settings-card");
-const qrModalToggle = document.getElementById("qr-modal-toggle");
-const qrModal = document.getElementById("qr-modal");
-const qrModalClose = document.getElementById("qr-modal-close");
-const qrModalImage = document.getElementById("qr-modal-image");
-
-const INTRO_QR_URL = "https://speckderkeck.github.io/wissivity/";
 
 function showDiceOverlay(roll) {
   if (!diceOverlay || !diceOverlayValue) return;
@@ -98,22 +88,13 @@ function setPanelState(panel, isActive) {
   panel.setAttribute("aria-hidden", String(!isActive));
 }
 
-function showIntroPanel() {
-  setPanelState(introPanel, true);
-  setPanelState(menuPanel, false);
-  setPanelState(gamePanel, false);
-  document.body.classList.remove("game-active");
-}
-
 function showMenuPanel() {
-  setPanelState(introPanel, false);
   setPanelState(menuPanel, true);
   setPanelState(gamePanel, false);
   document.body.classList.remove("game-active");
 }
 
 function showGamePanel() {
-  setPanelState(introPanel, false);
   setPanelState(menuPanel, false);
   setPanelState(gamePanel, true);
   document.body.classList.add("game-active");
@@ -1632,31 +1613,6 @@ function handleMainMenu() {
   showMenuPanel();
 }
 
-function handleIntroStart() {
-  showMenuPanel();
-  menuSettingsCard?.scrollIntoView({ behavior: "smooth", block: "start" });
-  const focusTarget = menuSettingsCard?.querySelector("input, select, button");
-  focusTarget?.focus();
-}
-
-function setupIntroPanel() {
-  if (introQr) {
-    const qrSource = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(INTRO_QR_URL)}`;
-    introQr.src = qrSource;
-    introQr.loading = "lazy";
-  }
-  if (qrModalImage) {
-    qrModalImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(INTRO_QR_URL)}`;
-    qrModalImage.loading = "lazy";
-  }
-}
-
-function setQrModalOpen(isOpen) {
-  if (!qrModal || !qrModalToggle) return;
-  qrModal.classList.toggle("hidden", !isOpen);
-  qrModalToggle.setAttribute("aria-expanded", String(isOpen));
-}
-
 function setOverlayStartFromCell() {
   const currentIndex = state.positions[state.currentTeam];
   const cell = board.querySelector(`.board-cell[data-index="${currentIndex}"]`);
@@ -1814,7 +1770,6 @@ function setup() {
   updateTimerDisplay(state.timeLimit);
   updateFullscreenState();
   syncSettingsPanel();
-  setupIntroPanel();
   setupDatasetSelects();
   applySelectedDatasets();
 }
@@ -1851,22 +1806,11 @@ boardSizeSelect?.addEventListener("change", () => {
   applyBoardSize(selectedBoardSize);
 });
 
-showIntroPanel();
+showMenuPanel();
 
 startButton.addEventListener("click", handleStartGame);
-introStartButton?.addEventListener("click", handleIntroStart);
-qrModalToggle?.addEventListener("click", () => setQrModalOpen(true));
-qrModalClose?.addEventListener("click", () => setQrModalOpen(false));
-qrModal?.addEventListener("click", (event) => {
-  if (event.target === qrModal) {
-    setQrModalOpen(false);
-  }
-});
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
-  if (qrModal && !qrModal.classList.contains("hidden")) {
-    setQrModalOpen(false);
-  }
   if (cardEditorModal && !cardEditorModal.classList.contains("hidden")) {
     closeCardEditor();
   }

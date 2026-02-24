@@ -545,6 +545,20 @@ body.fullscreen .board {
   }
 }
 
+
+.menu-footer {
+  position: sticky;
+  bottom: 0;
+  padding-top: clamp(8px, 1.5vh, 18px);
+  background: linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--app-bg) 85%, transparent) 34%, var(--app-bg) 100%);
+}
+
+.menu-start-button {
+  max-width: 520px;
+  margin: 0 auto;
+  display: block;
+}
+
 .primary {
   width: 100%;
   padding: 16px;

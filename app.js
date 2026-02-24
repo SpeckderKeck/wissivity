@@ -78,6 +78,13 @@ const mainMenuButton = document.getElementById("main-menu");
 const boardSizeInputs = document.querySelectorAll('input[name="board-size"]');
 const teamStatusList = document.getElementById("team-status-list");
 
+function setStatusMessage(message, { pulseDice = false } = {}) {
+  if (statusText) {
+    statusText.textContent = message;
+  }
+  rollButton?.classList.toggle("dice--pulse", pulseDice);
+}
+
 function showDiceOverlay(roll) {
   if (!diceOverlay || !diceOverlayValue) return;
   diceOverlayValue.textContent = roll;
@@ -833,7 +840,7 @@ function handleRoll() {
   const roll = Math.floor(Math.random() * 6) + 1;
   state.pendingRoll = roll;
   showDiceOverlay(roll);
-  statusText.textContent = `${formatTeamLabel(state.currentTeam)} würfelt ${roll}.`;
+  setStatusMessage(`${formatTeamLabel(state.currentTeam)} würfelt ${roll}.`);
   const previousPositions = [...state.positions];
   state.history.push({
     positions: previousPositions,
@@ -915,9 +922,9 @@ function finishTurn(isCorrect, timedOut = false, { returnToPrevious = false } = 
     showWinner(formatTeamLabel(teamIndex));
     return;
   }
-  statusText.textContent = `${formatTeamLabel(state.currentTeam)} beendet den Zug.`;
+  setStatusMessage(`${formatTeamLabel(state.currentTeam)} beendet den Zug.`);
   state.currentTeam = (state.currentTeam + 1) % state.teams.length;
-  statusText.textContent = `Nächstes: ${formatTeamLabel(state.currentTeam)} würfelt.`;
+  setStatusMessage(`Nächstes: ${formatTeamLabel(state.currentTeam)} würfelt.`, { pulseDice: true });
   renderTeamStatus();
   if (returnToPrevious) {
     setTimeout(() => {
@@ -938,7 +945,7 @@ function handleUndo() {
   state.positions = last.positions;
   state.currentTeam = last.team;
   positionTokens();
-  statusText.textContent = `Zug zurück: ${formatTeamLabel(state.currentTeam)} ist dran.`;
+  setStatusMessage(`Zug zurück: ${formatTeamLabel(state.currentTeam)} ist dran.`, { pulseDice: true });
   renderTeamStatus();
 }
 
@@ -980,7 +987,7 @@ function handleStartGame() {
   winnerScreen.classList.add("hidden");
   turnOverlay.classList.add("hidden");
   turnOverlay.classList.remove("active", "expanded", "category");
-  statusText.textContent = `Nächstes: ${formatTeamLabel(state.currentTeam)} würfelt.`;
+  setStatusMessage(`Nächstes: ${formatTeamLabel(state.currentTeam)} würfelt.`, { pulseDice: true });
 }
 
 function normalizeCardInput(rawRow = {}) {

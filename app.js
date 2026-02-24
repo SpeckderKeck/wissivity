@@ -1702,6 +1702,10 @@ function hideTurnOverlay() {
   turnOverlay.classList.remove("expanded");
   turnOverlay.classList.remove("category");
   turnOverlay.classList.remove("active");
+  requestAnimationFrame(() => {
+    renderBoardPath();
+    positionTokens();
+  });
   setTimeout(() => {
     turnOverlay.classList.add("hidden");
   }, 700);

@@ -811,11 +811,11 @@ body[data-theme="light"] .board-arrow {
 
 .token {
   position: absolute;
-  width: min(25vw, 25vh);
-  height: min(25vw, 25vh);
+  width: min(12.5vw, 12.5vh);
+  height: min(12.5vw, 12.5vh);
   display: grid;
   place-items: center;
-  font-size: min(22vw, 22vh);
+  font-size: min(11vw, 11vh);
   line-height: 1;
   transform: translate(-50%, -50%);
   transition: transform 0.6s ease, top 0.6s ease, left 0.6s ease;

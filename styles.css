@@ -660,7 +660,7 @@ body.card-view-active .game-top {
 
 .board-path-fill {
   stroke: rgba(250, 250, 250, 0.7);
-  stroke-width: calc(var(--board-cell) * 0.92);
+  stroke-width: calc(var(--board-cell) * 0.5);
 }
 
 body[data-theme="light"] .board-path-fill {

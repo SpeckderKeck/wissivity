@@ -602,14 +602,21 @@ function renderBoardPath() {
   const totalCells = state.boardDimensions.total;
   if (totalCells < 2) return;
 
-  const points = [];
+  const cells = [];
   for (let index = 0; index < totalCells; index += 1) {
     const cell = board.querySelector(`.board-cell[data-index="${index}"]`);
     if (!cell) continue;
-    points.push(`${cell.offsetLeft + cell.offsetWidth / 2},${cell.offsetTop + cell.offsetHeight / 2}`);
+    const card = cell.querySelector(".category-card");
+    const reference = card ?? cell;
+    cells.push({
+      centerX: cell.offsetLeft + cell.offsetWidth / 2,
+      centerY: cell.offsetTop + cell.offsetHeight / 2,
+      width: reference.offsetWidth,
+      height: reference.offsetHeight
+    });
   }
 
-  if (points.length < 2) return;
+  if (cells.length < 2) return;
 
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.classList.add("board-path");
@@ -617,15 +624,39 @@ function renderBoardPath() {
   svg.setAttribute("preserveAspectRatio", "none");
   svg.setAttribute("aria-hidden", "true");
 
-  const outline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-  outline.classList.add("board-path-outline");
-  outline.setAttribute("points", points.join(" "));
-  svg.appendChild(outline);
+  for (let index = 0; index < cells.length - 1; index += 1) {
+    const from = cells[index];
+    const to = cells[index + 1];
+    const dx = to.centerX - from.centerX;
+    const dy = to.centerY - from.centerY;
+    const distance = Math.hypot(dx, dy);
+    if (distance < 1) continue;
 
-  const fill = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-  fill.classList.add("board-path-fill");
-  fill.setAttribute("points", points.join(" "));
-  svg.appendChild(fill);
+    const dirX = dx / distance;
+    const dirY = dy / distance;
+    const perpX = -dirY;
+    const perpY = dirX;
+    const arrowLength = Math.min(from.width / 3, Math.max(distance - from.width / 2 - to.width / 2 - 4, 12));
+    const arrowWidth = from.height * 0.75;
+    const midpointX = (from.centerX + to.centerX) / 2;
+    const midpointY = (from.centerY + to.centerY) / 2;
+    const tipX = midpointX + dirX * (arrowLength / 2);
+    const tipY = midpointY + dirY * (arrowLength / 2);
+    const baseX = tipX - dirX * arrowLength;
+    const baseY = tipY - dirY * arrowLength;
+    const leftX = baseX + perpX * (arrowWidth / 2);
+    const leftY = baseY + perpY * (arrowWidth / 2);
+    const rightX = baseX - perpX * (arrowWidth / 2);
+    const rightY = baseY - perpY * (arrowWidth / 2);
+
+    const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    arrow.classList.add("board-arrow");
+    arrow.setAttribute(
+      "points",
+      `${tipX.toFixed(2)},${tipY.toFixed(2)} ${leftX.toFixed(2)},${leftY.toFixed(2)} ${rightX.toFixed(2)},${rightY.toFixed(2)}`
+    );
+    svg.appendChild(arrow);
+  }
 
   board.appendChild(svg);
 }

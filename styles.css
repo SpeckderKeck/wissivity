@@ -620,7 +620,7 @@ body.card-view-active .game-top {
 .board {
   position: relative;
   display: grid;
-  --board-gap: clamp(4px, 0.8vmin, 10px);
+  --board-gap: clamp(12px, 2vmin, 24px);
   --board-cell-width: calc(
     (100% - (var(--board-gap) * (var(--board-cols, 6) - 1))) / var(--board-cols, 6)
   );
@@ -646,28 +646,18 @@ body.card-view-active .game-top {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 0;
+  z-index: 2;
 }
 
-.board-path-outline,
-.board-path-fill {
-  fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.board-arrow {
+  fill: rgba(214, 218, 224, 0.92);
+  stroke: rgba(255, 255, 255, 0.85);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
 }
 
-.board-path-outline {
-  stroke: transparent;
-  stroke-width: 0;
-}
-
-.board-path-fill {
-  stroke: rgba(250, 250, 250, 0.7);
-  stroke-width: calc(var(--board-cell) * 0.5);
-}
-
-body[data-theme="light"] .board-path-fill {
-  stroke: rgba(20, 20, 20, 0.45);
+body[data-theme="light"] .board-arrow {
+  stroke: rgba(0, 0, 0, 0.7);
 }
 
 .board-cell {
@@ -695,7 +685,7 @@ body[data-theme="light"] .board-path-fill {
 
 .category-card {
   position: absolute;
-  inset: 0;
+  inset: clamp(4px, calc(var(--board-cell) * 0.08), 10px);
   border-radius: clamp(8px, 1.4vmin, 14px);
   background: var(--card-color, var(--card));
   border: 1px solid var(--board-card-border);

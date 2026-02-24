@@ -121,7 +121,7 @@ const CATEGORY_CONFIG = {
   Erklären: { id: "explain", iconPath: "erklaeren.svg", fallbackIcon: "💬" },
   Zeichnen: { id: "draw", iconPath: "zeichnen_1.svg", fallbackIcon: "✏️" },
   Pantomime: { id: "pantomime", iconPath: "pantomime_1.svg", fallbackIcon: "🎭" },
-  Quizfrage: { id: "quiz", iconPath: "", fallbackIcon: "?" },
+  Quizfrage: { id: "quiz", iconPath: "assets/icons/quiz.svg", fallbackIcon: "?" },
 };
 
 const CATEGORY_VISUALS = {

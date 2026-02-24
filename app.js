@@ -121,7 +121,7 @@ const CATEGORY_CONFIG = {
   Erklären: { id: "explain", iconPath: "erklaeren.svg", fallbackIcon: "💬" },
   Zeichnen: { id: "draw", iconPath: "zeichnen_1.svg", fallbackIcon: "✏️" },
   Pantomime: { id: "pantomime", iconPath: "pantomime_1.svg", fallbackIcon: "🎭" },
-  Quizfrage: { id: "quiz", iconPath: "assets/icons/quiz.svg", fallbackIcon: "❓" },
+  Quizfrage: { id: "quiz", iconPath: "", fallbackIcon: "?" },
 };
 
 const CATEGORY_VISUALS = {
@@ -156,6 +156,11 @@ function getCategoryFallbackIcon(category) {
 function applyCategoryIcon(element, category, { allowFallback = false } = {}) {
   const iconPath = getCategoryIconPath(category);
   const visuals = CATEGORY_VISUALS[category];
+  const categoryId = CATEGORY_CONFIG[category]?.id ?? "unknown";
+  Object.values(CATEGORY_CONFIG).forEach((config) => {
+    element.classList.remove(`category-icon--${config.id}`);
+  });
+  element.classList.add(`category-icon--${categoryId}`);
   element.classList.remove("icon-fallback");
   element.style.setProperty("--icon-color", visuals?.iconColor ?? "#3b3b3b");
   if (iconPath) {

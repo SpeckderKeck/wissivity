@@ -696,13 +696,18 @@ body[data-theme="light"] .board-arrow {
 }
 
 .category-icon {
-  width: min(46%, 58px);
-  height: min(46%, 58px);
+  width: 90%;
+  height: 90%;
   display: inline-block;
   background-image: var(--icon-url, none);
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
+}
+
+.category-icon.category-icon--quiz {
+  width: 80%;
+  height: 80%;
 }
 
 .category-icon.icon-fallback {
@@ -711,6 +716,12 @@ body[data-theme="light"] .board-arrow {
   font-size: clamp(0.9rem, calc(var(--board-cell) * 0.28), 1.8rem);
   display: grid;
   place-items: center;
+}
+
+.category-icon--quiz.icon-fallback {
+  font-size: calc(var(--board-cell) * 0.8);
+  font-weight: 300;
+  line-height: 1;
 }
 
 .board-cell.path {

@@ -705,10 +705,6 @@ body[data-theme="light"] .board-arrow {
   background-size: contain;
 }
 
-.category-icon.category-icon--quiz {
-  width: 80%;
-  height: 80%;
-}
 
 .category-icon.icon-fallback {
   background-image: none;

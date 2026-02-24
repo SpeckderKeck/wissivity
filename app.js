@@ -57,6 +57,16 @@ const cardEditorErrors = document.getElementById("card-editor-errors");
 const themeToggle = document.getElementById("theme-toggle");
 const themeToggleWrapper = themeToggle?.closest(".theme-switch");
 const fullscreenToggle = document.getElementById("fullscreen-toggle");
+const qrToggle = document.getElementById("qr-toggle");
+
+if (qrToggle) {
+  qrToggle.addEventListener("click", () => {
+    const pageUrl = window.location.href;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(pageUrl)}`;
+    window.open(qrUrl, "_blank", "noopener,noreferrer");
+  });
+}
+
 const swapSelectGame = document.getElementById("swap-select-game");
 const boardSizeSelect = document.getElementById("board-size-select");
 const boardSizeSelectGame = document.getElementById("board-size-select-game");

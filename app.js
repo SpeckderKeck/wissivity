@@ -789,7 +789,7 @@ function startTimer({ onTimeout } = {}) {
       if (typeof onTimeout === "function") {
         onTimeout();
       } else {
-        finishTurn(false, true);
+        finishTurn(false, true, { returnToPrevious: true });
       }
     }
   }, 1000);
@@ -1723,7 +1723,7 @@ function applySwapPenalty() {
   updateTimerDisplay(state.remainingTime);
   showPenaltyToast(penalty);
   if (state.remainingTime <= 0) {
-    finishTurn(false, true);
+    finishTurn(false, true, { returnToPrevious: true });
   }
 }
 

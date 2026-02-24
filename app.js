@@ -1014,7 +1014,10 @@ function handleStartGame() {
   });
   createTokens(teams);
   showGamePanel();
-  positionTokens();
+  requestAnimationFrame(() => {
+    renderBoardPath();
+    positionTokens();
+  });
   state.currentTeam = 0;
   state.pendingRoll = null;
   state.pendingCategory = null;

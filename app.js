@@ -617,7 +617,6 @@ function buildBoard(categories = state.categories) {
   const { rows, cols, total } = state.boardDimensions;
   board.style.setProperty("--board-cols", cols);
   board.style.setProperty("--board-rows", rows);
-  const pathPositions = Array.from({ length: total });
   const assignments = [];
   for (let index = 0; index < total; index += 1) {
     if (index === 0 || index === total - 1) {
@@ -634,71 +633,44 @@ function buildBoard(categories = state.categories) {
     for (let col = 0; col < cols; col += 1) {
       const index = row % 2 === 0 ? row * cols + col : row * cols + (cols - 1 - col);
       rowIndices.push(index);
-      pathPositions[index] = { row, col };
     }
     rowIndices.forEach((index) => {
       const cell = document.createElement("div");
       cell.className = `board-cell path alt-${index % 4}`;
+      const card = document.createElement("div");
+      card.className = "category-card";
       if (index === 0) {
         cell.classList.add("start");
+        card.style.setProperty("--card-color", "#d9f7ea");
         const icon = document.createElement("span");
-        icon.className = "cell-icon";
+        icon.className = "category-icon icon-fallback";
         icon.textContent = "🚩";
-        const label = document.createElement("span");
-        label.className = "cell-label";
-        label.textContent = "Start";
-        cell.append(icon, label);
+        card.append(icon);
+        cell.append(card);
       } else if (index === total - 1) {
         cell.classList.add("goal");
+        card.style.setProperty("--card-color", "#ffe4c7");
         const icon = document.createElement("span");
-        icon.className = "cell-icon";
+        icon.className = "category-icon icon-fallback";
         icon.textContent = "🏁";
-        const label = document.createElement("span");
-        label.className = "cell-label";
-        label.textContent = "Ziel";
-        cell.append(icon, label);
+        card.append(icon);
+        cell.append(card);
       } else {
-        const number = document.createElement("span");
-        number.className = "cell-number";
-        number.textContent = `${index + 1}`;
         const category = assignments[index];
         if (category) {
           const visuals = CATEGORY_VISUALS[category];
-          const card = document.createElement("div");
-          card.className = "category-card";
           card.style.setProperty("--card-color", visuals?.color ?? "#ffffff");
           const icon = document.createElement("span");
           icon.className = "category-icon";
           icon.setAttribute("aria-hidden", "true");
           applyCategoryIcon(icon, category, { allowFallback: true });
           card.appendChild(icon);
-          cell.append(number, card);
+          cell.append(card);
           cell.dataset.category = category;
           cell.classList.add("has-category");
-        } else {
-          cell.append(number);
         }
       }
       cell.dataset.index = index;
-      const connector = document.createElement("div");
-      connector.className = "path-connector";
-      const current = pathPositions[index];
-      const neighbors = [];
-      if (index > 0) neighbors.push(pathPositions[index - 1]);
-      if (index < total - 1) neighbors.push(pathPositions[index + 1]);
-      neighbors.forEach((neighbor) => {
-        if (!neighbor || !current) return;
-        const rowDiff = neighbor.row - current.row;
-        const colDiff = neighbor.col - current.col;
-        const segment = document.createElement("span");
-        segment.className = "path-connector-segment";
-        if (rowDiff === -1) segment.classList.add("up");
-        if (rowDiff === 1) segment.classList.add("down");
-        if (colDiff === -1) segment.classList.add("left");
-        if (colDiff === 1) segment.classList.add("right");
-        connector.appendChild(segment);
-      });
-      cell.appendChild(connector);
       board.appendChild(cell);
       cells[index] = cell;
     });

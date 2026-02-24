@@ -596,7 +596,7 @@ body.fullscreen .board {
   flex: 1;
   place-items: center;
   overflow: visible;
-  padding: 8px 0 calc(var(--game-bottom-total-space) + 8px);
+  padding: 0 0 var(--game-bottom-total-space);
 }
 
 body.fullscreen #game.panel--active {
@@ -635,47 +635,21 @@ body.card-view-active .game-top {
 .board {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(var(--board-cols, 6), 1fr);
-  grid-template-rows: repeat(var(--board-rows, 6), 1fr);
-  --board-gap-ratio: 0.3334;
-  --board-padding-ratio: 0.5;
-  --board-max-width: min(100%, calc(100dvw - 16px));
-  --board-max-height: calc(100dvh - var(--header-height) - var(--game-bottom-total-space) - 16px);
-  --board-cell-from-width: calc(
-    var(--board-max-width) /
-      (var(--board-cols, 6) +
-        ((var(--board-cols, 6) - 1) * var(--board-gap-ratio)) +
-        (2 * var(--board-padding-ratio)))
+  --board-gap: clamp(4px, 0.8vmin, 10px);
+  --board-cell-width: calc(
+    (100% - (var(--board-gap) * (var(--board-cols, 6) - 1))) / var(--board-cols, 6)
   );
-  --board-cell-from-height: calc(
-    var(--board-max-height) /
-      (var(--board-rows, 6) +
-        ((var(--board-rows, 6) - 1) * var(--board-gap-ratio)) +
-        (2 * var(--board-padding-ratio)))
+  --board-cell-height: calc(
+    (100% - (var(--board-gap) * (var(--board-rows, 6) - 1))) / var(--board-rows, 6)
   );
-  --board-cell: clamp(
-    2.4vmin,
-    min(var(--board-cell-from-width), var(--board-cell-from-height)),
-    var(--board-cell-max)
-  );
-  --board-gap: calc(var(--board-cell) * var(--board-gap-ratio));
-  --board-padding: calc(var(--board-cell) * var(--board-padding-ratio));
+  --board-cell: min(var(--board-cell-width), var(--board-cell-height));
+  grid-template-columns: repeat(var(--board-cols, 6), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--board-rows, 6), minmax(0, 1fr));
   gap: var(--board-gap);
-  background: var(--board);
-  border-radius: 24px;
-  padding: var(--board-padding);
-  grid-template-columns: repeat(var(--board-cols, 6), var(--board-cell));
-  grid-template-rows: repeat(var(--board-rows, 6), var(--board-cell));
-  width: calc(
-    (var(--board-cell) * var(--board-cols, 6)) +
-      (var(--board-gap) * (var(--board-cols, 6) - 1)) +
-      (var(--board-padding) * 2)
-  );
-  height: calc(
-    (var(--board-cell) * var(--board-rows, 6)) +
-      (var(--board-gap) * (var(--board-rows, 6) - 1)) +
-      (var(--board-padding) * 2)
-  );
+  width: calc(100dvw - 8px);
+  max-width: 100%;
+  height: calc(100dvh - var(--header-height) - var(--game-bottom-total-space));
+  max-height: 100%;
   margin: 0 auto;
 }
 
@@ -683,15 +657,14 @@ body.card-view-active .game-top {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(0.55rem, calc(var(--board-cell) * 0.18), 1.1rem);
+  font-size: clamp(0.55rem, 2vmin, 1.1rem);
   color: var(--text);
   font-weight: 600;
-  border-radius: clamp(10px, calc(var(--board-cell) * 0.25), 18px);
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0;
+  border: none;
   position: relative;
   z-index: 1;
-  aspect-ratio: 1 / 1;
-  background: var(--pastel-4);
+  background: transparent;
 }
 
 .board-cell.has-category {
@@ -700,20 +673,13 @@ body.card-view-active .game-top {
 }
 
 .cell-number {
-  position: absolute;
-  top: clamp(4px, calc(var(--board-cell) * 0.12), 8px);
-  left: clamp(6px, calc(var(--board-cell) * 0.16), 10px);
-  font-size: clamp(0.45rem, calc(var(--board-cell) * 0.12), 0.7rem);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  z-index: 3;
-  color: rgba(24, 24, 24, 0.7);
+  display: none;
 }
 
 .category-card {
   position: absolute;
-  inset: clamp(4px, calc(var(--board-cell) * 0.18), 10px);
-  border-radius: clamp(6px, calc(var(--board-cell) * 0.2), 12px);
+  inset: 0;
+  border-radius: clamp(8px, 1.4vmin, 14px);
   background: var(--card-color, var(--card));
   display: flex;
   align-items: center;
@@ -723,8 +689,8 @@ body.card-view-active .game-top {
 }
 
 .category-icon {
-  width: min(42%, 48px);
-  height: min(42%, 48px);
+  width: min(46%, 58px);
+  height: min(46%, 58px);
   display: inline-block;
   background-image: var(--icon-url, none);
   background-position: center;
@@ -746,43 +712,35 @@ body.card-view-active .game-top {
 }
 
 .board-cell.path {
-  background: var(--pastel-4);
+  background: transparent;
 }
 
 .board-cell.path.alt-1 {
-  background: var(--pastel-1);
+  background: transparent;
 }
 
 .board-cell.path.alt-2 {
-  background: var(--pastel-2);
+  background: transparent;
 }
 
 .board-cell.path.alt-3 {
-  background: var(--pastel-3);
+  background: transparent;
 }
 
 .board-cell.start {
-  background: var(--pastel-1);
+  background: transparent;
 }
 
 .board-cell.goal {
-  background: var(--pastel-3);
+  background: transparent;
 }
 
 .board-cell::after {
-  content: "";
-  position: absolute;
-  inset: clamp(3px, calc(var(--board-cell) * 0.16), 8px);
-  border-radius: clamp(6px, calc(var(--board-cell) * 0.2), 12px);
-  border: 1px dashed rgba(24, 24, 24, 0.18);
-  pointer-events: none;
+  display: none;
 }
 
 .path-connector {
-  position: absolute;
-  inset: calc(var(--board-gap) / -2);
-  pointer-events: none;
-  z-index: 2;
+  display: none;
 }
 
 .path-connector-segment {

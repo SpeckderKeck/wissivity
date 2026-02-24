@@ -215,24 +215,6 @@ const state = {
   customDatasets: {},
 };
 
-const TEAM_COLORS = [
-  { label: "Orange", value: "#f97316" },
-  { label: "Blau", value: "#38bdf8" },
-  { label: "Grün", value: "#34d399" },
-  { label: "Pink", value: "#f472b6" },
-  { label: "Rot", value: "#ef4444" },
-  { label: "Gelb", value: "#facc15" },
-  { label: "Lila", value: "#8b5cf6" },
-  { label: "Türkis", value: "#14b8a6" },
-  { label: "Cyan", value: "#22d3ee" },
-  { label: "Limette", value: "#84cc16" },
-  { label: "Beere", value: "#f43f5e" },
-  { label: "Schiefer", value: "#64748b" },
-  { label: "Indigo", value: "#6366f1" },
-  { label: "Bernstein", value: "#f59e0b" },
-  { label: "Koralle", value: "#fb7185" },
-  { label: "Moos", value: "#22c55e" },
-];
 const TEAM_ICONS = [
   "🐯",
   "🐼",
@@ -404,22 +386,7 @@ function renderTeams(count) {
   teamListContainer.innerHTML = "";
   for (let i = 0; i < count; i += 1) {
     const defaultIcon = TEAM_ICONS[i % TEAM_ICONS.length];
-    const defaultColor = TEAM_COLORS[i % TEAM_COLORS.length].value;
     const defaultName = DEFAULT_TEAM_NAMES[i] ?? `Team ${i + 1}`;
-    const colorOptions = TEAM_COLORS.map(
-      (color) => `
-        <button
-          type="button"
-          class="picker-option picker-option--color ${
-            color.value === defaultColor ? "is-selected" : ""
-          }"
-          data-team-color-option
-          data-color-value="${color.value}"
-          aria-label="${color.label}"
-          style="--swatch-color: ${color.value};"
-        ></button>
-      `
-    ).join("");
     const iconOptions = TEAM_ICONS.map(
       (icon) => `
         <button
@@ -438,20 +405,6 @@ function renderTeams(count) {
         <label class="field">
           <input type="text" data-team-name value="${defaultName}" aria-label="Teamname" />
         </label>
-        <div class="team-picker" data-picker="color">
-          <input type="hidden" data-team-color value="${defaultColor}" />
-          <button
-            type="button"
-            class="picker-button picker-button--color"
-            data-team-color-toggle
-            aria-label="Teamfarbe wählen"
-            aria-expanded="false"
-            style="background: ${defaultColor};"
-          ></button>
-          <div class="picker-panel" role="listbox" aria-label="Teamfarbe auswählen">
-            ${colorOptions}
-          </div>
-        </div>
         <div class="team-picker" data-picker="icon">
           <input type="hidden" data-team-icon value="${defaultIcon}" />
           <button
@@ -525,18 +478,12 @@ function closeAllTeamPickers() {
   });
 }
 
-function updatePickerSelection(picker, value, type) {
-  const hiddenInput = picker.querySelector(type === "color" ? "[data-team-color]" : "[data-team-icon]");
-  const toggleButton = picker.querySelector(
-    type === "color" ? "[data-team-color-toggle]" : "[data-team-icon-toggle]"
-  );
-  const options = picker.querySelectorAll(
-    type === "color" ? "[data-team-color-option]" : "[data-team-icon-option]"
-  );
+function updatePickerSelection(picker, value) {
+  const hiddenInput = picker.querySelector("[data-team-icon]");
+  const toggleButton = picker.querySelector("[data-team-icon-toggle]");
+  const options = picker.querySelectorAll("[data-team-icon-option]");
   options.forEach((option) => option.classList.remove("is-selected"));
-  const selectedOption = picker.querySelector(
-    type === "color" ? `[data-color-value="${value}"]` : `[data-icon-value="${value}"]`
-  );
+  const selectedOption = picker.querySelector(`[data-icon-value="${value}"]`);
   if (selectedOption) {
     selectedOption.classList.add("is-selected");
   }
@@ -544,11 +491,7 @@ function updatePickerSelection(picker, value, type) {
     hiddenInput.value = value;
   }
   if (toggleButton) {
-    if (type === "color") {
-      toggleButton.style.background = value;
-    } else {
-      toggleButton.textContent = value;
-    }
+    toggleButton.textContent = value;
   }
 }
 
@@ -564,14 +507,6 @@ function toggleTeamPicker(picker, toggleButton) {
 }
 
 function handleTeamListClick(event) {
-  const colorToggle = event.target.closest("[data-team-color-toggle]");
-  if (colorToggle) {
-    const picker = colorToggle.closest(".team-picker");
-    if (picker) {
-      toggleTeamPicker(picker, colorToggle);
-    }
-    return;
-  }
   const iconToggle = event.target.closest("[data-team-icon-toggle]");
   if (iconToggle) {
     const picker = iconToggle.closest(".team-picker");
@@ -580,22 +515,12 @@ function handleTeamListClick(event) {
     }
     return;
   }
-  const colorOption = event.target.closest("[data-team-color-option]");
-  if (colorOption) {
-    const picker = colorOption.closest(".team-picker");
-    const value = colorOption.dataset.colorValue;
-    if (picker && value) {
-      updatePickerSelection(picker, value, "color");
-      closeAllTeamPickers();
-    }
-    return;
-  }
   const iconOption = event.target.closest("[data-team-icon-option]");
   if (iconOption) {
     const picker = iconOption.closest(".team-picker");
     const value = iconOption.dataset.iconValue;
     if (picker && value) {
-      updatePickerSelection(picker, value, "icon");
+      updatePickerSelection(picker, value);
       closeAllTeamPickers();
     }
   }
@@ -707,16 +632,12 @@ function renderBoardPath() {
 
 function createTokens(teamData) {
   board.querySelectorAll(".token").forEach((token) => token.remove());
-  const teams = teamData.map((team, index) => ({
-    ...team,
-    color: team.color || TEAM_COLORS[index % TEAM_COLORS.length].value,
-  }));
+  const teams = teamData.map((team) => ({ ...team }));
   state.positions = teams.map(() => 0);
   state.teams = teams;
   teams.forEach((team, index) => {
     const token = document.createElement("div");
     token.className = "token";
-    token.style.background = team.color;
     token.dataset.team = index;
     token.dataset.icon = team.icon;
     const tokenIcon = document.createElement("span");
@@ -746,12 +667,9 @@ function renderTeamStatus() {
     }
     const info = document.createElement("div");
     info.className = "team-status-info";
-    const swatch = document.createElement("span");
-    swatch.className = "team-status-swatch";
-    swatch.style.background = team.color;
     const label = document.createElement("span");
     label.textContent = formatTeamLabel(index);
-    info.append(swatch, label);
+    info.append(label);
     const position = document.createElement("div");
     position.className = "team-status-position";
     position.textContent = `Feld ${state.positions[index] + 1}`;
@@ -1047,11 +965,9 @@ function handleStartGame() {
   const teams = [...teamListContainer.querySelectorAll(".team-row")].map((row, index) => {
     const nameInput = row.querySelector("[data-team-name]");
     const iconSelect = row.querySelector("[data-team-icon]");
-    const colorSelect = row.querySelector("[data-team-color]");
     const name = nameInput?.value.trim() || `Team ${index + 1}`;
     const icon = iconSelect?.value || TEAM_ICONS[0];
-    const color = colorSelect?.value || TEAM_COLORS[0].value;
-    return { name, icon, color };
+    return { name, icon };
   });
   createTokens(teams);
   showGamePanel();

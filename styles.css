@@ -714,6 +714,11 @@ body[data-theme="light"] .board-arrow {
   place-items: center;
 }
 
+.board-cell.start .category-icon.icon-fallback,
+.board-cell.goal .category-icon.icon-fallback {
+  font-size: clamp(1.1rem, calc(var(--board-cell) * 0.36), 2.25rem);
+}
+
 .category-icon--quiz.icon-fallback {
   font-size: calc(var(--board-cell) * 0.8);
   font-weight: 300;

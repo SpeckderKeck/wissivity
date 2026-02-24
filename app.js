@@ -118,9 +118,9 @@ function showGamePanel() {
 }
 
 const CATEGORY_CONFIG = {
-  Erklären: { id: "explain", iconPath: "assets/icons/explain.svg", fallbackIcon: "💬" },
-  Zeichnen: { id: "draw", iconPath: "assets/icons/draw.svg", fallbackIcon: "✏️" },
-  Pantomime: { id: "pantomime", iconPath: "assets/icons/pantomime.svg", fallbackIcon: "🎭" },
+  Erklären: { id: "explain", iconPath: "erklaeren.svg", fallbackIcon: "💬" },
+  Zeichnen: { id: "draw", iconPath: "zeichnen_1.svg", fallbackIcon: "✏️" },
+  Pantomime: { id: "pantomime", iconPath: "pantomime_1.svg", fallbackIcon: "🎭" },
   Quizfrage: { id: "quiz", iconPath: "assets/icons/quiz.svg", fallbackIcon: "❓" },
 };
 

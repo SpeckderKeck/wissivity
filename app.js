@@ -701,9 +701,16 @@ function renderBoardPath() {
   svg.setAttribute("preserveAspectRatio", "none");
   svg.setAttribute("aria-hidden", "true");
 
-  const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-  polyline.setAttribute("points", points.join(" "));
-  svg.appendChild(polyline);
+  const outline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+  outline.classList.add("board-path-outline");
+  outline.setAttribute("points", points.join(" "));
+  svg.appendChild(outline);
+
+  const fill = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+  fill.classList.add("board-path-fill");
+  fill.setAttribute("points", points.join(" "));
+  svg.appendChild(fill);
+
   board.appendChild(svg);
 }
 

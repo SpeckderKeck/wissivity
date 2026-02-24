@@ -675,8 +675,36 @@ function buildBoard(categories = state.categories) {
       cells[index] = cell;
     });
   }
+  renderBoardPath();
   existingTokens.forEach((token) => board.appendChild(token));
   return cells;
+}
+
+function renderBoardPath() {
+  if (!board) return;
+  board.querySelector(".board-path")?.remove();
+  const totalCells = state.boardDimensions.total;
+  if (totalCells < 2) return;
+
+  const points = [];
+  for (let index = 0; index < totalCells; index += 1) {
+    const cell = board.querySelector(`.board-cell[data-index="${index}"]`);
+    if (!cell) continue;
+    points.push(`${cell.offsetLeft + cell.offsetWidth / 2},${cell.offsetTop + cell.offsetHeight / 2}`);
+  }
+
+  if (points.length < 2) return;
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.classList.add("board-path");
+  svg.setAttribute("viewBox", `0 0 ${board.clientWidth} ${board.clientHeight}`);
+  svg.setAttribute("preserveAspectRatio", "none");
+  svg.setAttribute("aria-hidden", "true");
+
+  const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+  polyline.setAttribute("points", points.join(" "));
+  svg.appendChild(polyline);
+  board.appendChild(svg);
 }
 
 function createTokens(teamData) {
@@ -1770,6 +1798,7 @@ function setup() {
   const selectedBoardSize = getSelectedBoardSize(boardSizeSelect ?? boardSizeInputs);
   syncBoardSizeControls(selectedBoardSize);
   applyBoardSize(selectedBoardSize);
+  renderBoardPath();
   positionTokens();
   updateTimerDisplay(state.timeLimit);
   updateFullscreenState();
@@ -1779,7 +1808,10 @@ function setup() {
   applySelectedDatasets();
 }
 
-window.addEventListener("resize", positionTokens);
+window.addEventListener("resize", () => {
+  renderBoardPath();
+  positionTokens();
+});
 teamListContainer.addEventListener("click", handleTeamListClick);
 document.addEventListener("click", (event) => {
   if (!teamListContainer.contains(event.target)) {
@@ -1926,6 +1958,7 @@ fullscreenToggle.addEventListener("click", () => {
 
 document.addEventListener("fullscreenchange", () => {
   updateFullscreenState();
+  renderBoardPath();
   positionTokens();
 });
 

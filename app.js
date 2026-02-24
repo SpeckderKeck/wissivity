@@ -1860,11 +1860,11 @@ csvInfo.addEventListener("click", () => {
 themeToggle.addEventListener("change", (event) => {
   const isLight = event.target.checked;
   if (isLight) {
-    localStorage.setItem(THEME_STORAGE_KEY, "light");
-  } else {
     localStorage.removeItem(THEME_STORAGE_KEY);
+  } else {
+    localStorage.setItem(THEME_STORAGE_KEY, "dark");
   }
-  applyTheme(isLight ? "light" : "default");
+  applyTheme(isLight ? "light" : "dark");
 });
 
 function updateFullscreenState() {
@@ -1890,5 +1890,5 @@ document.addEventListener("fullscreenchange", () => {
 });
 
 const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-applyTheme(storedTheme === "light" ? "light" : "default");
+applyTheme(storedTheme === "dark" ? "dark" : "light");
 setup();

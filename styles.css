@@ -1208,7 +1208,7 @@ button:disabled {
   background: var(--overlay);
   display: grid;
   place-items: center;
-  z-index: 12;
+  z-index: 70;
   padding: 24px;
 }
 

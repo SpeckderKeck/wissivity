@@ -36,6 +36,10 @@ const winnerScreen = document.getElementById("winner-screen");
 const winnerLabel = document.getElementById("winner-label");
 const winnerRestartButton = document.getElementById("winner-restart");
 const csvUpload = document.getElementById("csv-upload");
+const csvDatasetNameInput = document.getElementById("csv-dataset-name");
+const csvSaveNewButton = document.getElementById("csv-save-new");
+const csvOverwriteSelect = document.getElementById("csv-overwrite-select");
+const csvOverwriteButton = document.getElementById("csv-overwrite");
 const csvStatus = document.getElementById("csv-status");
 const csvInfo = document.getElementById("csv-info");
 const csvTooltip = document.getElementById("csv-tooltip");
@@ -225,6 +229,7 @@ const state = {
   masterQuiz: false,
   selectedDatasets: [],
   customDatasets: {},
+  uploadedCsvCards: [],
 };
 
 const TEAM_ICONS = [
@@ -1261,12 +1266,20 @@ function saveCardEditor() {
 
 function refreshEditorCustomDatasetSelect(selectedId = "") {
   if (!cardEditorDatasetSelect) return;
-  cardEditorDatasetSelect.innerHTML = "";
+  populateCustomDatasetSelect(cardEditorDatasetSelect, {
+    selectedId,
+    placeholder: "Eigenen Kartensatz auswählen",
+  });
+}
+
+function populateCustomDatasetSelect(selectElement, { selectedId = "", placeholder = "Kartensatz auswählen" } = {}) {
+  if (!selectElement) return;
+  selectElement.innerHTML = "";
 
   const placeholderOption = document.createElement("option");
   placeholderOption.value = "";
-  placeholderOption.textContent = "Eigenen Kartensatz auswählen";
-  cardEditorDatasetSelect.append(placeholderOption);
+  placeholderOption.textContent = placeholder;
+  selectElement.append(placeholderOption);
 
   Object.values(state.customDatasets)
     .sort((a, b) => a.label.localeCompare(b.label, "de"))
@@ -1274,10 +1287,74 @@ function refreshEditorCustomDatasetSelect(selectedId = "") {
       const option = document.createElement("option");
       option.value = dataset.id;
       option.textContent = dataset.label;
-      cardEditorDatasetSelect.append(option);
+      selectElement.append(option);
     });
 
-  cardEditorDatasetSelect.value = state.customDatasets[selectedId] ? selectedId : "";
+  selectElement.value = state.customDatasets[selectedId] ? selectedId : "";
+}
+
+function deriveDatasetLabelFromFilename(filename = "") {
+  const trimmed = String(filename ?? "").trim();
+  if (!trimmed) return "";
+  return trimmed.replace(/\.[^/.]+$/, "").trim();
+}
+
+function updateCsvDatasetActionState() {
+  const hasUploadedCards = state.uploadedCsvCards.length > 0;
+  if (csvSaveNewButton) {
+    csvSaveNewButton.disabled = !hasUploadedCards;
+  }
+  if (csvOverwriteButton) {
+    const canOverwrite = hasUploadedCards && Boolean(csvOverwriteSelect?.value && state.customDatasets[csvOverwriteSelect.value]);
+    csvOverwriteButton.disabled = !canOverwrite;
+  }
+}
+
+function refreshCsvDatasetOverwriteSelect(selectedId = "") {
+  populateCustomDatasetSelect(csvOverwriteSelect, {
+    selectedId,
+    placeholder: "Bestehenden eigenen Kartensatz auswählen",
+  });
+  updateCsvDatasetActionState();
+}
+
+function saveCardsAsCustomDataset({ cards, label, existingId = "" }) {
+  const normalizedLabel = String(label ?? "").trim();
+  if (!normalizedLabel) {
+    return { ok: false, message: "Bitte einen Namen für den Kartensatz eingeben." };
+  }
+
+  const normalizedCards = cloneCards(cards).map((card) => normalizeCardInput(card)).filter((card) => card.term);
+  if (normalizedCards.length === 0) {
+    return { ok: false, message: "Kartensatz ist leer oder ungültig." };
+  }
+
+  const now = new Date().toISOString();
+  const existingDataset = existingId ? state.customDatasets[existingId] : null;
+  const datasetId = existingDataset?.id ?? createCustomDatasetId();
+  const wasOverwrite = Boolean(existingDataset);
+
+  state.customDatasets[datasetId] = {
+    id: datasetId,
+    label: normalizedLabel,
+    cards: normalizedCards,
+    createdAt: existingDataset?.createdAt ?? now,
+    updatedAt: now,
+  };
+
+  persistCustomDatasets();
+  state.selectedDatasets = [toCustomDatasetKey(datasetId)];
+  refreshEditorCustomDatasetSelect(datasetId);
+  refreshCsvDatasetOverwriteSelect(datasetId);
+  refreshDatasetSelections();
+
+  return {
+    ok: true,
+    datasetId,
+    label: normalizedLabel,
+    count: normalizedCards.length,
+    wasOverwrite,
+  };
 }
 
 function createCustomDatasetId() {
@@ -1300,23 +1377,16 @@ function saveEditorAsNewDataset() {
     return;
   }
 
-  const now = new Date().toISOString();
-  const dataset = {
-    id: createCustomDatasetId(),
-    label,
-    cards,
-    createdAt: now,
-    updatedAt: now,
-  };
-
-  state.customDatasets[dataset.id] = dataset;
-  persistCustomDatasets();
-  refreshEditorCustomDatasetSelect(dataset.id);
-  if (cardEditorDatasetLabelInput) {
-    cardEditorDatasetLabelInput.value = dataset.label;
+  const result = saveCardsAsCustomDataset({ cards, label });
+  if (!result.ok) {
+    csvStatus.textContent = result.message;
+    return;
   }
-  refreshDatasetSelections();
-  csvStatus.textContent = `Eigener Kartensatz gespeichert: ${dataset.label} (${cards.length} Karten).`;
+
+  if (cardEditorDatasetLabelInput) {
+    cardEditorDatasetLabelInput.value = result.label;
+  }
+  csvStatus.textContent = `Eigener Kartensatz gespeichert: ${result.label} (${result.count} Karten).`;
 }
 
 function overwriteSelectedCustomDataset() {
@@ -1334,21 +1404,16 @@ function overwriteSelectedCustomDataset() {
   }
 
   const nextLabel = cardEditorDatasetLabelInput?.value?.trim() || existingDataset.label;
-  state.customDatasets[selectedId] = {
-    id: existingDataset.id,
-    label: nextLabel,
-    cards,
-    createdAt: existingDataset.createdAt,
-    updatedAt: new Date().toISOString(),
-  };
+  const result = saveCardsAsCustomDataset({ cards, label: nextLabel, existingId: selectedId });
+  if (!result.ok) {
+    csvStatus.textContent = result.message;
+    return;
+  }
 
-  persistCustomDatasets();
-  refreshEditorCustomDatasetSelect(selectedId);
   if (cardEditorDatasetLabelInput) {
     cardEditorDatasetLabelInput.value = nextLabel;
   }
-  refreshDatasetSelections();
-  csvStatus.textContent = `Kartensatz überschrieben: ${nextLabel} (${cards.length} Karten).`;
+  csvStatus.textContent = `Kartensatz überschrieben: ${nextLabel} (${result.count} Karten).`;
 }
 
 function deleteSelectedCustomDataset() {
@@ -1367,6 +1432,7 @@ function deleteSelectedCustomDataset() {
   delete state.customDatasets[selectedId];
   persistCustomDatasets();
   refreshEditorCustomDatasetSelect("");
+  refreshCsvDatasetOverwriteSelect("");
   if (cardEditorDatasetLabelInput) {
     cardEditorDatasetLabelInput.value = "";
   }
@@ -1520,6 +1586,11 @@ function setupDatasetSelects() {
 function handleCsvUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
+  const labelFromFilename = deriveDatasetLabelFromFilename(file.name);
+  if (csvDatasetNameInput && labelFromFilename) {
+    csvDatasetNameInput.value = labelFromFilename;
+  }
+
   const reader = new FileReader();
   reader.onload = () => {
     const parsedRows = parseCsv(reader.result);
@@ -1527,19 +1598,58 @@ function handleCsvUpload(event) {
 
     if (cards.length > 0 && errors.length === 0) {
       state.cards = cards;
+      state.uploadedCsvCards = cards;
+      updateCsvDatasetActionState();
       csvStatus.textContent = `CSV geladen: ${cards.length} Karten.`;
       return;
     }
 
     if (errors.length > 0) {
+      state.uploadedCsvCards = [];
+      updateCsvDatasetActionState();
       const firstError = errors[0];
       csvStatus.textContent = `CSV ungültig (Zeile ${firstError.row}: ${firstError.messages.join(", ")}).`;
       return;
     }
 
+    state.uploadedCsvCards = [];
+    updateCsvDatasetActionState();
     csvStatus.textContent = "CSV leer oder ungültig.";
   };
   reader.readAsText(file, "utf-8");
+}
+
+function saveUploadedCsvAsNewDataset() {
+  const label = csvDatasetNameInput?.value?.trim() || "";
+  const result = saveCardsAsCustomDataset({ cards: state.uploadedCsvCards, label });
+  if (!result.ok) {
+    csvStatus.textContent = result.message;
+    return;
+  }
+  refreshCsvDatasetOverwriteSelect(result.datasetId);
+  csvStatus.textContent = `CSV dauerhaft gespeichert: ${result.label} (${result.count} Karten).`;
+}
+
+function overwriteDatasetWithUploadedCsv() {
+  const selectedId = csvOverwriteSelect?.value ?? "";
+  const existingDataset = state.customDatasets[selectedId];
+  if (!existingDataset) {
+    csvStatus.textContent = "Bitte zuerst einen vorhandenen eigenen Kartensatz auswählen.";
+    return;
+  }
+
+  const label = csvDatasetNameInput?.value?.trim() || existingDataset.label;
+  const result = saveCardsAsCustomDataset({ cards: state.uploadedCsvCards, label, existingId: selectedId });
+  if (!result.ok) {
+    csvStatus.textContent = result.message;
+    return;
+  }
+
+  if (csvDatasetNameInput) {
+    csvDatasetNameInput.value = result.label;
+  }
+  refreshCsvDatasetOverwriteSelect(result.datasetId);
+  csvStatus.textContent = `Datensatz überschrieben: ${result.label} (${result.count} Karten).`;
 }
 
 function syncSettingsPanel() {
@@ -1743,7 +1853,9 @@ function setup() {
   updateFullscreenState();
   syncSettingsPanel();
   setupDatasetSelects();
+  refreshCsvDatasetOverwriteSelect("");
   applySelectedDatasets();
+  updateCsvDatasetActionState();
 }
 
 window.addEventListener("resize", () => {
@@ -1790,6 +1902,9 @@ document.addEventListener("keydown", (event) => {
 rollButton.addEventListener("click", handleRoll);
 undoButton.addEventListener("click", handleUndo);
 csvUpload.addEventListener("change", handleCsvUpload);
+csvSaveNewButton?.addEventListener("click", saveUploadedCsvAsNewDataset);
+csvOverwriteButton?.addEventListener("click", overwriteDatasetWithUploadedCsv);
+csvOverwriteSelect?.addEventListener("change", updateCsvDatasetActionState);
 openCardEditorButton?.addEventListener("click", openCardEditor);
 closeCardEditorButton?.addEventListener("click", closeCardEditor);
 cardEditorAddRowButton?.addEventListener("click", addEditorRow);

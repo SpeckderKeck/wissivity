@@ -662,7 +662,8 @@ body.game-active .game-bottom {
   left: 50%;
   bottom: var(--game-bottom-offset);
   transform: translateX(-50%);
-  width: calc(100dvw - 16px);
+  width: max-content;
+  max-width: calc(100dvw - 16px);
   z-index: 45;
 }
 
@@ -1175,7 +1176,8 @@ button:disabled {
   bottom: 0;
   transform: translateX(-50%);
   z-index: 6;
-  width: calc(100dvw - 16px);
+  width: max-content;
+  max-width: calc(100dvw - 16px);
   display: flex;
   align-items: center;
   justify-content: center;

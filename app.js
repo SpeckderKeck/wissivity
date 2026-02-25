@@ -211,6 +211,7 @@ const DEFAULT_DATASET_KEY = "allgemein";
 const DEFAULT_DATA = PRESET_DATASETS[DEFAULT_DATASET_KEY]?.cards ?? [];
 const MAX_DATASET_SELECTIONS = 5;
 const CUSTOM_DATASETS_STORAGE_KEY = "wissivity.customDatasets";
+const CUSTOM_DATASETS_API_ENDPOINT = "/api/custom-datasets";
 const REMOVED_PRESET_DATASET_KEYS = new Set(["umformen"]);
 const REMOVED_CUSTOM_DATASET_LABELS = new Set(["umformen"]);
 
@@ -247,6 +248,7 @@ const state = {
   selectedDatasets: [],
   customDatasets: {},
   uploadedCsvCards: [],
+  datasetStorageMode: "local",
 };
 
 const TEAM_ICONS = [
@@ -321,13 +323,79 @@ function readCustomDatasetsFromStorage() {
   }
 }
 
-function persistCustomDatasets() {
+async function readCustomDatasetsFromApi() {
+  try {
+    const response = await fetch(CUSTOM_DATASETS_API_ENDPOINT, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const parsed = await response.json();
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+
+    return parsed.reduce((accumulator, rawDataset) => {
+      const dataset = normalizeStoredCustomDataset(rawDataset);
+      if (dataset) {
+        accumulator[dataset.id] = dataset;
+      }
+      return accumulator;
+    }, {});
+  } catch {
+    return null;
+  }
+}
+
+async function persistCustomDatasets() {
   const datasets = Object.values(state.customDatasets)
     .map((dataset) => normalizeStoredCustomDataset(dataset))
     .filter(Boolean)
     .sort((a, b) => String(a.label).localeCompare(String(b.label), "de"));
 
+  if (state.datasetStorageMode === "remote") {
+    try {
+      const response = await fetch(CUSTOM_DATASETS_API_ENDPOINT, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(datasets),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      localStorage.setItem(CUSTOM_DATASETS_STORAGE_KEY, JSON.stringify(datasets));
+      return { ok: true, mode: "remote" };
+    } catch {
+      state.datasetStorageMode = "local";
+      localStorage.setItem(CUSTOM_DATASETS_STORAGE_KEY, JSON.stringify(datasets));
+      return { ok: false, mode: "local", message: "Server nicht erreichbar, lokal gespeichert." };
+    }
+  }
+
   localStorage.setItem(CUSTOM_DATASETS_STORAGE_KEY, JSON.stringify(datasets));
+  return { ok: true, mode: "local" };
+}
+
+async function loadCustomDatasets() {
+  const remoteDatasets = await readCustomDatasetsFromApi();
+  if (remoteDatasets) {
+    state.datasetStorageMode = "remote";
+    return remoteDatasets;
+  }
+
+  state.datasetStorageMode = "local";
+  return readCustomDatasetsFromStorage();
 }
 
 function getAllDatasetEntries() {
@@ -1341,7 +1409,7 @@ function refreshCsvDatasetOverwriteSelect(selectedId = "") {
   updateCsvDatasetActionState();
 }
 
-function saveCardsAsCustomDataset({ cards, label, existingId = "" }) {
+async function saveCardsAsCustomDataset({ cards, label, existingId = "" }) {
   const normalizedLabel = String(label ?? "").trim();
   if (!normalizedLabel) {
     return { ok: false, message: "Bitte einen Namen für den Kartensatz eingeben." };
@@ -1365,7 +1433,7 @@ function saveCardsAsCustomDataset({ cards, label, existingId = "" }) {
     updatedAt: now,
   };
 
-  persistCustomDatasets();
+  const persistenceResult = await persistCustomDatasets();
   state.selectedDatasets = [toCustomDatasetKey(datasetId)];
   refreshEditorCustomDatasetSelect(datasetId);
   refreshCsvDatasetOverwriteSelect(datasetId);
@@ -1377,6 +1445,7 @@ function saveCardsAsCustomDataset({ cards, label, existingId = "" }) {
     label: normalizedLabel,
     count: normalizedCards.length,
     wasOverwrite,
+    persistenceResult,
   };
 }
 
@@ -1387,7 +1456,7 @@ function createCustomDatasetId() {
   return `dataset-${Date.now()}-${Math.round(Math.random() * 100000)}`;
 }
 
-function saveEditorAsNewDataset() {
+async function saveEditorAsNewDataset() {
   const { cards, errors } = updateEditorValidationState();
   if (errors.length > 0) {
     csvStatus.textContent = "Editor enthält ungültige Zeilen.";
@@ -1400,7 +1469,7 @@ function saveEditorAsNewDataset() {
     return;
   }
 
-  const result = saveCardsAsCustomDataset({ cards, label });
+  const result = await saveCardsAsCustomDataset({ cards, label });
   if (!result.ok) {
     csvStatus.textContent = result.message;
     return;
@@ -1409,10 +1478,14 @@ function saveEditorAsNewDataset() {
   if (cardEditorDatasetLabelInput) {
     cardEditorDatasetLabelInput.value = result.label;
   }
-  csvStatus.textContent = `Eigener Kartensatz gespeichert: ${result.label} (${result.count} Karten).`;
+  if (result.persistenceResult.mode === "remote") {
+    csvStatus.textContent = `Kartensatz global gespeichert: ${result.label} (${result.count} Karten).`;
+  } else {
+    csvStatus.textContent = `Eigener Kartensatz lokal gespeichert: ${result.label} (${result.count} Karten).`;
+  }
 }
 
-function overwriteSelectedCustomDataset() {
+async function overwriteSelectedCustomDataset() {
   const { cards, errors } = updateEditorValidationState();
   if (errors.length > 0) {
     csvStatus.textContent = "Editor enthält ungültige Zeilen.";
@@ -1427,7 +1500,7 @@ function overwriteSelectedCustomDataset() {
   }
 
   const nextLabel = cardEditorDatasetLabelInput?.value?.trim() || existingDataset.label;
-  const result = saveCardsAsCustomDataset({ cards, label: nextLabel, existingId: selectedId });
+  const result = await saveCardsAsCustomDataset({ cards, label: nextLabel, existingId: selectedId });
   if (!result.ok) {
     csvStatus.textContent = result.message;
     return;
@@ -1436,10 +1509,14 @@ function overwriteSelectedCustomDataset() {
   if (cardEditorDatasetLabelInput) {
     cardEditorDatasetLabelInput.value = nextLabel;
   }
-  csvStatus.textContent = `Kartensatz überschrieben: ${nextLabel} (${result.count} Karten).`;
+  if (result.persistenceResult.mode === "remote") {
+    csvStatus.textContent = `Kartensatz global überschrieben: ${nextLabel} (${result.count} Karten).`;
+  } else {
+    csvStatus.textContent = `Kartensatz lokal überschrieben: ${nextLabel} (${result.count} Karten).`;
+  }
 }
 
-function deleteSelectedCustomDataset() {
+async function deleteSelectedCustomDataset() {
   const selectedId = cardEditorDatasetSelect?.value ?? "";
   const dataset = state.customDatasets[selectedId];
   if (!dataset) {
@@ -1453,14 +1530,17 @@ function deleteSelectedCustomDataset() {
   }
 
   delete state.customDatasets[selectedId];
-  persistCustomDatasets();
+  const persistenceResult = await persistCustomDatasets();
   refreshEditorCustomDatasetSelect("");
   refreshCsvDatasetOverwriteSelect("");
   if (cardEditorDatasetLabelInput) {
     cardEditorDatasetLabelInput.value = "";
   }
   refreshDatasetSelections();
-  csvStatus.textContent = `Kartensatz gelöscht: ${dataset.label}.`;
+  csvStatus.textContent =
+    persistenceResult.mode === "remote"
+      ? `Kartensatz global gelöscht: ${dataset.label}.`
+      : `Kartensatz lokal gelöscht: ${dataset.label}.`;
 }
 
 function escapeCsvValue(value) {
@@ -1642,18 +1722,21 @@ function handleCsvUpload(event) {
   reader.readAsText(file, "utf-8");
 }
 
-function saveUploadedCsvAsNewDataset() {
+async function saveUploadedCsvAsNewDataset() {
   const label = csvDatasetNameInput?.value?.trim() || "";
-  const result = saveCardsAsCustomDataset({ cards: state.uploadedCsvCards, label });
+  const result = await saveCardsAsCustomDataset({ cards: state.uploadedCsvCards, label });
   if (!result.ok) {
     csvStatus.textContent = result.message;
     return;
   }
   refreshCsvDatasetOverwriteSelect(result.datasetId);
-  csvStatus.textContent = `CSV dauerhaft gespeichert: ${result.label} (${result.count} Karten).`;
+  csvStatus.textContent =
+    result.persistenceResult.mode === "remote"
+      ? `CSV global gespeichert: ${result.label} (${result.count} Karten).`
+      : `CSV lokal gespeichert: ${result.label} (${result.count} Karten).`;
 }
 
-function overwriteDatasetWithUploadedCsv() {
+async function overwriteDatasetWithUploadedCsv() {
   const selectedId = csvOverwriteSelect?.value ?? "";
   const existingDataset = state.customDatasets[selectedId];
   if (!existingDataset) {
@@ -1662,7 +1745,7 @@ function overwriteDatasetWithUploadedCsv() {
   }
 
   const label = csvDatasetNameInput?.value?.trim() || existingDataset.label;
-  const result = saveCardsAsCustomDataset({ cards: state.uploadedCsvCards, label, existingId: selectedId });
+  const result = await saveCardsAsCustomDataset({ cards: state.uploadedCsvCards, label, existingId: selectedId });
   if (!result.ok) {
     csvStatus.textContent = result.message;
     return;
@@ -1672,7 +1755,10 @@ function overwriteDatasetWithUploadedCsv() {
     csvDatasetNameInput.value = result.label;
   }
   refreshCsvDatasetOverwriteSelect(result.datasetId);
-  csvStatus.textContent = `Datensatz überschrieben: ${result.label} (${result.count} Karten).`;
+  csvStatus.textContent =
+    result.persistenceResult.mode === "remote"
+      ? `Datensatz global überschrieben: ${result.label} (${result.count} Karten).`
+      : `Datensatz lokal überschrieben: ${result.label} (${result.count} Karten).`;
 }
 
 function syncSettingsPanel() {
@@ -1862,8 +1948,8 @@ function handleWinnerRestart() {
   handleMainMenu();
 }
 
-function setup() {
-  state.customDatasets = readCustomDatasetsFromStorage();
+async function setup() {
+  state.customDatasets = await loadCustomDatasets();
   menuCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
   gameCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
   syncTeamCountControls(teamCountInput.value);
@@ -1879,6 +1965,12 @@ function setup() {
   refreshCsvDatasetOverwriteSelect("");
   applySelectedDatasets();
   updateCsvDatasetActionState();
+  if (csvStatus) {
+    csvStatus.textContent =
+      state.datasetStorageMode === "remote"
+        ? "Globale Kartensatzspeicherung aktiv."
+        : "Server nicht erreichbar – Kartensätze werden lokal gespeichert.";
+  }
 }
 
 window.addEventListener("resize", () => {

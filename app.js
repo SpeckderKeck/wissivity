@@ -218,6 +218,7 @@ const CUSTOM_DATASETS_STORAGE_KEY = "wissivity.customDatasets";
 const CUSTOM_DATASETS_API_URL_STORAGE_KEY = "wissivity.customDatasetsApiUrl";
 const CUSTOM_DATASETS_API_ENDPOINT = "/datasets";
 const CUSTOM_DATASET_KEY_PREFIX = "custom:";
+const STORAGE_DATASET_KEY_PREFIX = "storage:";
 const REMOVED_PRESET_DATASET_KEYS = new Set(["umformen"]);
 const REMOVED_CUSTOM_DATASET_LABELS = new Set(["umformen"]);
 
@@ -253,6 +254,7 @@ const state = {
   masterQuiz: false,
   selectedDatasets: [],
   customDatasets: {},
+  storageDatasets: {},
   uploadedCsvCards: [],
   datasetStorageMode: "local",
   customDatasetsApiUrl: "",
@@ -331,6 +333,23 @@ function toCustomDatasetKey(id) {
     return "";
   }
   return `${CUSTOM_DATASET_KEY_PREFIX}${normalizedId}`;
+}
+
+function fromStorageDatasetKey(key) {
+  const normalized = String(key ?? "").trim();
+  if (!normalized.startsWith(STORAGE_DATASET_KEY_PREFIX)) {
+    return null;
+  }
+  const objectName = normalized.slice(STORAGE_DATASET_KEY_PREFIX.length).trim();
+  return objectName || null;
+}
+
+function toStorageDatasetKey(objectName) {
+  const normalizedName = fromStorageDatasetKey(objectName) ?? String(objectName ?? "").trim();
+  if (!normalizedName) {
+    return "";
+  }
+  return `${STORAGE_DATASET_KEY_PREFIX}${normalizedName}`;
 }
 
 function normalizeDatasetTimestamp(value, fallback) {
@@ -561,7 +580,15 @@ function getAllDatasetEntries() {
       isCustom: true,
       id: dataset.id,
     }));
-  return [...presetEntries, ...customEntries];
+  const storageEntries = Object.entries(state.storageDatasets).map(([objectName, cards]) => ({
+    key: toStorageDatasetKey(objectName),
+    label: `${objectName} (Storage)`,
+    cards,
+    isCustom: false,
+    isStorage: true,
+    objectName,
+  }));
+  return [...presetEntries, ...customEntries, ...storageEntries];
 }
 
 function getDatasetEntryByKey(key) {
@@ -574,15 +601,28 @@ function getDatasetEntryByKey(key) {
     return { key: normalizedKey, label: dataset.label, cards: dataset.cards, isCustom: false };
   }
   const customId = fromCustomDatasetKey(normalizedKey);
-  if (!customId) return null;
-  const dataset = normalizeStoredCustomDataset(state.customDatasets[customId]);
-  if (!dataset) return null;
+  if (customId) {
+    const dataset = normalizeStoredCustomDataset(state.customDatasets[customId]);
+    if (!dataset) return null;
+    return {
+      key: toCustomDatasetKey(dataset.id),
+      label: `${dataset.label} (Eigen)`,
+      cards: dataset.cards,
+      isCustom: true,
+      id: dataset.id,
+    };
+  }
+  const storageObjectName = fromStorageDatasetKey(normalizedKey);
+  if (!storageObjectName) return null;
+  const cards = state.storageDatasets[storageObjectName];
+  if (!Array.isArray(cards) || cards.length === 0) return null;
   return {
-    key: toCustomDatasetKey(dataset.id),
-    label: `${dataset.label} (Eigen)`,
-    cards: dataset.cards,
-    isCustom: true,
-    id: dataset.id,
+    key: toStorageDatasetKey(storageObjectName),
+    label: `${storageObjectName} (Storage)`,
+    cards,
+    isCustom: false,
+    isStorage: true,
+    objectName: storageObjectName,
   };
 }
 
@@ -1231,7 +1271,9 @@ function handleUndo() {
 
 function handleStartGame() {
   const selectedDatasetKeys = readSelectedDatasetKeys();
-  if (selectedDatasetKeys.length === 0) {
+  const hasSelectedDatasets = selectedDatasetKeys.length > 0;
+  const hasLoadedCards = Array.isArray(state.cards) && state.cards.length > 0;
+  if (!hasSelectedDatasets && !hasLoadedCards) {
     alert("Bitte mindestens einen Kartensatz wählen.");
     return;
   }
@@ -1790,6 +1832,7 @@ function updateDatasetAddButtonVisibility() {
   const allSelected = [...datasetSelectList.querySelectorAll("select")].every((select) => getDatasetEntryByKey(select.value));
   const canAdd = hasCapacity && allSelected;
   datasetAddButton.disabled = !canAdd;
+  datasetAddButton.hidden = !canAdd;
   datasetAddButton.style.display = canAdd ? "inline-grid" : "none";
 }
 
@@ -1833,7 +1876,7 @@ function applySelectedDatasets() {
   if (csvUpload) {
     csvUpload.value = "";
   }
-  if (storageDatasetSelect) {
+  if (storageDatasetSelect && selectedKeys.length > 0) {
     storageDatasetSelect.value = "";
   }
 }
@@ -2051,13 +2094,16 @@ async function loadStorageDataset(objectName) {
       throw new Error("CSV enthält keine gültigen Karten.");
     }
 
+    const storageKey = toStorageDatasetKey(selectedName);
+    state.storageDatasets[selectedName] = cloneCards(cards);
+    const nextSelectedDatasets = new Set(state.selectedDatasets);
+    nextSelectedDatasets.add(storageKey);
+    state.selectedDatasets = [...nextSelectedDatasets].slice(0, MAX_DATASET_SELECTIONS);
     state.uploadedCsvCards = cloneCards(cards);
-    state.cards = cloneCards(cards);
-    state.selectedDatasets = [];
 
-    if (datasetSelect) {
-      datasetSelect.value = "";
-    }
+    setupDatasetSelects();
+    applySelectedDatasets();
+    updateDatasetAddButtonVisibility();
 
     console.log("Storage CSV Vorschau (erste 200 Zeichen):", csvText.slice(0, 200));
 

@@ -62,12 +62,27 @@ const themeToggle = document.getElementById("theme-toggle");
 const themeToggleWrapper = themeToggle?.closest(".theme-switch");
 const fullscreenToggle = document.getElementById("fullscreen-toggle");
 const qrToggle = document.getElementById("qr-toggle");
+const qrModal = document.getElementById("qr-modal");
+const qrImage = document.getElementById("qr-image");
+const closeQrModalButton = document.getElementById("close-qr-modal");
+
+function openQrModal(event) {
+  event?.preventDefault();
+  event?.stopPropagation();
+  if (!qrModal || !qrImage) return;
+  const pageUrl = window.location.href;
+  qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(pageUrl)}`;
+  qrModal.classList.remove("hidden");
+}
+
+function closeQrModal() {
+  if (!qrModal) return;
+  qrModal.classList.add("hidden");
+}
 
 if (qrToggle) {
-  qrToggle.addEventListener("click", () => {
-    const pageUrl = window.location.href;
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(pageUrl)}`;
-    window.open(qrUrl, "_blank", "noopener,noreferrer");
+  qrToggle.addEventListener("click", (event) => {
+    openQrModal(event);
   });
 }
 
@@ -1903,6 +1918,10 @@ showMenuPanel();
 startButton.addEventListener("click", handleStartGame);
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
+  if (qrModal && !qrModal.classList.contains("hidden")) {
+    closeQrModal();
+    return;
+  }
   if (cardEditorModal && !cardEditorModal.classList.contains("hidden")) {
     closeCardEditor();
   }
@@ -1933,6 +1952,12 @@ cardEditorBody?.addEventListener("change", updateEditorValidationState);
 cardEditorModal?.addEventListener("click", (event) => {
   if (event.target === cardEditorModal) {
     closeCardEditor();
+  }
+});
+closeQrModalButton?.addEventListener("click", closeQrModal);
+qrModal?.addEventListener("click", (event) => {
+  if (event.target === qrModal) {
+    closeQrModal();
   }
 });
 datasetAddButton?.addEventListener("click", () => {

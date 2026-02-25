@@ -175,10 +175,10 @@ body.game-active .app {
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
-.icon-button--label {
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+.qr-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  fill: currentColor;
 }
 
 body.fullscreen .app {
@@ -1219,6 +1219,46 @@ button:disabled {
   place-items: center;
   z-index: 70;
   padding: 24px;
+}
+
+
+.qr-modal {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  display: grid;
+  place-items: center;
+  z-index: 65;
+  padding: 24px;
+}
+
+.qr-modal-card {
+  width: min(420px, 100%);
+  background: var(--panel);
+  border-radius: 20px;
+  box-shadow: 0 16px 40px var(--shadow);
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+}
+
+.qr-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.qr-modal-header h2 {
+  margin: 0;
+}
+
+.qr-modal-image {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 10px;
 }
 
 .card-editor-modal {

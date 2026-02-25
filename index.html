@@ -23,12 +23,26 @@
       </label>
       <button
         id="qr-toggle"
-        class="icon-button icon-button--label"
+        class="icon-button"
         type="button"
         aria-label="QR-Code für diese Seite öffnen"
         title="QR-Code anzeigen"
       >
-        QR
+        <svg class="qr-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <rect x="3" y="3" width="6" height="6" rx="1"></rect>
+          <rect x="5" y="5" width="2" height="2"></rect>
+          <rect x="15" y="3" width="6" height="6" rx="1"></rect>
+          <rect x="17" y="5" width="2" height="2"></rect>
+          <rect x="3" y="15" width="6" height="6" rx="1"></rect>
+          <rect x="5" y="17" width="2" height="2"></rect>
+          <rect x="12" y="12" width="2" height="2"></rect>
+          <rect x="15" y="12" width="2" height="2"></rect>
+          <rect x="18" y="12" width="3" height="2"></rect>
+          <rect x="12" y="15" width="2" height="2"></rect>
+          <rect x="15" y="15" width="6" height="2"></rect>
+          <rect x="12" y="18" width="4" height="3"></rect>
+          <rect x="18" y="18" width="3" height="3"></rect>
+        </svg>
       </button>
       <button
         id="fullscreen-toggle"
@@ -271,6 +285,17 @@
   <div id="overlay" class="overlay hidden" aria-live="polite">
     <div class="overlay-content" id="overlay-content">🎲</div>
   </div>
+
+  <div id="qr-modal" class="qr-modal hidden" role="dialog" aria-modal="true" aria-label="QR-Code">
+    <div class="qr-modal-card">
+      <div class="qr-modal-header">
+        <h2>QR-Code</h2>
+        <button id="close-qr-modal" class="ghost" type="button">Schließen</button>
+      </div>
+      <img id="qr-image" class="qr-modal-image" alt="QR-Code für diese Seite" loading="lazy" />
+    </div>
+  </div>
+
   <div id="card-editor-modal" class="card-editor-modal hidden" role="dialog" aria-modal="true" aria-label="Karteneditor">
     <div class="card-editor-card">
       <div class="card-editor-header">

@@ -1201,6 +1201,9 @@ function handleRoll() {
   if (state.pendingRoll !== null || state.timer || state.phase !== "idle" || state.gameOver) {
     return;
   }
+
+  statusText?.classList.add("hidden");
+
   const roll = Math.floor(Math.random() * 6) + 1;
   state.pendingRoll = roll;
   showDiceOverlay(roll);

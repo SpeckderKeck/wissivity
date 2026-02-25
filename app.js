@@ -213,7 +213,7 @@ const DEFAULT_DATA = PRESET_DATASETS[DEFAULT_DATASET_KEY]?.cards ?? [];
 const MAX_DATASET_SELECTIONS = 5;
 const CUSTOM_DATASETS_STORAGE_KEY = "wissivity.customDatasets";
 const CUSTOM_DATASETS_API_URL_STORAGE_KEY = "wissivity.customDatasetsApiUrl";
-const CUSTOM_DATASETS_API_ENDPOINT = "/api/custom-datasets";
+const CUSTOM_DATASETS_API_ENDPOINT = "/datasets";
 const CUSTOM_DATASET_KEY_PREFIX = "custom:";
 const REMOVED_PRESET_DATASET_KEYS = new Set(["umformen"]);
 const REMOVED_CUSTOM_DATASET_LABELS = new Set(["umformen"]);
@@ -376,6 +376,7 @@ function normalizeStoredCustomDataset(rawDataset) {
     cards,
     createdAt,
     updatedAt,
+    version: Number.isInteger(rawDataset.version) && rawDataset.version > 0 ? rawDataset.version : 1,
   };
 }
 
@@ -427,7 +428,7 @@ async function readCustomDatasetsFromApi() {
   }
 }
 
-async function persistCustomDatasets() {
+async function persistCustomDatasets({ operation, datasetId, previousDataset } = {}) {
   const datasets = Object.values(state.customDatasets)
     .map((dataset) => normalizeStoredCustomDataset(dataset))
     .filter(Boolean)
@@ -440,29 +441,90 @@ async function persistCustomDatasets() {
 
   if (state.datasetStorageMode === "remote") {
     try {
-      const response = await fetch(getCustomDatasetsApiEndpoint(), {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(datasets),
-      });
+      const targetDataset = datasetId ? state.customDatasets[datasetId] : null;
+      let response;
+
+      if (operation === "delete") {
+        response = await fetch(`${getCustomDatasetsApiEndpoint()}/${encodeURIComponent(datasetId)}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            expectedVersion: previousDataset?.version,
+            expectedUpdatedAt: previousDataset?.updatedAt,
+          }),
+        });
+      } else if (targetDataset) {
+        const hasPreviousDataset = Boolean(previousDataset);
+        response = await fetch(
+          hasPreviousDataset
+            ? `${getCustomDatasetsApiEndpoint()}/${encodeURIComponent(targetDataset.id)}`
+            : getCustomDatasetsApiEndpoint(),
+          {
+            method: hasPreviousDataset ? "PATCH" : "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify(
+              hasPreviousDataset
+                ? {
+                    label: targetDataset.label,
+                    cards: targetDataset.cards,
+                    expectedVersion: previousDataset?.version,
+                    expectedUpdatedAt: previousDataset?.updatedAt,
+                  }
+                : targetDataset,
+            ),
+          },
+        );
+      } else {
+        response = { ok: true, status: 200, json: async () => null };
+      }
 
       if (!response.ok) {
+        if (response.status === 409) {
+          const conflictPayload = await response.json().catch(() => null);
+          if (operation === "delete" && previousDataset?.id) {
+            state.customDatasets[previousDataset.id] = previousDataset;
+          } else if (datasetId) {
+            if (previousDataset?.id) {
+              state.customDatasets[previousDataset.id] = previousDataset;
+            } else {
+              delete state.customDatasets[datasetId];
+            }
+          }
+          localStorage.setItem(CUSTOM_DATASETS_STORAGE_KEY, JSON.stringify(Object.values(state.customDatasets)));
+          return {
+            ok: false,
+            mode: "remote",
+            conflict: true,
+            message: "Konflikt erkannt: Kartensatz wurde zwischenzeitlich geändert.",
+            serverDataset: normalizeStoredCustomDataset(conflictPayload?.current),
+          };
+        }
         throw new Error(`HTTP ${response.status}`);
       }
 
-      localStorage.setItem(CUSTOM_DATASETS_STORAGE_KEY, JSON.stringify(datasets));
+      if (operation !== "delete" && datasetId) {
+        const persistedDataset = normalizeStoredCustomDataset(await response.json());
+        if (persistedDataset) {
+          state.customDatasets[persistedDataset.id] = persistedDataset;
+        }
+      }
+
+      localStorage.setItem(CUSTOM_DATASETS_STORAGE_KEY, JSON.stringify(Object.values(state.customDatasets)));
       return { ok: true, mode: "remote" };
     } catch {
       state.datasetStorageMode = "local";
-      localStorage.setItem(CUSTOM_DATASETS_STORAGE_KEY, JSON.stringify(datasets));
+      localStorage.setItem(CUSTOM_DATASETS_STORAGE_KEY, JSON.stringify(Object.values(state.customDatasets)));
       return { ok: false, mode: "local", message: "Server nicht erreichbar, lokal gespeichert." };
     }
   }
 
-  localStorage.setItem(CUSTOM_DATASETS_STORAGE_KEY, JSON.stringify(datasets));
+  localStorage.setItem(CUSTOM_DATASETS_STORAGE_KEY, JSON.stringify(Object.values(state.customDatasets)));
   return { ok: true, mode: "local" };
 }
 
@@ -1514,9 +1576,28 @@ async function saveCardsAsCustomDataset({ cards, label, existingId = "" }) {
     cards: normalizedCards,
     createdAt: existingDataset?.createdAt ?? now,
     updatedAt: now,
+    version: existingDataset?.version ?? 1,
   };
 
-  const persistenceResult = await persistCustomDatasets();
+  const persistenceResult = await persistCustomDatasets({
+    operation: "upsert",
+    datasetId,
+    previousDataset: existingDataset,
+  });
+  if (!persistenceResult.ok && persistenceResult.conflict) {
+    if (persistenceResult.serverDataset) {
+      state.customDatasets[datasetId] = persistenceResult.serverDataset;
+    }
+    refreshEditorCustomDatasetSelect(datasetId);
+    refreshCsvDatasetOverwriteSelect(datasetId);
+    refreshDatasetSelections();
+    return {
+      ok: false,
+      message: "Der Kartensatz wurde in der Zwischenzeit geändert. Bitte neu laden und erneut speichern.",
+      persistenceResult,
+    };
+  }
+
   state.selectedDatasets = [toCustomDatasetKey(datasetId)];
   refreshEditorCustomDatasetSelect(datasetId);
   refreshCsvDatasetOverwriteSelect(datasetId);
@@ -1613,7 +1694,18 @@ async function deleteSelectedCustomDataset() {
   }
 
   delete state.customDatasets[selectedId];
-  const persistenceResult = await persistCustomDatasets();
+  const persistenceResult = await persistCustomDatasets({
+    operation: "delete",
+    datasetId: selectedId,
+    previousDataset: dataset,
+  });
+  if (!persistenceResult.ok && persistenceResult.conflict) {
+    csvStatus.textContent = "Löschen fehlgeschlagen: Kartensatz wurde bereits geändert.";
+    refreshEditorCustomDatasetSelect(selectedId);
+    refreshCsvDatasetOverwriteSelect(selectedId);
+    refreshDatasetSelections();
+    return;
+  }
   refreshEditorCustomDatasetSelect("");
   refreshCsvDatasetOverwriteSelect("");
   if (cardEditorDatasetLabelInput) {

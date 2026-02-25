@@ -1580,6 +1580,10 @@ function deriveDatasetLabelFromFilename(filename = "") {
   return trimmed.replace(/\.[^/.]+$/, "").trim();
 }
 
+function getDisplayDatasetName(fileName = "") {
+  return deriveDatasetLabelFromFilename(fileName) || fileName;
+}
+
 function updateCsvDatasetActionState() {
   const hasUploadedCards = state.uploadedCsvCards.length > 0;
   if (csvSaveNewButton) {
@@ -1981,7 +1985,7 @@ function setStorageSelectOptions(files = []) {
   files.forEach((file) => {
     const option = document.createElement("option");
     option.value = file.name;
-    option.textContent = file.name;
+    option.textContent = getDisplayDatasetName(file.name);
     storageDatasetSelect.append(option);
   });
 }
@@ -2070,9 +2074,11 @@ async function loadStorageDataset(objectName) {
     return;
   }
 
+  const datasetLabel = getDisplayDatasetName(selectedName);
+
   try {
     if (csvStatus) {
-      csvStatus.textContent = `Lade Kartenset aus Storage: ${selectedName} ...`;
+      csvStatus.textContent = `Lade Kartenset aus Storage: ${datasetLabel} ...`;
     }
 
     const supabase = await getSupabaseStorageClient();
@@ -2108,7 +2114,10 @@ async function loadStorageDataset(objectName) {
     console.log("Storage CSV Vorschau (erste 200 Zeichen):", csvText.slice(0, 200));
 
     if (csvStatus) {
-      csvStatus.textContent = `${selectedName}: ${cards.length} Karten aus Storage geladen.`;
+      csvStatus.textContent = `${datasetLabel}: ${cards.length} Karten aus Storage geladen.`;
+    }
+    if (csvDatasetNameInput) {
+      csvDatasetNameInput.value = datasetLabel;
     }
   } catch (error) {
     if (csvStatus) {
@@ -2135,7 +2144,8 @@ async function handleCsvUpload() {
   }
 
   const safeName = sanitizeUploadFileName(file.name);
-  const uploadName = `${crypto.randomUUID()}_${safeName}`;
+  const uploadName = safeName;
+  const derivedLabel = getDisplayDatasetName(file.name);
 
   try {
     csvUploadButton && (csvUploadButton.disabled = true);
@@ -2155,8 +2165,11 @@ async function handleCsvUpload() {
     if (csvUpload) {
       csvUpload.value = "";
     }
+    if (csvDatasetNameInput) {
+      csvDatasetNameInput.value = derivedLabel;
+    }
     if (csvStatus) {
-      csvStatus.textContent = `Upload erfolgreich: ${uploadName}`;
+      csvStatus.textContent = `Upload erfolgreich: ${derivedLabel}`;
     }
 
     await refreshPublicCsvList();

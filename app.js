@@ -2033,7 +2033,10 @@ function parseStorageCsvToCards(csvText) {
       if (card.category === "Quizfrage") {
         return Boolean(card.answer);
       }
-      return Array.isArray(card.taboo) && card.taboo.length > 0;
+      if (card.category === "Erklären") {
+        return Array.isArray(card.taboo) && card.taboo.length > 0;
+      }
+      return true;
     });
 }
 

@@ -2056,6 +2056,18 @@ function setStorageSelectOptions(files = []) {
   });
 }
 
+function isSelectableStorageDataset(item) {
+  const rawName = String(item?.name ?? "").trim();
+  const normalizedName = rawName.toLowerCase();
+  if (!rawName || rawName.endsWith("/")) {
+    return false;
+  }
+  if (normalizedName === "emptyfolder" || normalizedName === ".emptyfolderplaceholder") {
+    return false;
+  }
+  return true;
+}
+
 function sanitizeUploadFileName(name) {
   return (
     name
@@ -2123,7 +2135,7 @@ async function refreshPublicCsvList() {
     }
 
     const sortedFiles = [...(data || [])]
-      .filter((item) => item && item.name && !item.name.endsWith("/"))
+      .filter((item) => isSelectableStorageDataset(item))
       .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
     setStorageSelectOptions(sortedFiles);

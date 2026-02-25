@@ -1827,6 +1827,47 @@ function createDatasetSelect(currentKey = "") {
   return select;
 }
 
+function createDatasetSelectRow(currentKey = "") {
+  const row = document.createElement("div");
+  row.className = "dataset-select-row";
+
+  const select = createDatasetSelect(currentKey);
+  row.append(select);
+
+  const removeButton = document.createElement("button");
+  removeButton.type = "button";
+  removeButton.className = "dataset-remove-button";
+  removeButton.setAttribute("aria-label", "Kartensatz entfernen");
+  removeButton.textContent = "−";
+  removeButton.addEventListener("click", () => {
+    row.remove();
+    applySelectedDatasets();
+    updateDatasetRowControls();
+  });
+  row.append(removeButton);
+
+  return { row, select, removeButton };
+}
+
+function updateDatasetRowControls() {
+  if (!datasetSelectList) {
+    return;
+  }
+
+  const rows = [...datasetSelectList.querySelectorAll(".dataset-select-row")];
+  const canRemove = rows.length > 1;
+  rows.forEach((row) => {
+    const removeButton = row.querySelector(".dataset-remove-button");
+    if (!removeButton) {
+      return;
+    }
+    removeButton.disabled = !canRemove;
+    removeButton.hidden = !canRemove;
+  });
+
+  updateDatasetAddButtonVisibility();
+}
+
 function updateDatasetAddButtonVisibility() {
   if (datasetSelect) {
     return;
@@ -1895,14 +1936,14 @@ function addDatasetSelect(initialKey = "") {
     return;
   }
 
-  const select = createDatasetSelect(initialKey);
+  const { row, select } = createDatasetSelectRow(initialKey);
   select.addEventListener("change", () => {
     applySelectedDatasets();
-    updateDatasetAddButtonVisibility();
+    updateDatasetRowControls();
   });
-  datasetSelectList.append(select);
+  datasetSelectList.append(row);
   applySelectedDatasets();
-  updateDatasetAddButtonVisibility();
+  updateDatasetRowControls();
 }
 
 function populateMainDatasetSelect() {
@@ -1951,7 +1992,7 @@ function setupDatasetSelects() {
     addDatasetSelect(key);
   });
 
-  updateDatasetAddButtonVisibility();
+  updateDatasetRowControls();
 }
 
 const SUPABASE_URL = "https://mqbokupviznrmnwvtwwe.supabase.co";

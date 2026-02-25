@@ -1199,7 +1199,6 @@ function handleRoll() {
   const roll = Math.floor(Math.random() * 6) + 1;
   state.pendingRoll = roll;
   showDiceOverlay(roll);
-  setStatusMessage(`${formatTeamLabel(state.currentTeam)} würfelt ${roll}.`);
   const previousPositions = [...state.positions];
   state.history.push({
     positions: previousPositions,

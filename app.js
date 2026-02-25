@@ -205,6 +205,9 @@ const CATEGORY_VISUALS = {
   },
 };
 
+const START_ICON_PATH = "start.svg";
+const GOAL_ICON_PATH = "ziel.svg";
+
 const ALLOWED_CARD_CATEGORIES = ["Erklären", "Zeichnen", "Pantomime", "Quizfrage"];
 
 function getCategoryIconPath(category) {
@@ -894,16 +897,18 @@ function buildBoard(categories = state.categories) {
         cell.classList.add("start");
         card.style.setProperty("--card-color", "#d9f7ea");
         const icon = document.createElement("span");
-        icon.className = "category-icon icon-fallback";
-        icon.textContent = "🚩";
+        icon.className = "category-icon";
+        icon.setAttribute("aria-hidden", "true");
+        icon.style.setProperty("--icon-url", `url("${START_ICON_PATH}")`);
         card.append(icon);
         cell.append(card);
       } else if (index === total - 1) {
         cell.classList.add("goal");
         card.style.setProperty("--card-color", "#ffe4c7");
         const icon = document.createElement("span");
-        icon.className = "category-icon icon-fallback";
-        icon.textContent = "🏁";
+        icon.className = "category-icon";
+        icon.setAttribute("aria-hidden", "true");
+        icon.style.setProperty("--icon-url", `url("${GOAL_ICON_PATH}")`);
         card.append(icon);
         cell.append(card);
       } else {

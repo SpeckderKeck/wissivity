@@ -274,6 +274,7 @@ function normalizeStoredCustomDataset(rawDataset) {
   const id = typeof rawDataset.id === "string" ? rawDataset.id.trim() : "";
   const label = typeof rawDataset.label === "string" ? rawDataset.label.trim() : "";
   if (!id || !label) return null;
+  if (REMOVED_CUSTOM_DATASET_LABELS.has(label.toLocaleLowerCase("de"))) return null;
   const cards = Array.isArray(rawDataset.cards)
     ? rawDataset.cards.map((card) => normalizeCardInput(card)).filter((card) => card.term)
     : [];
@@ -356,12 +357,14 @@ async function syncCustomDatasetsFromGlobalStorage() {
 }
 
 function getAllDatasetEntries() {
-  const presetEntries = Object.entries(PRESET_DATASETS).map(([key, dataset]) => ({
-    key,
-    label: dataset.label,
-    cards: dataset.cards,
-    isCustom: false,
-  }));
+  const presetEntries = Object.entries(PRESET_DATASETS)
+    .filter(([key]) => !REMOVED_PRESET_DATASET_KEYS.has(key))
+    .map(([key, dataset]) => ({
+      key,
+      label: dataset.label,
+      cards: dataset.cards,
+      isCustom: false,
+    }));
   const customEntries = Object.values(state.customDatasets).map((dataset) => ({
     key: toCustomDatasetKey(dataset.id),
     label: `${dataset.label} (Eigen)`,
@@ -373,6 +376,9 @@ function getAllDatasetEntries() {
 }
 
 function getDatasetEntryByKey(key) {
+  if (REMOVED_PRESET_DATASET_KEYS.has(key)) {
+    return null;
+  }
   if (PRESET_DATASETS[key]) {
     const dataset = PRESET_DATASETS[key];
     return { key, label: dataset.label, cards: dataset.cards, isCustom: false };

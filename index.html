@@ -23,12 +23,26 @@
       </label>
       <button
         id="qr-toggle"
-        class="icon-button icon-button--label"
+        class="icon-button"
         type="button"
         aria-label="QR-Code für diese Seite öffnen"
         title="QR-Code anzeigen"
       >
-        QR
+        <svg class="qr-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <rect x="3" y="3" width="6" height="6" rx="1"></rect>
+          <rect x="5" y="5" width="2" height="2"></rect>
+          <rect x="15" y="3" width="6" height="6" rx="1"></rect>
+          <rect x="17" y="5" width="2" height="2"></rect>
+          <rect x="3" y="15" width="6" height="6" rx="1"></rect>
+          <rect x="5" y="17" width="2" height="2"></rect>
+          <rect x="12" y="12" width="2" height="2"></rect>
+          <rect x="15" y="12" width="2" height="2"></rect>
+          <rect x="18" y="12" width="3" height="2"></rect>
+          <rect x="12" y="15" width="2" height="2"></rect>
+          <rect x="15" y="15" width="6" height="2"></rect>
+          <rect x="12" y="18" width="4" height="3"></rect>
+          <rect x="18" y="18" width="3" height="3"></rect>
+        </svg>
       </button>
       <button
         id="fullscreen-toggle"
@@ -48,66 +62,79 @@
     <main>
       <section id="menu" class="panel panel--active" aria-label="Hauptmenü" aria-hidden="false">
         <div class="panel-grid">
-          <div class="card card--teams">
-            <h2>Teams</h2>
-            <label class="field">
-              Anzahl Teams
-              <div class="team-count-control" role="group" aria-label="Anzahl Teams">
-                <button type="button" class="count-button" id="team-count-decrease" aria-label="Teamanzahl verringern">
-                  –
-                </button>
-                <input id="team-count" type="number" min="2" max="4" step="1" value="2" />
-                <button type="button" class="count-button" id="team-count-increase" aria-label="Teamanzahl erhöhen">
-                  +
-                </button>
-              </div>
-            </label>
-            <div id="team-list" class="team-list"></div>
+          <div class="card-stack">
+            <div class="card card--teams">
+              <h2>Teams</h2>
+              <label class="field">
+                Anzahl Teams
+                <div class="team-count-control" role="group" aria-label="Anzahl Teams">
+                  <button type="button" class="count-button" id="team-count-decrease" aria-label="Teamanzahl verringern">
+                    –
+                  </button>
+                  <input id="team-count" type="number" min="2" max="4" step="1" value="2" />
+                  <button type="button" class="count-button" id="team-count-increase" aria-label="Teamanzahl erhöhen">
+                    +
+                  </button>
+                </div>
+              </label>
+              <div id="team-list" class="team-list"></div>
+            </div>
+            <div class="card">
+              <h2>Spiellänge</h2>
+              <label class="field">
+                Spiellänge
+                <select id="board-size-select">
+                  <option value="short">Kurzes Spiel · 24 Felder (6 × 4)</option>
+                  <option value="normal" selected>Normales Spiel · 30 Felder (6 × 5)</option>
+                  <option value="long">Langes Spiel · 42 Felder (7 × 6)</option>
+                </select>
+              </label>
+            </div>
           </div>
 
           <div class="card" id="menu-settings-card">
             <h2>Spieleinstellungen</h2>
             <div class="field-group category-settings">
               <p>Kategorien</p>
+              <div class="category-settings-head" aria-hidden="true">
+                <span>Kategorie</span>
+                <span>Zeit pro Runde</span>
+              </div>
               <div class="category-setting">
                 <label class="category-toggle">
                   <input type="checkbox" id="category-explain" value="Erklären" checked />
                   Erklären
                 </label>
-                <label class="field category-time">
-                  Zeit pro Runde
-                  <select id="time-explain"></select>
-                </label>
+                <div class="category-time">
+                  <select id="time-explain" aria-label="Zeit pro Runde für Erklären"></select>
+                </div>
               </div>
               <div class="category-setting">
                 <label class="category-toggle">
                   <input type="checkbox" id="category-draw" value="Zeichnen" checked />
                   Zeichnen
                 </label>
-                <label class="field category-time">
-                  Zeit pro Runde
-                  <select id="time-draw"></select>
-                </label>
+                <div class="category-time">
+                  <select id="time-draw" aria-label="Zeit pro Runde für Zeichnen"></select>
+                </div>
               </div>
               <div class="category-setting">
                 <label class="category-toggle">
                   <input type="checkbox" id="category-pantomime" value="Pantomime" checked />
                   Pantomime
                 </label>
-                <label class="field category-time">
-                  Zeit pro Runde
-                  <select id="time-pantomime"></select>
-                </label>
+                <div class="category-time">
+                  <select id="time-pantomime" aria-label="Zeit pro Runde für Pantomime"></select>
+                </div>
               </div>
               <div class="category-setting">
                 <label class="category-toggle">
                   <input type="checkbox" id="category-quiz" value="Quizfrage" checked />
                   Quizfrage
                 </label>
-                <label class="field category-time">
-                  Zeit pro Runde
-                  <select id="time-quiz"></select>
-                </label>
+                <div class="category-time">
+                  <select id="time-quiz" aria-label="Zeit pro Runde für Quizfrage"></select>
+                </div>
               </div>
             </div>
             <label class="field">
@@ -157,17 +184,6 @@
                 </ul>
               </div>
             </div>
-            <div class="card">
-              <h2>Spiellänge</h2>
-              <label class="field">
-                Spiellänge
-                <select id="board-size-select">
-                  <option value="short">Kurzes Spiel · 24 Felder (6 × 4)</option>
-                  <option value="normal" selected>Normales Spiel · 30 Felder (6 × 5)</option>
-                  <option value="long">Langes Spiel · 42 Felder (7 × 6)</option>
-                </select>
-              </label>
-            </div>
           </div>
         </div>
         <footer class="menu-footer">
@@ -202,45 +218,45 @@
             </div>
             <div class="field-group category-settings">
               <p>Kategorien</p>
+              <div class="category-settings-head" aria-hidden="true">
+                <span>Kategorie</span>
+                <span>Zeit pro Runde</span>
+              </div>
               <div class="category-setting">
                 <label class="category-toggle">
                   <input type="checkbox" id="category-explain-game" value="Erklären" checked />
                   Erklären
                 </label>
-                <label class="field category-time">
-                  Zeit pro Runde
-                  <select id="time-explain-game"></select>
-                </label>
+                <div class="category-time">
+                  <select id="time-explain-game" aria-label="Zeit pro Runde für Erklären"></select>
+                </div>
               </div>
               <div class="category-setting">
                 <label class="category-toggle">
                   <input type="checkbox" id="category-draw-game" value="Zeichnen" checked />
                   Zeichnen
                 </label>
-                <label class="field category-time">
-                  Zeit pro Runde
-                  <select id="time-draw-game"></select>
-                </label>
+                <div class="category-time">
+                  <select id="time-draw-game" aria-label="Zeit pro Runde für Zeichnen"></select>
+                </div>
               </div>
               <div class="category-setting">
                 <label class="category-toggle">
                   <input type="checkbox" id="category-pantomime-game" value="Pantomime" checked />
                   Pantomime
                 </label>
-                <label class="field category-time">
-                  Zeit pro Runde
-                  <select id="time-pantomime-game"></select>
-                </label>
+                <div class="category-time">
+                  <select id="time-pantomime-game" aria-label="Zeit pro Runde für Pantomime"></select>
+                </div>
               </div>
               <div class="category-setting">
                 <label class="category-toggle">
                   <input type="checkbox" id="category-quiz-game" value="Quizfrage" checked />
                   Quizfrage
                 </label>
-                <label class="field category-time">
-                  Zeit pro Runde
-                  <select id="time-quiz-game"></select>
-                </label>
+                <div class="category-time">
+                  <select id="time-quiz-game" aria-label="Zeit pro Runde für Quizfrage"></select>
+                </div>
               </div>
             </div>
             <label class="field">
@@ -269,6 +285,17 @@
   <div id="overlay" class="overlay hidden" aria-live="polite">
     <div class="overlay-content" id="overlay-content">🎲</div>
   </div>
+
+  <div id="qr-modal" class="qr-modal hidden" role="dialog" aria-modal="true" aria-label="QR-Code">
+    <div class="qr-modal-card">
+      <div class="qr-modal-header">
+        <h2>QR-Code</h2>
+        <button id="close-qr-modal" class="ghost" type="button">Schließen</button>
+      </div>
+      <img id="qr-image" class="qr-modal-image" alt="QR-Code für diese Seite" loading="lazy" />
+    </div>
+  </div>
+
   <div id="card-editor-modal" class="card-editor-modal hidden" role="dialog" aria-modal="true" aria-label="Karteneditor">
     <div class="card-editor-card">
       <div class="card-editor-header">

@@ -34,33 +34,33 @@
 
 body[data-theme="light"] {
   color-scheme: light;
-  --bg: #fde7eb;
-  --panel: #ffffff;
-  --card: #ffffff;
-  --surface-alt: #fff4f7;
-  --text: #2e2e2e;
-  --muted: #6e6e6e;
-  --accent: #e6d72a;
-  --button: #f16d9e;
+  --bg: #f5ece3;
+  --panel: #fff9f2;
+  --card: #fff5ea;
+  --surface-alt: #f5e8d9;
+  --text: #2f261f;
+  --muted: #6f6154;
+  --accent: #ce7a2f;
+  --button: #2f5f3f;
   --button-text: #ffffff;
-  --button-hover: #e15d8f;
-  --button-active: #cf4f80;
-  --button-disabled: #f8c5d7;
-  --success: #5bc8ac;
-  --success-hover: #49b79b;
-  --success-active: #3aa78c;
-  --danger: #e6d72a;
-  --danger-hover: #d5c71f;
-  --danger-active: #c4b61a;
-  --board: #fde7eb;
-  --border: #e2e2e2;
+  --button-hover: #284f35;
+  --button-active: #22442d;
+  --button-disabled: #a9bdaf;
+  --success: #2e5e3f;
+  --success-hover: #285238;
+  --success-active: #22472f;
+  --danger: #b3562b;
+  --danger-hover: #9d4b25;
+  --danger-active: #883f1f;
+  --board: #f2e6d7;
+  --border: #d8c5af;
   --board-card-border: #000000;
-  --shadow: rgba(46, 46, 46, 0.12);
-  --overlay: rgba(46, 46, 46, 0.35);
-  --pastel-1: rgba(241, 109, 158, 0.2);
-  --pastel-2: rgba(91, 200, 172, 0.18);
-  --pastel-3: rgba(230, 215, 42, 0.22);
-  --pastel-4: rgba(255, 255, 255, 0.8);
+  --shadow: rgba(73, 47, 29, 0.14);
+  --overlay: rgba(47, 38, 31, 0.38);
+  --pastel-1: rgba(139, 90, 53, 0.2);
+  --pastel-2: rgba(46, 94, 63, 0.18);
+  --pastel-3: rgba(206, 122, 47, 0.22);
+  --pastel-4: rgba(255, 249, 242, 0.82);
 }
 
 * {

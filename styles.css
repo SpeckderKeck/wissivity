@@ -41,11 +41,11 @@ body[data-theme="light"] {
   --text: #2f261f;
   --muted: #6f6154;
   --accent: #ce7a2f;
-  --button: #2f5f3f;
-  --button-text: #ffffff;
-  --button-hover: #284f35;
-  --button-active: #22442d;
-  --button-disabled: #a9bdaf;
+  --button: #fedc78;
+  --button-text: #2f261f;
+  --button-hover: #f4cf63;
+  --button-active: #e9c256;
+  --button-disabled: #e2d3a2;
   --success: #2e5e3f;
   --success-hover: #285238;
   --success-active: #22472f;
@@ -61,6 +61,20 @@ body[data-theme="light"] {
   --pastel-2: rgba(46, 94, 63, 0.18);
   --pastel-3: rgba(206, 122, 47, 0.22);
   --pastel-4: rgba(255, 249, 242, 0.82);
+}
+
+body[data-theme="light"] button:not(:disabled),
+body[data-theme="light"] .ghost:not(:disabled),
+body[data-theme="light"] .icon-button:not(:disabled),
+body[data-theme="light"] .dice:not(:disabled),
+body[data-theme="light"] .count-button:not(:disabled),
+body[data-theme="light"] .picker-button:not(:disabled),
+body[data-theme="light"] .dataset-add-button:not(:disabled),
+body[data-theme="light"] .dataset-remove-button:not(:disabled),
+body[data-theme="light"] .info-button:not(:disabled),
+body[data-theme="light"] .turn-action-button:not(:disabled) {
+  background: var(--button);
+  color: var(--button-text);
 }
 
 * {

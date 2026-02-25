@@ -103,7 +103,10 @@ const teamStatusList = document.getElementById("team-status-list");
 
 function setStatusMessage(message, { pulseDice = false } = {}) {
   if (statusText) {
+    statusText.classList.remove("hidden");
     statusText.classList.remove("status--next-roll");
+    const closeButton = statusText.querySelector(".status-close-button");
+    closeButton?.remove();
     statusText.textContent = message;
   }
   rollButton?.classList.toggle("dice--pulse", pulseDice);
@@ -115,8 +118,19 @@ function setNextRollStatus(teamIndex, { pulseDice = true } = {}) {
     return;
   }
   const team = state.teams[teamIndex] ?? { name: "Team", icon: "" };
+  statusText.classList.remove("hidden");
   statusText.replaceChildren();
   statusText.classList.add("status--next-roll");
+
+  const closeButton = document.createElement("button");
+  closeButton.type = "button";
+  closeButton.className = "status-close-button";
+  closeButton.setAttribute("aria-label", "Hinweis schließen");
+  closeButton.textContent = "×";
+  closeButton.addEventListener("click", () => {
+    statusText.classList.add("hidden");
+  });
+  statusText.append(closeButton);
 
   if (team.icon) {
     const icon = document.createElement("span");

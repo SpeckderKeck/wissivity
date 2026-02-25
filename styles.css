@@ -1236,6 +1236,25 @@ button:disabled {
   z-index: 4;
 }
 
+.status-close-button {
+  position: absolute;
+  top: clamp(8px, 1.5vw, 14px);
+  right: clamp(8px, 1.5vw, 14px);
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--panel) 88%, white 12%);
+  color: var(--text);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.status-close-button:hover {
+  background: color-mix(in srgb, var(--panel) 72%, white 28%);
+}
+
 .status--next-roll {
   width: min(92dvw, clamp(320px, 45vw, 680px));
   min-height: clamp(240px, 50vh, 560px);

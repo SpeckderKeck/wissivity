@@ -6,7 +6,9 @@ const HOST = '0.0.0.0';
 const PORT = Number.parseInt(process.env.PORT || '3000', 10);
 const ROOT_DIR = __dirname;
 const DATA_DIR = path.join(ROOT_DIR, 'data');
-const DATA_FILE = path.join(DATA_DIR, 'custom-datasets.json');
+const LEGACY_DATA_FILE = path.join(DATA_DIR, 'custom-datasets.json');
+const DATASET_STORE_DIR = path.join(DATA_DIR, 'custom-datasets-store');
+const MANIFEST_VERSION = 2;
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -22,7 +24,7 @@ const MIME_TYPES = {
 
 function setCorsHeaders(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
 }
 
@@ -35,33 +37,188 @@ function sendJson(res, status, payload) {
   res.end(JSON.stringify(payload));
 }
 
-function isDatasetPayload(payload) {
-  return Array.isArray(payload);
+function normalizeIsoTimestamp(value, fallbackIso) {
+  const parsed = new Date(value ?? '');
+  if (Number.isNaN(parsed.getTime())) return fallbackIso;
+  return parsed.toISOString();
 }
 
-async function ensureDataFile() {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  try {
-    await fs.access(DATA_FILE);
-  } catch {
-    await fs.writeFile(DATA_FILE, '[]\n', 'utf8');
+function toDatasetFilePath(datasetId) {
+  return path.join(DATASET_STORE_DIR, `${encodeURIComponent(datasetId)}.json`);
+}
+
+function normalizeDataset(rawDataset) {
+  if (!rawDataset || typeof rawDataset !== 'object') {
+    return null;
   }
+
+  const id = String(rawDataset.id ?? rawDataset.datasetId ?? rawDataset.key ?? '').trim();
+  if (!id) {
+    return null;
+  }
+
+  const label = String(rawDataset.label ?? '').trim() || id;
+  const cards = Array.isArray(rawDataset.cards) ? rawDataset.cards : [];
+  if (cards.length === 0) {
+    return null;
+  }
+
+  const nowIso = new Date().toISOString();
+  const createdAt = normalizeIsoTimestamp(rawDataset.createdAt, nowIso);
+  const updatedAt = normalizeIsoTimestamp(rawDataset.updatedAt, createdAt);
+  const version = Number.isInteger(rawDataset.version) && rawDataset.version > 0 ? rawDataset.version : 1;
+
+  return {
+    id,
+    label,
+    cards,
+    createdAt,
+    updatedAt,
+    version,
+  };
 }
 
-async function readDatasets() {
-  await ensureDataFile();
-  const raw = await fs.readFile(DATA_FILE, 'utf8');
+async function ensureStorageInitialized() {
+  await fs.mkdir(DATA_DIR, { recursive: true });
+  await fs.mkdir(DATASET_STORE_DIR, { recursive: true });
+
+  try {
+    await fs.access(LEGACY_DATA_FILE);
+  } catch {
+    const emptyManifest = { schemaVersion: MANIFEST_VERSION, datasets: [] };
+    await fs.writeFile(LEGACY_DATA_FILE, `${JSON.stringify(emptyManifest, null, 2)}\n`, 'utf8');
+    return;
+  }
+
+  const raw = await fs.readFile(LEGACY_DATA_FILE, 'utf8');
   const parsed = JSON.parse(raw || '[]');
-  if (!Array.isArray(parsed)) return [];
-  return parsed;
+
+  if (!Array.isArray(parsed)) {
+    if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.datasets)) {
+      const emptyManifest = { schemaVersion: MANIFEST_VERSION, datasets: [] };
+      await fs.writeFile(LEGACY_DATA_FILE, `${JSON.stringify(emptyManifest, null, 2)}\n`, 'utf8');
+    }
+    return;
+  }
+
+  const datasets = parsed.map((entry) => normalizeDataset(entry)).filter(Boolean);
+  const manifestEntries = [];
+  for (const dataset of datasets) {
+    const datasetFile = toDatasetFilePath(dataset.id);
+    await fs.writeFile(datasetFile, `${JSON.stringify(dataset.cards, null, 2)}\n`, 'utf8');
+    manifestEntries.push({
+      id: dataset.id,
+      label: dataset.label,
+      createdAt: dataset.createdAt,
+      updatedAt: dataset.updatedAt,
+      version: dataset.version,
+    });
+  }
+
+  const manifest = {
+    schemaVersion: MANIFEST_VERSION,
+    datasets: manifestEntries,
+  };
+  await fs.writeFile(LEGACY_DATA_FILE, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 }
 
-async function writeDatasets(datasets) {
-  await ensureDataFile();
-  await fs.writeFile(DATA_FILE, `${JSON.stringify(datasets, null, 2)}\n`, 'utf8');
+async function readManifest() {
+  await ensureStorageInitialized();
+  const raw = await fs.readFile(LEGACY_DATA_FILE, 'utf8');
+  const parsed = JSON.parse(raw || '{}');
+
+  if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.datasets)) {
+    return { schemaVersion: MANIFEST_VERSION, datasets: [] };
+  }
+
+  return {
+    schemaVersion: Number.isInteger(parsed.schemaVersion) ? parsed.schemaVersion : MANIFEST_VERSION,
+    datasets: parsed.datasets
+      .map((entry) => {
+        if (!entry || typeof entry !== 'object') return null;
+        const id = String(entry.id ?? '').trim();
+        if (!id) return null;
+        const label = String(entry.label ?? '').trim() || id;
+        const nowIso = new Date().toISOString();
+        const createdAt = normalizeIsoTimestamp(entry.createdAt, nowIso);
+        const updatedAt = normalizeIsoTimestamp(entry.updatedAt, createdAt);
+        const version = Number.isInteger(entry.version) && entry.version > 0 ? entry.version : 1;
+        return { id, label, createdAt, updatedAt, version };
+      })
+      .filter(Boolean),
+  };
 }
 
-async function handleApi(req, res) {
+async function writeManifest(manifest) {
+  const normalizedManifest = {
+    schemaVersion: MANIFEST_VERSION,
+    datasets: [...manifest.datasets].sort((a, b) => String(a.label).localeCompare(String(b.label), 'de')),
+  };
+  await fs.writeFile(LEGACY_DATA_FILE, `${JSON.stringify(normalizedManifest, null, 2)}\n`, 'utf8');
+}
+
+async function readDatasetCards(datasetId) {
+  const datasetPath = toDatasetFilePath(datasetId);
+  const raw = await fs.readFile(datasetPath, 'utf8');
+  const parsed = JSON.parse(raw || '[]');
+  return Array.isArray(parsed) ? parsed : [];
+}
+
+async function writeDatasetCards(datasetId, cards) {
+  const datasetPath = toDatasetFilePath(datasetId);
+  await fs.writeFile(datasetPath, `${JSON.stringify(cards, null, 2)}\n`, 'utf8');
+}
+
+async function readBodyJson(req) {
+  const chunks = [];
+  for await (const chunk of req) {
+    chunks.push(chunk);
+  }
+  const body = Buffer.concat(chunks).toString('utf8');
+  if (!body) return {};
+  return JSON.parse(body);
+}
+
+function checkOptimisticConcurrency(current, payload) {
+  if (!payload || typeof payload !== 'object') {
+    return false;
+  }
+
+  const hasVersionCheck = Number.isInteger(payload.expectedVersion);
+  const hasUpdatedAtCheck = typeof payload.expectedUpdatedAt === 'string';
+
+  if (!hasVersionCheck && !hasUpdatedAtCheck) {
+    return false;
+  }
+
+  if (hasVersionCheck && payload.expectedVersion !== current.version) {
+    return true;
+  }
+
+  if (hasUpdatedAtCheck && String(payload.expectedUpdatedAt) !== String(current.updatedAt)) {
+    return true;
+  }
+
+  return false;
+}
+
+async function listDatasets() {
+  const manifest = await readManifest();
+  const datasets = [];
+
+  for (const entry of manifest.datasets) {
+    try {
+      const cards = await readDatasetCards(entry.id);
+      datasets.push({ ...entry, cards });
+    } catch {
+      // Skip broken entry files gracefully.
+    }
+  }
+
+  return datasets;
+}
+
+async function handleDatasetsApi(req, res, url) {
   if (req.method === 'OPTIONS') {
     setCorsHeaders(res);
     res.writeHead(204);
@@ -69,30 +226,127 @@ async function handleApi(req, res) {
     return;
   }
 
-  if (req.method === 'GET') {
-    const datasets = await readDatasets();
+  const listPathMatch = url.pathname === '/datasets';
+  const itemPathMatch = url.pathname.match(/^\/datasets\/([^/]+)$/);
+  const datasetIdFromPath = itemPathMatch ? decodeURIComponent(itemPathMatch[1]) : '';
+
+  if (req.method === 'GET' && listPathMatch) {
+    const datasets = await listDatasets();
     return sendJson(res, 200, datasets);
   }
 
-  if (req.method === 'PUT') {
-    const chunks = [];
-    for await (const chunk of req) {
-      chunks.push(chunk);
-    }
-    const body = Buffer.concat(chunks).toString('utf8');
-    let parsed;
+  if (req.method === 'POST' && listPathMatch) {
+    let payload;
     try {
-      parsed = body ? JSON.parse(body) : [];
+      payload = await readBodyJson(req);
     } catch {
       return sendJson(res, 400, { error: 'invalid_json' });
     }
 
-    if (!isDatasetPayload(parsed)) {
+    const dataset = normalizeDataset(payload);
+    if (!dataset) {
       return sendJson(res, 400, { error: 'invalid_payload' });
     }
 
-    await writeDatasets(parsed);
-    return sendJson(res, 200, { ok: true, count: parsed.length });
+    const manifest = await readManifest();
+    if (manifest.datasets.some((entry) => entry.id === dataset.id)) {
+      return sendJson(res, 409, { error: 'already_exists' });
+    }
+
+    const nowIso = new Date().toISOString();
+    dataset.createdAt = nowIso;
+    dataset.updatedAt = nowIso;
+    dataset.version = 1;
+
+    await writeDatasetCards(dataset.id, dataset.cards);
+    manifest.datasets.push({
+      id: dataset.id,
+      label: dataset.label,
+      createdAt: dataset.createdAt,
+      updatedAt: dataset.updatedAt,
+      version: dataset.version,
+    });
+    await writeManifest(manifest);
+
+    return sendJson(res, 201, dataset);
+  }
+
+  if (req.method === 'PATCH' && itemPathMatch) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      return sendJson(res, 400, { error: 'invalid_json' });
+    }
+
+    const manifest = await readManifest();
+    const datasetIndex = manifest.datasets.findIndex((entry) => entry.id === datasetIdFromPath);
+    if (datasetIndex < 0) {
+      return sendJson(res, 404, { error: 'not_found' });
+    }
+
+    const currentEntry = manifest.datasets[datasetIndex];
+    const currentCards = await readDatasetCards(currentEntry.id);
+    const currentDataset = { ...currentEntry, cards: currentCards };
+
+    if (checkOptimisticConcurrency(currentDataset, payload)) {
+      return sendJson(res, 409, { error: 'conflict', current: currentDataset });
+    }
+
+    const nextLabel = String(payload.label ?? currentEntry.label).trim() || currentEntry.id;
+    const nextCards = Array.isArray(payload.cards) ? payload.cards : currentCards;
+    if (!Array.isArray(nextCards) || nextCards.length === 0) {
+      return sendJson(res, 400, { error: 'invalid_payload' });
+    }
+
+    const updatedAt = new Date().toISOString();
+    const version = currentEntry.version + 1;
+
+    await writeDatasetCards(currentEntry.id, nextCards);
+    manifest.datasets[datasetIndex] = {
+      ...currentEntry,
+      label: nextLabel,
+      updatedAt,
+      version,
+    };
+    await writeManifest(manifest);
+
+    return sendJson(res, 200, {
+      id: currentEntry.id,
+      label: nextLabel,
+      cards: nextCards,
+      createdAt: currentEntry.createdAt,
+      updatedAt,
+      version,
+    });
+  }
+
+  if (req.method === 'DELETE' && itemPathMatch) {
+    let payload = {};
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      return sendJson(res, 400, { error: 'invalid_json' });
+    }
+
+    const manifest = await readManifest();
+    const datasetIndex = manifest.datasets.findIndex((entry) => entry.id === datasetIdFromPath);
+    if (datasetIndex < 0) {
+      return sendJson(res, 404, { error: 'not_found' });
+    }
+
+    const currentEntry = manifest.datasets[datasetIndex];
+    const currentCards = await readDatasetCards(currentEntry.id);
+    const currentDataset = { ...currentEntry, cards: currentCards };
+
+    if (checkOptimisticConcurrency(currentDataset, payload)) {
+      return sendJson(res, 409, { error: 'conflict', current: currentDataset });
+    }
+
+    manifest.datasets.splice(datasetIndex, 1);
+    await writeManifest(manifest);
+    await fs.rm(toDatasetFilePath(currentEntry.id), { force: true });
+    return sendJson(res, 200, { ok: true, id: currentEntry.id });
   }
 
   return sendJson(res, 405, { error: 'method_not_allowed' });
@@ -135,8 +389,8 @@ async function serveStatic(req, res) {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-    if (url.pathname === '/api/custom-datasets') {
-      await handleApi(req, res);
+    if (url.pathname === '/datasets' || /^\/datasets\/[^/]+$/.test(url.pathname)) {
+      await handleDatasetsApi(req, res, url);
       return;
     }
 

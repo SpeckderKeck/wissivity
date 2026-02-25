@@ -287,6 +287,7 @@ body.fullscreen .board {
 }
 
 .field select,
+.category-time select,
 .field input[type="number"],
 .field input[type="file"] {
   background: var(--card);
@@ -304,6 +305,21 @@ body.fullscreen .board {
 
 .category-settings {
   gap: 12px;
+}
+
+
+.category-settings-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  padding: 0 12px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.category-settings-head span:last-child {
+  justify-self: end;
 }
 
 .category-setting {
@@ -333,9 +349,11 @@ body.fullscreen .board {
   margin: 0;
   display: flex;
   align-items: center;
-  flex-direction: row;
-  gap: 8px;
   justify-content: flex-end;
+}
+
+.category-time select {
+  min-width: 110px;
 }
 
 

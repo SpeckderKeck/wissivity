@@ -211,6 +211,7 @@ const DEFAULT_DATASET_KEY = "allgemein";
 const DEFAULT_DATA = PRESET_DATASETS[DEFAULT_DATASET_KEY]?.cards ?? [];
 const MAX_DATASET_SELECTIONS = 5;
 const CUSTOM_DATASETS_STORAGE_KEY = "wissivity.customDatasets";
+const CUSTOM_DATASETS_API_URL_STORAGE_KEY = "wissivity.customDatasetsApiUrl";
 const CUSTOM_DATASETS_API_ENDPOINT = "/api/custom-datasets";
 const REMOVED_PRESET_DATASET_KEYS = new Set(["umformen"]);
 const REMOVED_CUSTOM_DATASET_LABELS = new Set(["umformen"]);
@@ -249,6 +250,7 @@ const state = {
   customDatasets: {},
   uploadedCsvCards: [],
   datasetStorageMode: "local",
+  customDatasetsApiUrl: "",
 };
 
 const TEAM_ICONS = [
@@ -277,32 +279,36 @@ const BOARD_CONFIGS = {
   long: { rows: 6, cols: 7, total: 42 },
 };
 
-function toCustomDatasetKey(id) {
-  return `custom:${id}`;
+function normalizeCustomDatasetsApiUrl(url) {
+  return String(url ?? "").trim().replace(/\/+$/, "");
 }
 
-function fromCustomDatasetKey(key) {
-  if (!key?.startsWith("custom:")) return null;
-  return key.slice(7);
+function resolveCustomDatasetsApiUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const fromQuery = normalizeCustomDatasetsApiUrl(params.get("datasetsApi"));
+  if (fromQuery) {
+    localStorage.setItem(CUSTOM_DATASETS_API_URL_STORAGE_KEY, fromQuery);
+    return fromQuery;
+  }
+
+  const fromStorage = normalizeCustomDatasetsApiUrl(localStorage.getItem(CUSTOM_DATASETS_API_URL_STORAGE_KEY));
+  if (fromStorage) {
+    return fromStorage;
+  }
+
+  if (window.location.protocol.startsWith("http")) {
+    return window.location.origin;
+  }
+
+  return "";
 }
 
-function normalizeStoredCustomDataset(rawDataset) {
-  if (!rawDataset || typeof rawDataset !== "object") return null;
-  const id = typeof rawDataset.id === "string" ? rawDataset.id.trim() : "";
-  const label = typeof rawDataset.label === "string" ? rawDataset.label.trim() : "";
-  if (!id || !label) return null;
-  if (REMOVED_CUSTOM_DATASET_LABELS.has(label.toLocaleLowerCase("de"))) return null;
-  const cards = Array.isArray(rawDataset.cards)
-    ? rawDataset.cards.map((card) => normalizeCardInput(card)).filter((card) => card.term)
-    : [];
-
-  return {
-    id,
-    label,
-    cards,
-    createdAt: rawDataset.createdAt || new Date().toISOString(),
-    updatedAt: rawDataset.updatedAt || new Date().toISOString(),
-  };
+function getCustomDatasetsApiEndpoint() {
+  const baseUrl = normalizeCustomDatasetsApiUrl(state.customDatasetsApiUrl);
+  if (!baseUrl) {
+    return CUSTOM_DATASETS_API_ENDPOINT;
+  }
+  return `${baseUrl}${CUSTOM_DATASETS_API_ENDPOINT}`;
 }
 
 function readCustomDatasetsFromStorage() {
@@ -325,7 +331,7 @@ function readCustomDatasetsFromStorage() {
 
 async function readCustomDatasetsFromApi() {
   try {
-    const response = await fetch(CUSTOM_DATASETS_API_ENDPOINT, {
+    const response = await fetch(getCustomDatasetsApiEndpoint(), {
       method: "GET",
       headers: {
         Accept: "application/json",
@@ -361,7 +367,7 @@ async function persistCustomDatasets() {
 
   if (state.datasetStorageMode === "remote") {
     try {
-      const response = await fetch(CUSTOM_DATASETS_API_ENDPOINT, {
+      const response = await fetch(getCustomDatasetsApiEndpoint(), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -1949,6 +1955,7 @@ function handleWinnerRestart() {
 }
 
 async function setup() {
+  state.customDatasetsApiUrl = resolveCustomDatasetsApiUrl();
   state.customDatasets = await loadCustomDatasets();
   menuCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
   gameCategoryControls.forEach((control) => populateTimeSelect(control.timeSelect, 60));
@@ -1969,7 +1976,7 @@ async function setup() {
     csvStatus.textContent =
       state.datasetStorageMode === "remote"
         ? "Globale Kartensatzspeicherung aktiv."
-        : "Server nicht erreichbar – Kartensätze werden lokal gespeichert.";
+        : "Server nicht erreichbar – Kartensätze werden lokal gespeichert. Tipp: Seite über denselben Server öffnen oder ?datasetsApi=https://dein-server setzen.";
   }
 }
 

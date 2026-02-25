@@ -20,7 +20,14 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon',
 };
 
+function setCorsHeaders(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+}
+
 function sendJson(res, status, payload) {
+  setCorsHeaders(res);
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store',
@@ -55,6 +62,13 @@ async function writeDatasets(datasets) {
 }
 
 async function handleApi(req, res) {
+  if (req.method === 'OPTIONS') {
+    setCorsHeaders(res);
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
   if (req.method === 'GET') {
     const datasets = await readDatasets();
     return sendJson(res, 200, datasets);
@@ -91,6 +105,7 @@ async function serveStatic(req, res) {
   const normalizedPath = path.normalize(filePath);
 
   if (!normalizedPath.startsWith(ROOT_DIR)) {
+    setCorsHeaders(res);
     res.writeHead(403);
     res.end('Forbidden');
     return;
@@ -107,9 +122,11 @@ async function serveStatic(req, res) {
     const ext = path.extname(normalizedPath).toLowerCase();
     const mimeType = MIME_TYPES[ext] || 'application/octet-stream';
     const content = await fs.readFile(normalizedPath);
+    setCorsHeaders(res);
     res.writeHead(200, { 'Content-Type': mimeType });
     res.end(content);
   } catch {
+    setCorsHeaders(res);
     res.writeHead(404);
     res.end('Not found');
   }

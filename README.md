@@ -20,3 +20,13 @@ Danach im Browser öffnen:
 
 Die Daten werden serverseitig in `data/custom-datasets.json` abgelegt.
 Falls die API nicht erreichbar ist, nutzt die App automatisch den lokalen Browser-Speicher als Fallback.
+
+
+## Zugriff von anderen Browsern/Geräten
+Wenn die Webseite von einem anderen Host/Port geladen wird als der API-Server, setze die API-URL per Query-Parameter:
+
+```text
+https://deine-seite.example/?datasetsApi=http://SERVER-IP:3000
+```
+
+Die App merkt sich diesen Wert danach im Browser.

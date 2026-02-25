@@ -1683,7 +1683,7 @@ function showWordCard() {
   } else {
     state.quizPhase = null;
     setWordCard(card);
-    setTurnButtons({ showCorrect: true, showWrong: true, showSwap: true, showContinue: true });
+    setTurnButtons({ showCorrect: true, showWrong: true, showSwap: true, showContinue: false });
     startTimer();
   }
 }

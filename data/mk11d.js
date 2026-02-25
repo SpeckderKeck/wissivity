@@ -3,7 +3,124 @@
   databases.mk11d = {
     label: "MK11D",
     cards: [
+      { category: "Erklären", term: "Bremse", taboo: ["Bremsbacken", "Reifen", "Sattel"] },
+      { category: "Erklären", term: "Anlasser", taboo: ["starten", "50-Kabel", "Motor"] },
+      { category: "Erklären", term: "Messspitzen", taboo: ["prüfen", "Kabel", "Widerstand"] },
+      { category: "Erklären", term: "Radkappen", taboo: ["Reifen", "Abdeckung", "Felge"] },
       {
+        category: "Erklären",
+        term: "Kennzeichenhalter",
+        taboo: ["befestigen", "Front", "Plastik"],
+      },
+      { category: "Erklären", term: "Scheinwerfer", taboo: ["Licht", "Blinker", "Sicht"] },
+      {
+        category: "Erklären",
+        term: "Batteriesensor",
+        taboo: ["Ladespannung", "reguliert", "Bordnetzspannung"],
+      },
+      { category: "Erklären", term: "Starter", taboo: ["50-Kabel", "Wicklung", "Spannung"] },
+      {
+        category: "Erklären",
+        term: "Bremsbelag",
+        taboo: ["Bremsen", "Anhalten", "Bremsbacken"],
+      },
+      {
+        category: "Erklären",
+        term: "Rückholfeder",
+        taboo: ["Bremsbacken", "zurückholen", "Trommelbremse"],
+      },
+      {
+        category: "Erklären",
+        term: "Bremsleitung",
+        taboo: ["Hydraulik", "Bremssattel", "entlüften"],
+      },
+      {
+        category: "Erklären",
+        term: "Bremskreisaufteilung",
+        taboo: ["Vorderachse", "Hinterachse", "diagonal"],
+      },
+      {
+        category: "Erklären",
+        term: "Ausgleichsbehälter",
+        taboo: ["Bremsflüssigkeit", "entlüften", "Kasten"],
+      },
+      {
+        category: "Erklären",
+        term: "Bremskraftverstärker",
+        taboo: ["Unterdruck", "Bremse", "Pedal", "Verstärkung"],
+      },
+      {
+        category: "Erklären",
+        term: "ABS",
+        taboo: ["Bremsen", "Blockieren", "Sicherheit", "Sensor"],
+      },
+      { category: "Erklären", term: "Rückfahrlicht", taboo: ["Licht", "Schalter", "Gang"] },
+      { category: "Erklären", term: "Zündkerze", taboo: ["Zündung", "Keramik", "Schrauben"] },
+      { category: "Erklären", term: "Kupplung", taboo: ["Motor", "Getriebe", "trennen", "Pedal"] },
+      { category: "Erklären", term: "Getriebe", taboo: ["Gang", "übersetzen", "Kupplung"] },
+      {
+        category: "Erklären",
+        term: "Kurbelwelle",
+        taboo: ["Kolben", "Drehbewegung", "Pleuel"],
+      },
+      {
+        category: "Erklären",
+        term: "Nockenwelle",
+        taboo: ["Ventil", "Steuerzeit", "oben"],
+      },
+      { category: "Erklären", term: "Zahnriemen", taboo: ["Steuerung", "Ventile", "reißen"] },
+      {
+        category: "Erklären",
+        term: "Keilrippenriemen",
+        taboo: ["Nebenaggregate", "Lichtmaschine", "Riemen"],
+      },
+      { category: "Erklären", term: "Ölfilter", taboo: ["reinigen", "Motoröl", "Schmutz"] },
+      {
+        category: "Erklären",
+        term: "Kraftstoffpumpe",
+        taboo: ["Benzin", "Diesel", "fördern"],
+      },
+      {
+        category: "Erklären",
+        term: "Einspritzdüse",
+        taboo: ["Kraftstoff", "einspritzen", "Zylinder"],
+      },
+      {
+        category: "Erklären",
+        term: "Lichtmaschine",
+        taboo: ["Strom", "Batterie", "laden"],
+      },
+      {
+        category: "Erklären",
+        term: "Generator",
+        taboo: ["elektrisch", "Spannung", "Lichtmaschine"],
+      },
+      { category: "Erklären", term: "Thermostat", taboo: ["Temperatur", "Kühlmittel", "öffnen"] },
+      { category: "Erklären", term: "Kühler", taboo: ["Kühlflüssigkeit", "Luft", "Temperatur"] },
+      {
+        category: "Erklären",
+        term: "Lenkgetriebe",
+        taboo: ["Räder", "lenken", "Zahnstange"],
+      },
+      { category: "Erklären", term: "Spurstange", taboo: ["Lenkung", "Rad", "Bewegung"] },
+      {
+        category: "Erklären",
+        term: "Stoßdämpfer",
+        taboo: ["Feder", "schwingen", "Fahrwerk"],
+      },
+      { category: "Erklären", term: "Feder", taboo: ["Fahrwerk", "Dämpfung", "Metall"] },
+      {
+        category: "Erklären",
+        term: "Bremssattel",
+        taboo: ["Bremsscheibe", "Kolben", "Bremsbelag"],
+      },
+      {
+        category: "Erklären",
+        term: "Bremsscheibe",
+        taboo: ["Reibung", "Bremsbelag", "rotieren"],
+      },
+      { category: "Erklären", term: "Handbremse", taboo: ["Feststellbremse", "Parken", "Hebel"] },
+      ...[{
         question: "Wofür steht die Abkürzung ABS?",
         answer: "Antiblockiersystem – verhindert das Blockieren der Räder beim Bremsen.",
       },
@@ -136,11 +253,12 @@
         answer:
           "Unterschiedliche Siedepunkte, Temperaturbeständigkeit und Einsatzbereiche (DOT-Klassen).",
       },
-    ].map(({ question, answer }) => ({
-      category: "Quizfrage",
-      term: question,
-      answer,
-      taboo: [],
-    })),
+      ].map(({ question, answer }) => ({
+        category: "Quizfrage",
+        term: question,
+        answer,
+        taboo: [],
+      })),
+    ],
   };
 })();

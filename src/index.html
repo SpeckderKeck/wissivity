@@ -39,21 +39,34 @@
     <main>
       <section id="menu" class="panel panel--active" aria-label="Hauptmenü">
         <div class="panel-grid">
-          <div class="card card--teams">
-            <h2>Teams</h2>
-            <label class="field">
-              Anzahl Teams
-              <div class="team-count-control" role="group" aria-label="Anzahl Teams">
-                <button type="button" class="count-button" id="team-count-decrease" aria-label="Teamanzahl verringern">
-                  –
-                </button>
-                <input id="team-count" type="number" min="2" max="4" step="1" value="2" />
-                <button type="button" class="count-button" id="team-count-increase" aria-label="Teamanzahl erhöhen">
-                  +
-                </button>
-              </div>
-            </label>
-            <div id="team-list" class="team-list"></div>
+          <div class="card-stack">
+            <div class="card card--teams">
+              <h2>Teams</h2>
+              <label class="field">
+                Anzahl Teams
+                <div class="team-count-control" role="group" aria-label="Anzahl Teams">
+                  <button type="button" class="count-button" id="team-count-decrease" aria-label="Teamanzahl verringern">
+                    –
+                  </button>
+                  <input id="team-count" type="number" min="2" max="4" step="1" value="2" />
+                  <button type="button" class="count-button" id="team-count-increase" aria-label="Teamanzahl erhöhen">
+                    +
+                  </button>
+                </div>
+              </label>
+              <div id="team-list" class="team-list"></div>
+            </div>
+            <div class="card">
+              <h2>Spiellänge</h2>
+              <label class="field">
+                Spiellänge
+                <select id="board-size-select">
+                  <option value="short">Kurzes Spiel · 24 Felder (6 × 4)</option>
+                  <option value="normal" selected>Normales Spiel · 30 Felder (6 × 5)</option>
+                  <option value="long">Langes Spiel · 42 Felder (7 × 6)</option>
+                </select>
+              </label>
+            </div>
           </div>
 
           <div class="card">
@@ -139,17 +152,6 @@
                 <li>Excel: als CSV (UTF-8, Semikolon) exportieren</li>
               </ul>
             </div>
-          </div>
-          <div class="card">
-            <h2>Spiellänge</h2>
-            <label class="field">
-              Spiellänge
-              <select id="board-size-select">
-                <option value="short">Kurzes Spiel · 24 Felder (6 × 4)</option>
-                <option value="normal" selected>Normales Spiel · 30 Felder (6 × 5)</option>
-                <option value="long">Langes Spiel · 42 Felder (7 × 6)</option>
-              </select>
-            </label>
           </div>
         </div>
         <button id="start-game" class="primary">Spiel starten</button>

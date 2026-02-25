@@ -412,6 +412,11 @@ body.fullscreen .board {
   gap: 10px;
 }
 
+#open-card-editor {
+  width: 100%;
+  text-align: center;
+}
+
 .csv-public-list {
   margin: 12px 0 0;
   padding-left: 18px;

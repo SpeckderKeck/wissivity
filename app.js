@@ -41,6 +41,9 @@ const csvSaveNewButton = document.getElementById("csv-save-new");
 const csvOverwriteSelect = document.getElementById("csv-overwrite-select");
 const csvOverwriteButton = document.getElementById("csv-overwrite");
 const csvStatus = document.getElementById("csv-status");
+const csvUploadButton = document.getElementById("csv-upload-button");
+const csvRefreshListButton = document.getElementById("csv-refresh-list");
+const csvPublicList = document.getElementById("csv-public-list");
 const csvInfo = document.getElementById("csv-info");
 const csvTooltip = document.getElementById("csv-tooltip");
 const datasetSelect = document.getElementById("dataset-select");
@@ -1901,40 +1904,160 @@ function setupDatasetSelects() {
   updateDatasetAddButtonVisibility();
 }
 
-function handleCsvUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const labelFromFilename = deriveDatasetLabelFromFilename(file.name);
-  if (csvDatasetNameInput && labelFromFilename) {
-    csvDatasetNameInput.value = labelFromFilename;
+const SUPABASE_URL = "https://mqbokupviznrmnwvtwwe.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xYm9rdXB2aXpucm1ud3Z0d3dlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMzczNzYsImV4cCI6MjA4NzYxMzM3Nn0.dckhmcqrKAv8dYTxg6b4313OQs-uI2MCeWXPqfQr5HI";
+const SUPABASE_BUCKET_ID = "Kartensets";
+const CSV_MAX_SIZE_BYTES = 1024 * 1024;
+let supabaseStorageClientPromise;
+
+function sanitizeUploadFileName(name) {
+  return (
+    name
+      .trim()
+      .normalize("NFKD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/\s+/g, "_")
+      .replace(/[^a-zA-Z0-9._-]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^[-_.]+|[-_.]+$/g, "") || "file.csv"
+  );
+}
+
+function isValidCsvUpload(file) {
+  const lowerName = file?.name?.toLowerCase?.() ?? "";
+  const hasCsvExtension = lowerName.endsWith(".csv");
+  const allowedMimeTypes = new Set(["text/csv", "application/vnd.ms-excel", ""]);
+  return hasCsvExtension && allowedMimeTypes.has(file?.type ?? "");
+}
+
+async function getSupabaseStorageClient() {
+  if (!supabaseStorageClientPromise) {
+    supabaseStorageClientPromise = import("https://esm.sh/@supabase/supabase-js@2")
+      .then(({ createClient }) => createClient(SUPABASE_URL, SUPABASE_ANON_KEY))
+      .catch((error) => {
+        supabaseStorageClientPromise = undefined;
+        throw error;
+      });
+  }
+  return supabaseStorageClientPromise;
+}
+
+function renderPublicCsvList(files = []) {
+  if (!csvPublicList) return;
+  csvPublicList.innerHTML = "";
+
+  if (!Array.isArray(files) || files.length === 0) {
+    const emptyItem = document.createElement("li");
+    emptyItem.className = "hint";
+    emptyItem.textContent = "Noch keine Dateien im Bucket Kartensets vorhanden.";
+    csvPublicList.append(emptyItem);
+    return;
   }
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    const parsedRows = parseCsv(reader.result);
-    const { cards, errors } = validateEditorCards(parsedRows);
+  files.forEach((file) => {
+    const listItem = document.createElement("li");
+    const link = document.createElement("a");
+    const createdAt = file.created_at ? new Date(file.created_at) : null;
+    const createdLabel = createdAt && !Number.isNaN(createdAt.getTime()) ? createdAt.toLocaleString("de-DE") : "ohne Datum";
 
-    if (cards.length > 0 && errors.length === 0) {
-      state.cards = cards;
-      state.uploadedCsvCards = cards;
-      updateCsvDatasetActionState();
-      csvStatus.textContent = `CSV geladen: ${cards.length} Karten.`;
-      return;
+    link.href = file.publicUrl;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = `${file.name} (${createdLabel})`;
+
+    listItem.append(link);
+    csvPublicList.append(listItem);
+  });
+}
+
+async function refreshPublicCsvList() {
+  if (csvStatus) {
+    csvStatus.textContent = "Lade Dateiliste ...";
+  }
+
+  try {
+    const supabase = await getSupabaseStorageClient();
+    const { data, error } = await supabase.storage
+      .from(SUPABASE_BUCKET_ID)
+      .list("", { limit: 1000, offset: 0, sortBy: { column: "created_at", order: "desc" } });
+
+    if (error) {
+      throw error;
     }
 
-    if (errors.length > 0) {
-      state.uploadedCsvCards = [];
-      updateCsvDatasetActionState();
-      const firstError = errors[0];
-      csvStatus.textContent = `CSV ungültig (Zeile ${firstError.row}: ${firstError.messages.join(", ")}).`;
-      return;
+    const sortedFiles = [...(data || [])]
+      .filter((item) => item && item.name)
+      .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+      .map((item) => {
+        const { data: publicUrlData } = supabase.storage.from(SUPABASE_BUCKET_ID).getPublicUrl(item.name);
+        return {
+          ...item,
+          publicUrl: publicUrlData.publicUrl
+        };
+      });
+
+    renderPublicCsvList(sortedFiles);
+    if (csvStatus) {
+      csvStatus.textContent = `${sortedFiles.length} Datei(en) im öffentlichen Bucket Kartensets.`;
+    }
+  } catch (error) {
+    if (csvStatus) {
+      csvStatus.textContent = `Fehler beim Laden der Dateiliste: ${error?.message || String(error)}`;
+    }
+  }
+}
+
+async function handleCsvUpload() {
+  const file = csvUpload?.files?.[0];
+  if (!file) {
+    if (csvStatus) csvStatus.textContent = "Bitte zuerst eine CSV-Datei auswählen.";
+    return;
+  }
+
+  if (!isValidCsvUpload(file)) {
+    if (csvStatus) csvStatus.textContent = "Ungültige Datei. Erlaubt ist nur .csv.";
+    return;
+  }
+
+  if (file.size > CSV_MAX_SIZE_BYTES) {
+    if (csvStatus) csvStatus.textContent = "Datei ist zu groß. Maximal 1 MB erlaubt.";
+    return;
+  }
+
+  const safeName = sanitizeUploadFileName(file.name);
+  const uploadName = `${crypto.randomUUID()}_${safeName}`;
+
+  try {
+    csvUploadButton && (csvUploadButton.disabled = true);
+    if (csvStatus) csvStatus.textContent = "Upload läuft ...";
+
+    const supabase = await getSupabaseStorageClient();
+    const { error } = await supabase.storage.from(SUPABASE_BUCKET_ID).upload(uploadName, file, {
+      upsert: false,
+      cacheControl: "3600",
+      contentType: file.type || "text/csv"
+    });
+
+    if (error) {
+      throw error;
     }
 
-    state.uploadedCsvCards = [];
-    updateCsvDatasetActionState();
-    csvStatus.textContent = "CSV leer oder ungültig.";
-  };
-  reader.readAsText(file, "utf-8");
+    if (csvUpload) {
+      csvUpload.value = "";
+    }
+    if (csvStatus) {
+      csvStatus.textContent = `Upload erfolgreich: ${uploadName}`;
+    }
+
+    await refreshPublicCsvList();
+  } catch (error) {
+    if (csvStatus) {
+      csvStatus.textContent = `Upload-Fehler: ${error?.message || String(error)}`;
+    }
+  } finally {
+    csvUploadButton && (csvUploadButton.disabled = false);
+  }
 }
 
 async function saveUploadedCsvAsNewDataset() {
@@ -2181,12 +2304,7 @@ async function setup() {
   refreshCsvDatasetOverwriteSelect("");
   applySelectedDatasets();
   updateCsvDatasetActionState();
-  if (csvStatus) {
-    csvStatus.textContent =
-      state.datasetStorageMode === "remote"
-        ? "Globale Kartensatzspeicherung aktiv."
-        : "Server nicht erreichbar – Kartensätze werden lokal gespeichert. Tipp: Seite über denselben Server öffnen oder ?datasetsApi=https://dein-server setzen.";
-  }
+  refreshPublicCsvList();
 }
 
 window.addEventListener("resize", () => {
@@ -2236,7 +2354,8 @@ document.addEventListener("keydown", (event) => {
 });
 rollButton.addEventListener("click", handleRoll);
 undoButton.addEventListener("click", handleUndo);
-csvUpload.addEventListener("change", handleCsvUpload);
+csvUploadButton?.addEventListener("click", handleCsvUpload);
+csvRefreshListButton?.addEventListener("click", refreshPublicCsvList);
 csvSaveNewButton?.addEventListener("click", saveUploadedCsvAsNewDataset);
 csvOverwriteButton?.addEventListener("click", overwriteDatasetWithUploadedCsv);
 csvOverwriteSelect?.addEventListener("change", updateCsvDatasetActionState);

@@ -103,8 +103,33 @@ const teamStatusList = document.getElementById("team-status-list");
 
 function setStatusMessage(message, { pulseDice = false } = {}) {
   if (statusText) {
+    statusText.classList.remove("status--next-roll");
     statusText.textContent = message;
   }
+  rollButton?.classList.toggle("dice--pulse", pulseDice);
+}
+
+function setNextRollStatus(teamIndex, { pulseDice = true } = {}) {
+  if (!statusText) {
+    rollButton?.classList.toggle("dice--pulse", pulseDice);
+    return;
+  }
+  const team = state.teams[teamIndex] ?? { name: "Team", icon: "" };
+  statusText.replaceChildren();
+  statusText.classList.add("status--next-roll");
+
+  if (team.icon) {
+    const icon = document.createElement("span");
+    icon.className = "status-next-roll-icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = team.icon;
+    statusText.append(icon);
+  }
+
+  const label = document.createElement("span");
+  label.className = "status-next-roll-label";
+  label.textContent = `${team.name || "Team"} würfelt`;
+  statusText.append(label);
   rollButton?.classList.toggle("dice--pulse", pulseDice);
 }
 
@@ -1244,7 +1269,7 @@ function finishTurn(isCorrect, timedOut = false, { returnToPrevious = false } = 
   }
   setStatusMessage(`${formatTeamLabel(state.currentTeam)} beendet den Zug.`);
   state.currentTeam = (state.currentTeam + 1) % state.teams.length;
-  setStatusMessage(`Nächstes: ${formatTeamLabel(state.currentTeam)} würfelt.`, { pulseDice: true });
+  setNextRollStatus(state.currentTeam);
   renderTeamStatus();
   if (returnToPrevious) {
     setTimeout(() => {
@@ -1312,7 +1337,7 @@ function handleStartGame() {
   winnerScreen.classList.add("hidden");
   turnOverlay.classList.add("hidden");
   turnOverlay.classList.remove("active", "expanded", "category");
-  setStatusMessage(`Nächstes: ${formatTeamLabel(state.currentTeam)} würfelt.`, { pulseDice: true });
+  setNextRollStatus(state.currentTeam);
 }
 
 function normalizeCardInput(rawRow = {}) {

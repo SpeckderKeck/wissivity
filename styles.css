@@ -1236,6 +1236,27 @@ button:disabled {
   z-index: 4;
 }
 
+.status--next-roll {
+  width: min(92dvw, clamp(320px, 45vw, 680px));
+  min-height: clamp(240px, 50vh, 560px);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: clamp(10px, 1.8vh, 16px);
+  padding: clamp(18px, 4vw, 36px);
+  border-radius: 24px;
+}
+
+.status-next-roll-icon {
+  font-size: clamp(3rem, 10vw, 6rem);
+  line-height: 1;
+}
+
+.status-next-roll-label {
+  font-size: clamp(1.4rem, 4vw, 3rem);
+  line-height: 1.15;
+}
+
 .game-controls {
   display: flex;
   align-items: center;

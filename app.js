@@ -188,19 +188,19 @@ const CATEGORY_CONFIG = {
 
 const CATEGORY_VISUALS = {
   Erklären: {
-    color: "#5bc8ac",
+    color: "#A36F58",
     iconColor: "#2f7c67",
   },
   Zeichnen: {
-    color: "#f16d9e",
+    color: "#F6F5AD",
     iconColor: "#9a2f5d",
   },
   Pantomime: {
-    color: "#e6d72a",
+    color: "#C9855B",
     iconColor: "#7a6d00",
   },
   Quizfrage: {
-    color: "#38bdf8",
+    color: "#CFEEB7",
     iconColor: "#0ea5e9",
   },
 };

@@ -66,7 +66,9 @@ const qrModal = document.getElementById("qr-modal");
 const qrImage = document.getElementById("qr-image");
 const closeQrModalButton = document.getElementById("close-qr-modal");
 
-function openQrModal() {
+function openQrModal(event) {
+  event?.preventDefault();
+  event?.stopPropagation();
   if (!qrModal || !qrImage) return;
   const pageUrl = window.location.href;
   qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(pageUrl)}`;
@@ -79,7 +81,9 @@ function closeQrModal() {
 }
 
 if (qrToggle) {
-  qrToggle.addEventListener("click", openQrModal);
+  qrToggle.addEventListener("click", (event) => {
+    openQrModal(event);
+  });
 }
 
 const swapSelectGame = document.getElementById("swap-select-game");

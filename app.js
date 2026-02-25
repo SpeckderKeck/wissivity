@@ -214,6 +214,7 @@ const MAX_DATASET_SELECTIONS = 5;
 const CUSTOM_DATASETS_STORAGE_KEY = "wissivity.customDatasets";
 const CUSTOM_DATASETS_API_URL_STORAGE_KEY = "wissivity.customDatasetsApiUrl";
 const CUSTOM_DATASETS_API_ENDPOINT = "/api/custom-datasets";
+const CUSTOM_DATASET_KEY_PREFIX = "custom:";
 const REMOVED_PRESET_DATASET_KEYS = new Set(["umformen"]);
 const REMOVED_CUSTOM_DATASET_LABELS = new Set(["umformen"]);
 
@@ -312,6 +313,72 @@ function getCustomDatasetsApiEndpoint() {
   return `${baseUrl}${CUSTOM_DATASETS_API_ENDPOINT}`;
 }
 
+function fromCustomDatasetKey(key) {
+  const normalized = String(key ?? "").trim();
+  if (!normalized.startsWith(CUSTOM_DATASET_KEY_PREFIX)) {
+    return null;
+  }
+  const id = normalized.slice(CUSTOM_DATASET_KEY_PREFIX.length).trim();
+  return id || null;
+}
+
+function toCustomDatasetKey(id) {
+  const normalizedId = fromCustomDatasetKey(id) ?? String(id ?? "").trim();
+  if (!normalizedId) {
+    return "";
+  }
+  return `${CUSTOM_DATASET_KEY_PREFIX}${normalizedId}`;
+}
+
+function normalizeDatasetTimestamp(value, fallback) {
+  const parsedDate = new Date(value ?? "");
+  if (Number.isNaN(parsedDate.getTime())) {
+    return fallback;
+  }
+  return parsedDate.toISOString();
+}
+
+function isValidNormalizedCard(card) {
+  if (!card || !ALLOWED_CARD_CATEGORIES.includes(card.category) || !card.term) {
+    return false;
+  }
+  if (card.category === "Quizfrage") {
+    return Boolean(card.answer);
+  }
+  return true;
+}
+
+function normalizeStoredCustomDataset(rawDataset) {
+  if (!rawDataset || typeof rawDataset !== "object") {
+    return null;
+  }
+
+  const rawId = rawDataset.id ?? rawDataset.datasetId ?? rawDataset.key;
+  const id = fromCustomDatasetKey(rawId) ?? String(rawId ?? "").trim();
+  if (!id) {
+    return null;
+  }
+
+  const label = String(rawDataset.label ?? "").trim() || id;
+  const rawCards = Array.isArray(rawDataset.cards) ? rawDataset.cards : [];
+  const cards = rawCards.map((card) => normalizeCardInput(card)).filter((card) => isValidNormalizedCard(card));
+  if (cards.length === 0) {
+    return null;
+  }
+
+  const nowIso = new Date().toISOString();
+  const createdAt = normalizeDatasetTimestamp(rawDataset.createdAt, nowIso);
+  const updatedAt = normalizeDatasetTimestamp(rawDataset.updatedAt, createdAt);
+
+  return {
+    id,
+    label,
+    cards,
+    createdAt,
+    updatedAt,
+  };
+}
+
 function readCustomDatasetsFromStorage() {
   try {
     const raw = localStorage.getItem(CUSTOM_DATASETS_STORAGE_KEY);
@@ -366,6 +433,11 @@ async function persistCustomDatasets() {
     .filter(Boolean)
     .sort((a, b) => String(a.label).localeCompare(String(b.label), "de"));
 
+  state.customDatasets = datasets.reduce((accumulator, dataset) => {
+    accumulator[dataset.id] = dataset;
+    return accumulator;
+  }, {});
+
   if (state.datasetStorageMode === "remote") {
     try {
       const response = await fetch(getCustomDatasetsApiEndpoint(), {
@@ -414,30 +486,34 @@ function getAllDatasetEntries() {
       cards: dataset.cards,
       isCustom: false,
     }));
-  const customEntries = Object.values(state.customDatasets).map((dataset) => ({
-    key: toCustomDatasetKey(dataset.id),
-    label: `${dataset.label} (Eigen)`,
-    cards: dataset.cards,
-    isCustom: true,
-    id: dataset.id,
-  }));
+  const customEntries = Object.values(state.customDatasets)
+    .map((dataset) => normalizeStoredCustomDataset(dataset))
+    .filter(Boolean)
+    .map((dataset) => ({
+      key: toCustomDatasetKey(dataset.id),
+      label: `${dataset.label} (Eigen)`,
+      cards: dataset.cards,
+      isCustom: true,
+      id: dataset.id,
+    }));
   return [...presetEntries, ...customEntries];
 }
 
 function getDatasetEntryByKey(key) {
-  if (REMOVED_PRESET_DATASET_KEYS.has(key)) {
+  const normalizedKey = String(key ?? "").trim();
+  if (REMOVED_PRESET_DATASET_KEYS.has(normalizedKey)) {
     return null;
   }
-  if (PRESET_DATASETS[key]) {
-    const dataset = PRESET_DATASETS[key];
-    return { key, label: dataset.label, cards: dataset.cards, isCustom: false };
+  if (PRESET_DATASETS[normalizedKey]) {
+    const dataset = PRESET_DATASETS[normalizedKey];
+    return { key: normalizedKey, label: dataset.label, cards: dataset.cards, isCustom: false };
   }
-  const customId = fromCustomDatasetKey(key);
+  const customId = fromCustomDatasetKey(normalizedKey);
   if (!customId) return null;
-  const dataset = state.customDatasets[customId];
+  const dataset = normalizeStoredCustomDataset(state.customDatasets[customId]);
   if (!dataset) return null;
   return {
-    key,
+    key: toCustomDatasetKey(dataset.id),
     label: `${dataset.label} (Eigen)`,
     cards: dataset.cards,
     isCustom: true,

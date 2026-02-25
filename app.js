@@ -1696,6 +1696,11 @@ function populateMainDatasetSelect() {
 
   datasetSelect.innerHTML = "";
 
+  const placeholderOption = document.createElement("option");
+  placeholderOption.value = "";
+  placeholderOption.textContent = "Kartensatz wählen";
+  datasetSelect.append(placeholderOption);
+
   availableDatasets.forEach(({ key, label }) => {
     const option = document.createElement("option");
     option.value = key;
@@ -1703,10 +1708,7 @@ function populateMainDatasetSelect() {
     datasetSelect.append(option);
   });
 
-  const fallbackKey = getDatasetEntryByKey(DEFAULT_DATASET_KEY)
-    ? DEFAULT_DATASET_KEY
-    : availableDatasets[0]?.key ?? "";
-  const nextKey = getDatasetEntryByKey(preferredKey) ? preferredKey : fallbackKey;
+  const nextKey = getDatasetEntryByKey(preferredKey) ? preferredKey : "";
   datasetSelect.value = nextKey;
 }
 

@@ -43,6 +43,7 @@ const csvOverwriteButton = document.getElementById("csv-overwrite");
 const csvStatus = document.getElementById("csv-status");
 const csvInfo = document.getElementById("csv-info");
 const csvTooltip = document.getElementById("csv-tooltip");
+const datasetSelect = document.getElementById("dataset-select");
 const datasetSelectList = document.getElementById("dataset-select-list");
 const datasetAddButton = document.getElementById("dataset-add");
 const openCardEditorButton = document.getElementById("open-card-editor");
@@ -1610,6 +1611,9 @@ function createDatasetSelect(currentKey = "") {
 }
 
 function updateDatasetAddButtonVisibility() {
+  if (datasetSelect) {
+    return;
+  }
   if (!datasetAddButton || !datasetSelectList) return;
   const hasCapacity = datasetSelectList.querySelectorAll("select").length < MAX_DATASET_SELECTIONS;
   const allSelected = [...datasetSelectList.querySelectorAll("select")].every((select) => getDatasetEntryByKey(select.value));
@@ -1619,6 +1623,10 @@ function updateDatasetAddButtonVisibility() {
 }
 
 function readSelectedDatasetKeys() {
+  if (datasetSelect) {
+    return getDatasetEntryByKey(datasetSelect.value) ? [datasetSelect.value] : [];
+  }
+
   if (!datasetSelectList) {
     return [DEFAULT_DATASET_KEY];
   }
@@ -1676,7 +1684,38 @@ function addDatasetSelect(initialKey = "") {
   updateDatasetAddButtonVisibility();
 }
 
+function populateMainDatasetSelect() {
+  if (!datasetSelect) {
+    return;
+  }
+
+  const availableDatasets = getAllDatasetEntries();
+  const preferredKey =
+    state.selectedDatasets.find((key) => getDatasetEntryByKey(key)) ??
+    (getDatasetEntryByKey(datasetSelect.value) ? datasetSelect.value : "");
+
+  datasetSelect.innerHTML = "";
+
+  availableDatasets.forEach(({ key, label }) => {
+    const option = document.createElement("option");
+    option.value = key;
+    option.textContent = label;
+    datasetSelect.append(option);
+  });
+
+  const fallbackKey = getDatasetEntryByKey(DEFAULT_DATASET_KEY)
+    ? DEFAULT_DATASET_KEY
+    : availableDatasets[0]?.key ?? "";
+  const nextKey = getDatasetEntryByKey(preferredKey) ? preferredKey : fallbackKey;
+  datasetSelect.value = nextKey;
+}
+
 function setupDatasetSelects() {
+  if (datasetSelect) {
+    populateMainDatasetSelect();
+    return;
+  }
+
   if (!datasetSelectList) return;
   datasetSelectList.innerHTML = "";
 
@@ -2061,6 +2100,9 @@ qrModal?.addEventListener("click", (event) => {
 });
 datasetAddButton?.addEventListener("click", () => {
   addDatasetSelect("");
+});
+datasetSelect?.addEventListener("change", () => {
+  applySelectedDatasets();
 });
 openSettingsButton.addEventListener("click", handleOpenSettings);
 closeSettingsButton.addEventListener("click", handleCloseSettings);

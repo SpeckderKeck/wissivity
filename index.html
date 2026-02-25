@@ -154,6 +154,12 @@
                 Kartensatz auswählen
                 <select id="dataset-select" aria-label="Kartensatz auswählen"></select>
               </div>
+              <div class="field">
+                Kartenset aus Storage laden
+                <select id="storage-dataset-select" aria-label="Kartenset aus Storage laden">
+                  <option value="">Lade Kartensets ...</option>
+                </select>
+              </div>
               <label class="field upload">
                 CSV Upload (Supabase Bucket: Kartensets, max. 1 MB)
                 <input id="csv-upload" type="file" accept=".csv,text/csv" />
@@ -166,7 +172,6 @@
               </div>
               <button id="open-card-editor" class="ghost" type="button">Karten bearbeiten</button>
               <p class="hint" id="csv-status">Lade Dateiliste ...</p>
-              <ul id="csv-public-list" class="csv-public-list" aria-live="polite"></ul>
               <div class="tooltip" id="csv-tooltip" role="dialog" aria-hidden="true">
                 <h3>CSV-Upload Hinweise</h3>
                 <ul>

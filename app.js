@@ -43,7 +43,7 @@ const csvOverwriteButton = document.getElementById("csv-overwrite");
 const csvStatus = document.getElementById("csv-status");
 const csvUploadButton = document.getElementById("csv-upload-button");
 const csvRefreshListButton = document.getElementById("csv-refresh-list");
-const csvPublicList = document.getElementById("csv-public-list");
+const storageDatasetSelect = document.getElementById("storage-dataset-select");
 const csvInfo = document.getElementById("csv-info");
 const csvTooltip = document.getElementById("csv-tooltip");
 const datasetSelect = document.getElementById("dataset-select");
@@ -1833,6 +1833,9 @@ function applySelectedDatasets() {
   if (csvUpload) {
     csvUpload.value = "";
   }
+  if (storageDatasetSelect) {
+    storageDatasetSelect.value = "";
+  }
 }
 
 function addDatasetSelect(initialKey = "") {
@@ -1911,6 +1914,35 @@ const SUPABASE_BUCKET_ID = "Kartensets";
 const CSV_MAX_SIZE_BYTES = 1024 * 1024;
 let supabaseStorageClientPromise;
 
+
+function setStorageSelectOptions(files = []) {
+  if (!storageDatasetSelect) return;
+
+  storageDatasetSelect.innerHTML = "";
+
+  const placeholderOption = document.createElement("option");
+  placeholderOption.value = "";
+
+  if (!Array.isArray(files) || files.length === 0) {
+    placeholderOption.textContent = "Keine Kartensets verfügbar";
+    placeholderOption.disabled = true;
+    placeholderOption.selected = true;
+    storageDatasetSelect.append(placeholderOption);
+    return;
+  }
+
+  placeholderOption.textContent = "Kartenset aus Storage auswählen";
+  placeholderOption.selected = true;
+  storageDatasetSelect.append(placeholderOption);
+
+  files.forEach((file) => {
+    const option = document.createElement("option");
+    option.value = file.name;
+    option.textContent = file.name;
+    storageDatasetSelect.append(option);
+  });
+}
+
 function sanitizeUploadFileName(name) {
   return (
     name
@@ -1943,33 +1975,21 @@ async function getSupabaseStorageClient() {
   return supabaseStorageClientPromise;
 }
 
-function renderPublicCsvList(files = []) {
-  if (!csvPublicList) return;
-  csvPublicList.innerHTML = "";
-
-  if (!Array.isArray(files) || files.length === 0) {
-    const emptyItem = document.createElement("li");
-    emptyItem.className = "hint";
-    emptyItem.textContent = "Noch keine Dateien im Bucket Kartensets vorhanden.";
-    csvPublicList.append(emptyItem);
-    return;
-  }
-
-  files.forEach((file) => {
-    const listItem = document.createElement("li");
-    const link = document.createElement("a");
-    const createdAt = file.created_at ? new Date(file.created_at) : null;
-    const createdLabel = createdAt && !Number.isNaN(createdAt.getTime()) ? createdAt.toLocaleString("de-DE") : "ohne Datum";
-
-    link.href = file.publicUrl;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.textContent = `${file.name} (${createdLabel})`;
-
-    listItem.append(link);
-    csvPublicList.append(listItem);
-  });
+function parseStorageCsvToCards(csvText) {
+  const parsedRows = parseCsv(csvText);
+  return parsedRows
+    .map((row) => normalizeCardInput(row))
+    .filter((card) => {
+      if (!card.term || !ALLOWED_CARD_CATEGORIES.includes(card.category)) {
+        return false;
+      }
+      if (card.category === "Quizfrage") {
+        return Boolean(card.answer);
+      }
+      return Array.isArray(card.taboo) && card.taboo.length > 0;
+    });
 }
+
 
 async function refreshPublicCsvList() {
   if (csvStatus) {
@@ -1987,23 +2007,66 @@ async function refreshPublicCsvList() {
     }
 
     const sortedFiles = [...(data || [])]
-      .filter((item) => item && item.name)
-      .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
-      .map((item) => {
-        const { data: publicUrlData } = supabase.storage.from(SUPABASE_BUCKET_ID).getPublicUrl(item.name);
-        return {
-          ...item,
-          publicUrl: publicUrlData.publicUrl
-        };
-      });
+      .filter((item) => item && item.name && !item.name.endsWith("/"))
+      .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
-    renderPublicCsvList(sortedFiles);
+    setStorageSelectOptions(sortedFiles);
     if (csvStatus) {
       csvStatus.textContent = `${sortedFiles.length} Datei(en) im öffentlichen Bucket Kartensets.`;
     }
   } catch (error) {
     if (csvStatus) {
       csvStatus.textContent = `Fehler beim Laden der Dateiliste: ${error?.message || String(error)}`;
+    }
+  }
+}
+
+async function loadStorageDataset(objectName) {
+  const selectedName = String(objectName || "").trim();
+  if (!selectedName) {
+    return;
+  }
+
+  try {
+    if (csvStatus) {
+      csvStatus.textContent = `Lade Kartenset aus Storage: ${selectedName} ...`;
+    }
+
+    const supabase = await getSupabaseStorageClient();
+    const { data: publicUrlData } = supabase.storage.from(SUPABASE_BUCKET_ID).getPublicUrl(selectedName);
+    const publicUrl = publicUrlData?.publicUrl;
+    if (!publicUrl) {
+      throw new Error("Public URL konnte nicht erzeugt werden.");
+    }
+
+    const response = await fetch(publicUrl, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`CSV-Abruf fehlgeschlagen (HTTP ${response.status}).`);
+    }
+
+    const csvText = await response.text();
+    const cards = parseStorageCsvToCards(csvText);
+
+    if (cards.length === 0) {
+      throw new Error("CSV enthält keine gültigen Karten.");
+    }
+
+    state.uploadedCsvCards = cloneCards(cards);
+    state.cards = cloneCards(cards);
+    state.selectedDatasets = [];
+
+    if (datasetSelect) {
+      datasetSelect.value = "";
+    }
+
+    console.log("Storage CSV Vorschau (erste 200 Zeichen):", csvText.slice(0, 200));
+
+    if (csvStatus) {
+      csvStatus.textContent = `${selectedName}: ${cards.length} Karten aus Storage geladen.`;
+    }
+  } catch (error) {
+    if (csvStatus) {
+      csvStatus.textContent = `Fehler beim Laden des Storage-Kartensets: ${error?.message || String(error)}`;
     }
   }
 }
@@ -2051,6 +2114,10 @@ async function handleCsvUpload() {
     }
 
     await refreshPublicCsvList();
+    if (storageDatasetSelect) {
+      storageDatasetSelect.value = uploadName;
+    }
+    await loadStorageDataset(uploadName);
   } catch (error) {
     if (csvStatus) {
       csvStatus.textContent = `Upload-Fehler: ${error?.message || String(error)}`;
@@ -2356,6 +2423,9 @@ rollButton.addEventListener("click", handleRoll);
 undoButton.addEventListener("click", handleUndo);
 csvUploadButton?.addEventListener("click", handleCsvUpload);
 csvRefreshListButton?.addEventListener("click", refreshPublicCsvList);
+storageDatasetSelect?.addEventListener("change", (event) => {
+  loadStorageDataset(event.target.value);
+});
 csvSaveNewButton?.addEventListener("click", saveUploadedCsvAsNewDataset);
 csvOverwriteButton?.addEventListener("click", overwriteDatasetWithUploadedCsv);
 csvOverwriteSelect?.addEventListener("change", updateCsvDatasetActionState);

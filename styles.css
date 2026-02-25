@@ -60,6 +60,45 @@ body[data-theme="light"] {
   --pastel-2: rgba(91, 200, 172, 0.18);
   --pastel-3: rgba(230, 215, 42, 0.22);
   --pastel-4: rgba(255, 255, 255, 0.8);
+  --menu-lilac: #f3ecff;
+  --menu-lilac-strong: #e9dcff;
+}
+
+body[data-theme="light"] #menu .field select,
+body[data-theme="light"] #menu .field input[type="number"],
+body[data-theme="light"] #menu .field input[type="file"],
+body[data-theme="light"] #menu .team-row input[type="text"],
+body[data-theme="light"] #menu .team-row select,
+body[data-theme="light"] #menu .category-setting,
+body[data-theme="light"] #menu .team-row {
+  background: var(--menu-lilac);
+}
+
+body[data-theme="light"] #menu button,
+body[data-theme="light"] #menu .ghost,
+body[data-theme="light"] #menu .icon-button,
+body[data-theme="light"] #menu .dataset-add-button,
+body[data-theme="light"] #menu .dataset-remove-button,
+body[data-theme="light"] #menu .count-button,
+body[data-theme="light"] #menu .picker-button,
+body[data-theme="light"] #menu .picker-option,
+body[data-theme="light"] #menu .primary {
+  background: var(--menu-lilac);
+}
+
+body[data-theme="light"] #menu .primary {
+  background: var(--menu-lilac-strong);
+  color: var(--text);
+}
+
+body[data-theme="light"] #menu .primary:hover:not(:disabled),
+body[data-theme="light"] #menu .ghost:hover:not(:disabled),
+body[data-theme="light"] #menu .dataset-add-button:hover:not(:disabled),
+body[data-theme="light"] #menu .dataset-remove-button:hover:not(:disabled),
+body[data-theme="light"] #menu .count-button:hover:not(:disabled),
+body[data-theme="light"] #menu .picker-button:hover:not(:disabled),
+body[data-theme="light"] #menu .picker-option:hover:not(:disabled) {
+  background: var(--menu-lilac-strong);
 }
 
 * {

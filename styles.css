@@ -367,6 +367,27 @@ body.fullscreen .board {
   opacity: 0.45;
   cursor: not-allowed;
 }
+
+.csv-dataset-actions {
+  gap: 8px;
+}
+
+.csv-dataset-buttons {
+  display: grid;
+  gap: 8px;
+}
+
+.csv-dataset-buttons button,
+.csv-dataset-buttons select,
+#csv-dataset-name {
+  width: 100%;
+}
+
+.csv-dataset-buttons button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .info-button {
   background: var(--accent);
   border: none;

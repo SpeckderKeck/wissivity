@@ -1,6 +1,7 @@
 :root {
   color-scheme: dark;
-  --header-height: 64px;
+  --header-base-height: 64px;
+  --header-height: calc(var(--header-base-height) + env(safe-area-inset-top, 0px));
   --bg: #121212;
   --panel: #1e1e1e;
   --card: #242424;

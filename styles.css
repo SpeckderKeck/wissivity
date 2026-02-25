@@ -474,13 +474,15 @@ body.fullscreen .board {
 }
 
 .team-count-control {
-  display: grid;
-  grid-template-columns: auto minmax(60px, 80px) auto;
+  display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 10px;
 }
 
 .team-count-control input[type="number"] {
+  width: 72px;
+  margin: 0;
   text-align: center;
   font-weight: 600;
   -moz-appearance: textfield;

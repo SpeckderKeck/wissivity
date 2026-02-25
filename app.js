@@ -196,8 +196,8 @@ const DEFAULT_DATASET_KEY = "allgemein";
 const DEFAULT_DATA = PRESET_DATASETS[DEFAULT_DATASET_KEY]?.cards ?? [];
 const MAX_DATASET_SELECTIONS = 5;
 const CUSTOM_DATASETS_STORAGE_KEY = "wissivity.customDatasets";
-const REMOVED_PRESET_DATASET_KEYS = new Set(["umformen"]);
-const REMOVED_CUSTOM_DATASET_LABELS = new Set(["umformen"]);
+const GLOBAL_CUSTOM_DATASETS_ENDPOINT = "/api/custom-datasets";
+
 
 const state = {
   teams: [],
@@ -288,31 +288,72 @@ function normalizeStoredCustomDataset(rawDataset) {
   };
 }
 
+function toNormalizedDatasetList(customDatasets) {
+  return Object.values(customDatasets)
+    .map((dataset) => normalizeStoredCustomDataset(dataset))
+    .filter(Boolean)
+    .sort((a, b) => String(a.label).localeCompare(String(b.label), "de"));
+}
+
+function normalizeStoredDatasetArray(rawDatasets) {
+  if (!Array.isArray(rawDatasets)) return {};
+  return rawDatasets.reduce((accumulator, rawDataset) => {
+    const dataset = normalizeStoredCustomDataset(rawDataset);
+    if (dataset) {
+      accumulator[dataset.id] = dataset;
+    }
+    return accumulator;
+  }, {});
+}
+
 function readCustomDatasetsFromStorage() {
   try {
     const raw = localStorage.getItem(CUSTOM_DATASETS_STORAGE_KEY);
     if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return {};
-    return parsed.reduce((accumulator, rawDataset) => {
-      const dataset = normalizeStoredCustomDataset(rawDataset);
-      if (dataset) {
-        accumulator[dataset.id] = dataset;
-      }
-      return accumulator;
-    }, {});
+    return normalizeStoredDatasetArray(JSON.parse(raw));
   } catch {
     return {};
   }
 }
 
-function persistCustomDatasets() {
-  const datasets = Object.values(state.customDatasets)
-    .map((dataset) => normalizeStoredCustomDataset(dataset))
-    .filter(Boolean)
-    .sort((a, b) => String(a.label).localeCompare(String(b.label), "de"));
+async function fetchCustomDatasetsFromGlobalStorage() {
+  try {
+    const response = await fetch(GLOBAL_CUSTOM_DATASETS_ENDPOINT, { cache: "no-store" });
+    if (!response.ok) return null;
+    const payload = await response.json();
+    return normalizeStoredDatasetArray(payload);
+  } catch {
+    return null;
+  }
+}
 
+async function persistCustomDatasetsToGlobalStorage(datasets) {
+  try {
+    await fetch(GLOBAL_CUSTOM_DATASETS_ENDPOINT, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(datasets),
+    });
+  } catch {
+  }
+}
+
+function persistCustomDatasets() {
+  const datasets = toNormalizedDatasetList(state.customDatasets);
   localStorage.setItem(CUSTOM_DATASETS_STORAGE_KEY, JSON.stringify(datasets));
+  void persistCustomDatasetsToGlobalStorage(datasets);
+}
+
+async function syncCustomDatasetsFromGlobalStorage() {
+  const globalDatasets = await fetchCustomDatasetsFromGlobalStorage();
+  if (!globalDatasets) {
+    return;
+  }
+  state.customDatasets = globalDatasets;
+  localStorage.setItem(CUSTOM_DATASETS_STORAGE_KEY, JSON.stringify(toNormalizedDatasetList(state.customDatasets)));
+  refreshEditorCustomDatasetSelect(cardEditorDatasetSelect?.value ?? "");
+  refreshCsvDatasetOverwriteSelect(csvOverwriteSelect?.value ?? "");
+  refreshDatasetSelections();
 }
 
 function getAllDatasetEntries() {
@@ -1864,6 +1905,7 @@ function setup() {
   refreshCsvDatasetOverwriteSelect("");
   applySelectedDatasets();
   updateCsvDatasetActionState();
+  void syncCustomDatasetsFromGlobalStorage();
 }
 
 window.addEventListener("resize", () => {

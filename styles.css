@@ -1917,6 +1917,13 @@ button:disabled {
   color: var(--color-text);
 }
 
+.turn-word.is-quiz-question .turn-action-button.is-swap {
+  background: color-mix(in srgb, #13223a 86%, var(--accent));
+  color: #ffffff;
+  border: 2px solid color-mix(in srgb, #ffffff 82%, transparent);
+  box-shadow: 0 8px 16px color-mix(in srgb, #13223a 35%, transparent);
+}
+
 .turn-action-button:hover:not(:disabled) {
   filter: brightness(1.05);
 }

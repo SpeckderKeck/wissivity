@@ -726,7 +726,7 @@ body.card-view-active {
 }
 
 body.card-view-active .global-header {
-  display: none;
+  display: flex;
 }
 
 body.card-view-active .game-bottom {
@@ -1639,10 +1639,10 @@ button:disabled {
 }
 
 .turn-overlay.expanded.turn-overlay-panel {
-  width: min(700px, calc(100vw - 24px));
-  height: min(620px, calc(100vh - 24px));
-  transform: translate(calc(50vw - min(350px, 50vw - 12px)), calc(50vh - min(310px, 50vh - 12px)));
-  border-radius: 24px;
+  width: 100dvw;
+  height: calc(100dvh - var(--header-height));
+  transform: translate(0, var(--header-height));
+  border-radius: 0;
 }
 
 .turn-category,
@@ -1695,16 +1695,16 @@ button:disabled {
 
 .turn-word.fullscreen-card-overlay {
   position: fixed;
-  inset: 0;
+  inset: var(--header-height) 0 0 0;
   z-index: 70;
   display: grid;
   grid-template-rows: auto auto 1fr auto auto auto;
   align-content: center;
   justify-items: center;
   gap: clamp(10px, 2.4vh, 24px);
-  padding: clamp(14px, 3vw, 36px) max(clamp(14px, 3.2vw, 40px), env(safe-area-inset-left, 0px)) max(clamp(14px, 3vw, 32px), env(safe-area-inset-bottom, 0px)) max(clamp(14px, 3.2vw, 40px), env(safe-area-inset-right, 0px));
+  padding: max(clamp(14px, 3vw, 36px), env(safe-area-inset-top, 0px)) max(clamp(14px, 3.2vw, 40px), env(safe-area-inset-left, 0px)) max(clamp(14px, 3vw, 32px), env(safe-area-inset-bottom, 0px)) max(clamp(14px, 3.2vw, 40px), env(safe-area-inset-right, 0px));
   width: 100dvw;
-  height: 100dvh;
+  height: calc(100dvh - var(--header-height));
   text-align: center;
   background: var(--panel);
   overflow: hidden;

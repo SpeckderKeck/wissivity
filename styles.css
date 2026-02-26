@@ -2,6 +2,7 @@
   color-scheme: light;
   --header-base-height: 64px;
   --header-height: calc(var(--header-base-height) + env(safe-area-inset-top, 0px));
+  --topbar-height: var(--header-height);
   --color-bg: #1F2A1E;
   --color-surface: #F3E9D3;
   --color-text: #1E1E1E;
@@ -1612,6 +1613,37 @@ button:disabled {
   pointer-events: auto;
 }
 
+.turn-overlay.fullscreen-state {
+  background: transparent;
+  pointer-events: auto;
+}
+
+.turn-overlay.fullscreen-state .turn-overlay-panel {
+  width: 100dvw;
+  height: calc(100dvh - var(--header-height));
+  transform: translate(0, var(--header-height));
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.turn-overlay.fullscreen-state .turn-category,
+.turn-overlay.fullscreen-state .turn-countdown-card {
+  display: none;
+}
+
+.turn-overlay.fullscreen-state #turn-word {
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+}
+
+.turn-overlay.fullscreen-state #turn-word.hidden {
+  pointer-events: none;
+}
+
 .turn-overlay-panel {
 
   position: fixed;
@@ -1693,49 +1725,93 @@ button:disabled {
   display: none;
 }
 
-.turn-word.fullscreen-card-overlay {
+.turn-word.fullscreen-game-card {
   position: fixed;
-  inset: var(--header-height) 0 0 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: var(--topbar-height, 56px);
   z-index: 70;
-  display: grid;
-  grid-template-rows: auto auto 1fr auto auto auto;
-  align-content: center;
-  justify-items: center;
-  gap: clamp(10px, 2.4vh, 24px);
-  padding: max(clamp(14px, 3vw, 36px), env(safe-area-inset-top, 0px)) max(clamp(14px, 3.2vw, 40px), env(safe-area-inset-left, 0px)) max(clamp(14px, 3vw, 32px), env(safe-area-inset-bottom, 0px)) max(clamp(14px, 3.2vw, 40px), env(safe-area-inset-right, 0px));
-  width: 100dvw;
-  height: calc(100dvh - var(--header-height));
-  text-align: center;
-  background: var(--panel);
+  width: 100%;
+  height: calc(100dvh - var(--topbar-height, 56px));
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  background: var(--fullscreen-card-bg, var(--panel));
+  color: var(--fullscreen-card-text, var(--text));
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   overflow: hidden;
+  text-align: center;
   --term-scale: 1;
+  --taboo-scale: 1;
+}
+
+.fullscreen-game-card__top,
+.fullscreen-game-card__center,
+.fullscreen-game-card__bottom {
+  width: 100%;
+  min-height: 0;
+  padding-inline: max(clamp(14px, 3vw, 32px), env(safe-area-inset-left, 0px)) max(clamp(14px, 3vw, 32px), env(safe-area-inset-right, 0px));
+}
+
+.fullscreen-game-card__top {
+  flex: 0 1 24%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(4px, 1.2vh, 12px);
+  padding-top: max(clamp(10px, 2.6vh, 26px), env(safe-area-inset-top, 0px));
+}
+
+.fullscreen-game-card__center {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 2vh, 20px);
+}
+
+.fullscreen-game-card__bottom {
+  flex: 0 1 34%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: clamp(8px, 1.8vh, 16px);
+  padding-bottom: max(clamp(10px, 2.5vh, 26px), env(safe-area-inset-bottom, 0px));
 }
 
 .turn-timer {
-  background: var(--surface-alt);
-  color: var(--text);
-  padding: 8px 22px;
+  background: color-mix(in srgb, var(--fullscreen-card-text, var(--text)) 12%, transparent);
+  color: var(--fullscreen-card-text, var(--text));
+  padding: clamp(6px, 1.2vh, 10px) clamp(16px, 2.3vw, 24px);
   border-radius: 999px;
   font-weight: 700;
-  font-size: 1.3rem;
+  font-size: clamp(1rem, 2.6vw, 1.5rem);
 }
 
 #turn-word-title {
   font-size: calc(clamp(2rem, 7.5vw, 6.5rem) * var(--term-scale, 1));
-  line-height: clamp(1.02, 1.15, 1.2);
-  max-inline-size: min(18ch, 100%);
+  line-height: clamp(0.95, 1.04, 1.1);
+  max-inline-size: min(18ch, calc(100% - clamp(8px, 2vw, 16px)));
   overflow-wrap: normal;
   word-break: normal;
   hyphens: none;
   margin: 0;
-  text-wrap: balance;
+  color: var(--fullscreen-card-text, var(--text));
 }
 
 .turn-word.is-quiz-question #turn-word-title {
   font-size: calc(clamp(1.4rem, 4.2vw, 3.6rem) * var(--term-scale, 1));
   line-height: clamp(1.08, 1.18, 1.24);
   max-inline-size: min(28ch, 100%);
-  color: #47b8d8;
+  color: var(--fullscreen-card-text, var(--text));
 }
 
 #turn-taboo-list {
@@ -1745,30 +1821,31 @@ button:disabled {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: clamp(8px, 1.8vw, 16px);
-  color: var(--muted);
+  gap: clamp(6px, 1.4vh, 14px);
+  color: var(--fullscreen-card-text, var(--text));
   max-width: min(90ch, 100%);
 }
 
 #turn-taboo-list li {
-  font-size: calc(clamp(1.05rem, 4.2vw, 3.6rem) * 0.65 * var(--term-scale, 1));
-  line-height: clamp(1.1, 1.25, 1.35);
+  font-size: calc(clamp(0.95rem, 3.8vw, 3.1rem) * 0.66 * var(--taboo-scale, 1));
+  line-height: clamp(1, 1.12, 1.18);
   padding: clamp(5px, 1.3vw, 10px) clamp(10px, 2.1vw, 16px);
   border-radius: 999px;
-  background: var(--surface-alt);
+  background: color-mix(in srgb, var(--fullscreen-card-text, var(--text)) 14%, transparent);
   max-inline-size: min(24ch, 100%);
   overflow-wrap: normal;
   word-break: normal;
   hyphens: none;
+  white-space: nowrap;
 }
 
 .turn-answer {
   margin: 0;
   padding: 12px 18px;
   border-radius: 16px;
-  background: var(--surface-alt);
-  font-size: 1.4rem;
-  color: var(--text);
+  background: color-mix(in srgb, var(--fullscreen-card-text, var(--text)) 14%, transparent);
+  font-size: clamp(1rem, 2.8vw, 1.8rem);
+  color: var(--fullscreen-card-text, var(--text));
 }
 
 .turn-penalty {
@@ -1786,21 +1863,23 @@ button:disabled {
 
 .turn-word-category-label {
   margin: 0;
-  font-size: clamp(0.95rem, 2.3vw, 1.45rem);
+  font-size: clamp(0.75rem, 1.6vw, 1rem);
+  line-height: clamp(1.1, 1.2, 1.3);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: color-mix(in srgb, var(--fullscreen-card-text, var(--text)) 78%, transparent);
 }
 
 .turn-word-hint {
   margin: 0;
-  font-size: clamp(0.85rem, 1.8vw, 1.15rem);
-  color: var(--muted);
+  font-size: clamp(0.8rem, 1.8vw, 1.1rem);
+  line-height: clamp(1.1, 1.2, 1.3);
+  color: color-mix(in srgb, var(--fullscreen-card-text, var(--text)) 78%, transparent);
   opacity: 0.82;
 }
 .turn-action-buttons {
   display: flex;
-  gap: 16px;
+  gap: clamp(10px, 2vw, 16px);
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;

@@ -62,8 +62,6 @@ const cardEditorDatasetSelect = document.getElementById("card-editor-dataset-sel
 const cardEditorOverwriteButton = document.getElementById("card-editor-overwrite");
 const cardEditorDeleteButton = document.getElementById("card-editor-delete");
 const cardEditorErrors = document.getElementById("card-editor-errors");
-const themeToggle = document.getElementById("theme-toggle");
-const themeToggleWrapper = themeToggle?.closest(".theme-switch");
 const fullscreenToggle = document.getElementById("fullscreen-toggle");
 const qrToggle = document.getElementById("qr-toggle");
 const qrModal = document.getElementById("qr-modal");
@@ -299,7 +297,6 @@ const TEAM_ICONS = [
   "🦓",
 ];
 const DEFAULT_TEAM_NAMES = ["Team A", "Team B", "Team C", "Team D"];
-const THEME_STORAGE_KEY = "wissivity-theme";
 const BOARD_CONFIGS = {
   short: { rows: 4, cols: 6, total: 24 },
   normal: { rows: 5, cols: 6, total: 30 },
@@ -651,22 +648,6 @@ function refreshDatasetSelections() {
   applySelectedDatasets();
 }
 
-function applyTheme(theme) {
-  if (theme === "light") {
-    document.body.dataset.theme = "light";
-  } else {
-    delete document.body.dataset.theme;
-  }
-  updateThemeToggle(theme === "light");
-}
-
-function updateThemeToggle(isLight) {
-  themeToggle.checked = isLight;
-  themeToggle.setAttribute("aria-checked", String(isLight));
-  if (themeToggleWrapper) {
-    themeToggleWrapper.title = isLight ? "Dunkles Design aktivieren" : "Helles Design aktivieren";
-  }
-}
 
 function populateTimeSelect(selectEl, defaultValue = 60) {
   for (let i = 10; i <= 120; i += 10) {
@@ -2674,15 +2655,6 @@ csvInfo.addEventListener("click", () => {
   csvTooltip.setAttribute("aria-hidden", isHidden ? "false" : "true");
 });
 
-themeToggle.addEventListener("change", (event) => {
-  const isLight = event.target.checked;
-  if (isLight) {
-    localStorage.removeItem(THEME_STORAGE_KEY);
-  } else {
-    localStorage.setItem(THEME_STORAGE_KEY, "dark");
-  }
-  applyTheme(isLight ? "light" : "dark");
-});
 
 function updateFullscreenState() {
   const isFullscreen = Boolean(document.fullscreenElement);
@@ -2706,6 +2678,4 @@ document.addEventListener("fullscreenchange", () => {
   positionTokens();
 });
 
-const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-applyTheme(storedTheme === "dark" ? "dark" : "light");
 setup();

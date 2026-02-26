@@ -1,39 +1,7 @@
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   --header-base-height: 64px;
   --header-height: calc(var(--header-base-height) + env(safe-area-inset-top, 0px));
-  --bg: #121212;
-  --panel: #1e1e1e;
-  --card: #242424;
-  --surface-alt: #262626;
-  --text: #f1f1f1;
-  --muted: #a0a0a0;
-  --accent: #ffa502;
-  --button: #5c7cfa;
-  --button-text: #f1f1f1;
-  --button-hover: #4b6cf0;
-  --button-active: #425fd6;
-  --button-disabled: #2f3f7a;
-  --success: #2ed573;
-  --success-hover: #27c168;
-  --success-active: #22aa5c;
-  --danger: #ff6b6b;
-  --danger-hover: #f45b5b;
-  --danger-active: #e04f4f;
-  --board: #1a1a1a;
-  --border: #2a2a2a;
-  --shadow: rgba(0, 0, 0, 0.4);
-  --overlay: rgba(0, 0, 0, 0.6);
-  --pastel-1: rgba(92, 124, 250, 0.22);
-  --pastel-2: rgba(46, 213, 115, 0.2);
-  --pastel-3: rgba(255, 165, 2, 0.18);
-  --pastel-4: rgba(30, 30, 30, 0.7);
-  --board-cell-max: 12vmin;
-  --board-card-border: #ffffff;
-}
-
-body[data-theme="light"] {
-  color-scheme: light;
   --bg: #f5ece3;
   --panel: #fff9f2;
   --card: #fff5ea;
@@ -61,6 +29,7 @@ body[data-theme="light"] {
   --pastel-2: rgba(46, 94, 63, 0.18);
   --pastel-3: rgba(206, 122, 47, 0.22);
   --pastel-4: rgba(255, 249, 242, 0.82);
+  --board-cell-max: 12vmin;
 }
 
 * {
@@ -111,51 +80,6 @@ body.game-active .app {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-}
-
-.theme-switch {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-
-.theme-switch input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.theme-switch-track {
-  width: 52px;
-  height: 28px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  padding: 3px;
-  transition: background 0.2s ease, border-color 0.2s ease;
-}
-
-.theme-switch-thumb {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--button);
-  box-shadow: 0 2px 6px var(--shadow);
-  transform: translateX(0);
-  transition: transform 0.2s ease, background 0.2s ease;
-}
-
-.theme-switch input:checked + .theme-switch-track {
-  background: var(--surface-alt);
-  border-color: var(--border);
-}
-
-.theme-switch input:checked + .theme-switch-track .theme-switch-thumb {
-  transform: translateX(22px);
-  background: var(--accent);
 }
 
 .tagline {
@@ -759,14 +683,11 @@ body.card-view-active .game-top {
 
 .board-arrow {
   fill: rgba(214, 218, 224, 0.92);
-  stroke: rgba(255, 255, 255, 0.85);
+  stroke: rgba(0, 0, 0, 0.7);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
 
-body[data-theme="light"] .board-arrow {
-  stroke: rgba(0, 0, 0, 0.7);
-}
 
 .board-cell {
   display: flex;
@@ -1101,8 +1022,7 @@ button {
   cursor: pointer;
 }
 
-button:focus-visible,
-.theme-switch input:focus-visible + .theme-switch-track {
+button:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--accent) 70%, transparent);
   outline-offset: 2px;
 }

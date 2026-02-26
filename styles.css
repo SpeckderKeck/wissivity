@@ -1881,6 +1881,12 @@ button:disabled {
   white-space: nowrap;
 }
 
+@media (max-width: 768px) {
+  #turn-taboo-list li {
+    font-size: calc(clamp(1.05rem, 4.8vw, 3.4rem) * 0.74 * var(--taboo-scale, 1));
+  }
+}
+
 .turn-answer {
   margin: 0;
   padding: 12px 18px;

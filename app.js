@@ -2390,14 +2390,14 @@ function handleMainMenu() {
 }
 
 function setOverlayStartFromCell() {
-  const currentIndex = state.positions[state.currentTeam];
-  const cell = board.querySelector(`.board-cell[data-index="${currentIndex}"]`);
-  if (!cell) return;
-  const rect = cell.getBoundingClientRect();
-  turnOverlayPanel.style.setProperty("--panel-width", `${rect.width}px`);
-  turnOverlayPanel.style.setProperty("--panel-height", `${rect.height}px`);
-  turnOverlayPanel.style.setProperty("--panel-x", `${rect.left}px`);
-  turnOverlayPanel.style.setProperty("--panel-y", `${rect.top}px`);
+  const width = Math.min(300, Math.max(220, Math.round(window.innerWidth * 0.24)));
+  const height = Math.min(300, Math.max(220, Math.round(window.innerHeight * 0.28)));
+  const x = Math.round(window.innerWidth / 2 - width / 2);
+  const y = Math.round(window.innerHeight / 2 - height / 2);
+  turnOverlayPanel.style.setProperty("--panel-width", `${width}px`);
+  turnOverlayPanel.style.setProperty("--panel-height", `${height}px`);
+  turnOverlayPanel.style.setProperty("--panel-x", `${x}px`);
+  turnOverlayPanel.style.setProperty("--panel-y", `${y}px`);
 }
 
 function setOverlayCategorySize() {

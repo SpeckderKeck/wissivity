@@ -26,6 +26,8 @@ const turnTimer = document.getElementById("turn-timer");
 const turnPenalty = document.getElementById("turn-penalty");
 const turnWordTitle = document.getElementById("turn-word-title");
 const turnTabooList = document.getElementById("turn-taboo-list");
+const turnWordCategoryLabel = document.getElementById("turn-word-category-label");
+const turnWordHint = document.getElementById("turn-word-hint");
 const turnCorrectButton = document.getElementById("turn-correct");
 const turnWrongButton = document.getElementById("turn-wrong");
 const turnSwapButton = document.getElementById("turn-swap");
@@ -67,6 +69,75 @@ const qrToggle = document.getElementById("qr-toggle");
 const qrModal = document.getElementById("qr-modal");
 const qrImage = document.getElementById("qr-image");
 const closeQrModalButton = document.getElementById("close-qr-modal");
+
+const GAME_PHASES = {
+  IDLE: "idle",
+  READY: "ready",
+  COUNTDOWN: "countdown",
+  FULLSCREEN_CARD: "FULLSCREEN_CARD",
+  WINNER: "winner",
+};
+
+function createFullscreenCardOverlay({
+  root,
+  categoryElement,
+  termElement,
+  tabooListElement,
+  hintElement,
+}) {
+  if (!root || !termElement || !tabooListElement) {
+    return {
+      update: () => {},
+      setOpen: () => {},
+      fitTermText: () => {},
+    };
+  }
+
+  const fitTermText = () => {
+    root.style.setProperty("--term-scale", "1");
+    const minScale = 0.55;
+    const scaleStep = 0.05;
+    let nextScale = 1;
+
+    while (nextScale > minScale && termElement.scrollWidth > termElement.clientWidth + 1) {
+      nextScale -= scaleStep;
+      root.style.setProperty("--term-scale", nextScale.toFixed(2));
+    }
+  };
+
+  const resizeObserver = new ResizeObserver(() => {
+    fitTermText();
+  });
+  resizeObserver.observe(root);
+
+  return {
+    update: ({ category = "", term = "", tabooTerms = [], showHint = false }) => {
+      if (categoryElement) {
+        categoryElement.textContent = category || "Kategorie";
+      }
+      termElement.textContent = term || "Keine Karte";
+      tabooListElement.innerHTML = "";
+      tabooTerms.forEach((taboo) => {
+        const li = document.createElement("li");
+        li.textContent = taboo;
+        tabooListElement.appendChild(li);
+      });
+      if (hintElement) {
+        hintElement.classList.toggle("hidden", !showHint);
+      }
+      fitTermText();
+    },
+    setOpen: ({ isOpen }) => {
+      root.classList.toggle("fullscreen-card-overlay", isOpen);
+      root.classList.toggle("hidden", !isOpen);
+      document.body.classList.toggle("fullscreen-card-open", isOpen);
+      if (isOpen) {
+        fitTermText();
+      }
+    },
+    fitTermText,
+  };
+}
 
 function openQrModal(event) {
   event?.preventDefault();
@@ -277,6 +348,14 @@ const STORAGE_DATASET_KEY_PREFIX = "storage:";
 const REMOVED_PRESET_DATASET_KEYS = new Set(["umformen"]);
 const REMOVED_CUSTOM_DATASET_LABELS = new Set(["umformen"]);
 
+const fullscreenCardOverlay = createFullscreenCardOverlay({
+  root: turnWord,
+  categoryElement: turnWordCategoryLabel,
+  termElement: turnWordTitle,
+  tabooListElement: turnTabooList,
+  hintElement: turnWordHint,
+});
+
 const state = {
   teams: [],
   currentTeam: 0,
@@ -301,7 +380,7 @@ const state = {
   cards: [...DEFAULT_DATA],
   history: [],
   boardCategories: [],
-  phase: "idle",
+  phase: GAME_PHASES.IDLE,
   gameOver: false,
   pendingReturn: null,
   currentCard: null,
@@ -711,6 +790,18 @@ function setCategorySelectionInvalidState(controls, isInvalid) {
     const row = control.checkbox?.closest(".category-setting");
     row?.classList.toggle("selection-invalid", isInvalid);
   });
+}
+
+function updateMainMenuRequiredSelectionState() {
+  const selectedDatasetKeys = readSelectedDatasetKeys();
+  const hasSelectedDatasets = selectedDatasetKeys.length > 0;
+  const selectedCategories = getSelectedCategories(menuCategoryControls);
+  const hasSelectedCategories = selectedCategories.length > 0;
+
+  setDatasetSelectionInvalidState(!hasSelectedDatasets);
+  setCategorySelectionInvalidState(menuCategoryControls, !hasSelectedCategories);
+
+  return hasSelectedDatasets && hasSelectedCategories;
 }
 
 function readCategoryTimes(controls) {
@@ -1131,44 +1222,26 @@ function getCardByCategory(category) {
 
 function setWordCard(card) {
   turnWord?.classList.remove("is-quiz-question");
-  if (!card) {
-    turnWordTitle.textContent = "Keine Karte";
-    turnTabooList.innerHTML = "";
-    turnAnswer?.classList.add("hidden");
-    if (turnAnswer) {
-      turnAnswer.textContent = "";
-    }
-    return;
-  }
-  turnWordTitle.textContent = card.term;
-  turnTabooList.innerHTML = "";
+  fullscreenCardOverlay.update({
+    category: state.pendingCategory,
+    term: card?.term ?? "Keine Karte",
+    tabooTerms: card?.category === "Erklären" ? card.taboo : [],
+    showHint: false,
+  });
   turnAnswer?.classList.add("hidden");
   if (turnAnswer) {
     turnAnswer.textContent = "";
   }
-  if (card.category === "Erklären") {
-    card.taboo.forEach((taboo) => {
-      const li = document.createElement("li");
-      li.textContent = taboo;
-      turnTabooList.appendChild(li);
-    });
-  }
 }
 
 function setQuizQuestionCard(card) {
-  if (!card) {
-    turnWord?.classList.remove("is-quiz-question");
-    turnWordTitle.textContent = "Keine Quizfrage";
-    turnTabooList.innerHTML = "";
-    turnAnswer?.classList.add("hidden");
-    if (turnAnswer) {
-      turnAnswer.textContent = "";
-    }
-    return;
-  }
   turnWord?.classList.add("is-quiz-question");
-  turnWordTitle.textContent = card.term;
-  turnTabooList.innerHTML = "";
+  fullscreenCardOverlay.update({
+    category: state.pendingCategory,
+    term: card?.term ?? "Keine Quizfrage",
+    tabooTerms: [],
+    showHint: true,
+  });
   if (turnAnswer) {
     turnAnswer.textContent = "";
     turnAnswer.classList.add("hidden");
@@ -1189,7 +1262,7 @@ function setQuizAnswerCard(card) {
   turnWordTitle.textContent = "Antwort";
   turnTabooList.innerHTML = "";
   if (turnAnswer) {
-    const answerText = card.answer ? `Antwort: ${card.answer}` : "Antwort fehlt.";
+    const answerText = card?.answer ? `Antwort: ${card.answer}` : "Antwort fehlt.";
     turnAnswer.textContent = answerText;
     turnAnswer.classList.remove("hidden");
   }
@@ -1212,7 +1285,7 @@ function setCategory(category) {
 }
 
 function handleRoll() {
-  if (state.pendingRoll !== null || state.timer || state.phase !== "idle" || state.gameOver) {
+  if (state.pendingRoll !== null || state.timer || state.phase !== GAME_PHASES.IDLE || state.gameOver) {
     return;
   }
 
@@ -1331,22 +1404,14 @@ function handleUndo() {
 }
 
 function handleStartGame() {
-  const selectedDatasetKeys = readSelectedDatasetKeys();
-  const hasSelectedDatasets = selectedDatasetKeys.length > 0;
-  const hasLoadedCards = Array.isArray(state.cards) && state.cards.length > 0;
-  if (!hasSelectedDatasets && !hasLoadedCards) {
-    setDatasetSelectionInvalidState(true);
+  const isMainMenuComplete = updateMainMenuRequiredSelectionState();
+  if (!isMainMenuComplete) {
     return;
   }
-  setDatasetSelectionInvalidState(false);
+
   applySelectedDatasets();
 
   const selectedCategories = getSelectedCategories(menuCategoryControls);
-  if (selectedCategories.length === 0) {
-    setCategorySelectionInvalidState(menuCategoryControls, true);
-    return;
-  }
-  setCategorySelectionInvalidState(menuCategoryControls, false);
   const selectedBoardSize = getSelectedBoardSize(boardSizeSelect ?? boardSizeInputs);
   syncBoardSizeControls(selectedBoardSize);
   state.categories = selectedCategories;
@@ -1371,7 +1436,7 @@ function handleStartGame() {
   state.pendingRoll = null;
   state.pendingCategory = null;
   state.gameOver = false;
-  state.phase = "idle";
+  state.phase = GAME_PHASES.IDLE;
   winnerScreen.classList.add("hidden");
   turnOverlay.classList.add("hidden");
   turnOverlay.classList.remove("active", "expanded", "category");
@@ -1906,6 +1971,7 @@ function createDatasetSelectRow(currentKey = "") {
     row.remove();
     applySelectedDatasets();
     updateDatasetRowControls();
+    updateMainMenuRequiredSelectionState();
   });
   row.append(removeButton);
 
@@ -2001,13 +2067,14 @@ function addDatasetSelect(initialKey = "") {
 
   const { row, select } = createDatasetSelectRow(initialKey);
   select.addEventListener("change", () => {
-    setDatasetSelectionInvalidState(false);
     applySelectedDatasets();
     updateDatasetRowControls();
+    updateMainMenuRequiredSelectionState();
   });
   datasetSelectList.append(row);
   applySelectedDatasets();
   updateDatasetRowControls();
+  updateMainMenuRequiredSelectionState();
 }
 
 function populateMainDatasetSelect() {
@@ -2387,6 +2454,7 @@ function handleMainMenu() {
   stopTimer();
   hideTurnOverlay();
   showMenuPanel();
+  updateMainMenuRequiredSelectionState();
 }
 
 function setOverlayStartFromCell() {
@@ -2412,8 +2480,9 @@ function setOverlayCategorySize() {
 }
 
 function showTurnOverlay() {
-  state.phase = "ready";
+  state.phase = GAME_PHASES.READY;
   document.body.classList.remove("card-view-active");
+  fullscreenCardOverlay.setOpen({ isOpen: false });
   setOverlayStartFromCell();
   setOverlayCategorySize();
   turnCategory.classList.remove("hidden");
@@ -2431,6 +2500,7 @@ function showTurnOverlay() {
 
 function hideTurnOverlay() {
   document.body.classList.remove("card-view-active");
+  fullscreenCardOverlay.setOpen({ isOpen: false });
   turnOverlay.classList.remove("expanded");
   turnOverlay.classList.remove("category");
   turnOverlay.classList.remove("active");
@@ -2441,7 +2511,7 @@ function hideTurnOverlay() {
   setTimeout(() => {
     turnOverlay.classList.add("hidden");
   }, 700);
-  state.phase = "idle";
+  state.phase = GAME_PHASES.IDLE;
 }
 
 function startCountdown() {
@@ -2453,7 +2523,7 @@ function startCountdown() {
   turnCountdownCard.classList.remove("hidden");
   turnCountdown.classList.remove("hidden");
   turnReadyButton.classList.add("hidden");
-  state.phase = "countdown";
+  state.phase = GAME_PHASES.COUNTDOWN;
   state.countdownTimer = setInterval(() => {
     countdown -= 1;
     if (countdown <= 0) {
@@ -2470,10 +2540,10 @@ function showWordCard() {
   document.body.classList.add("card-view-active");
   turnCategory.classList.add("hidden");
   turnCountdownCard.classList.add("hidden");
-  turnWord.classList.remove("hidden");
   turnOverlay.classList.remove("category");
   turnOverlay.classList.add("expanded");
-  state.phase = "word";
+  fullscreenCardOverlay.setOpen({ isOpen: true });
+  state.phase = GAME_PHASES.FULLSCREEN_CARD;
   const card = getCardByCategory(state.pendingCategory);
   state.currentCard = card;
   state.timeLimit = state.categoryTimes[state.pendingCategory] ?? 60;
@@ -2504,7 +2574,7 @@ function applySwapPenalty() {
 }
 
 function handleSwapCard() {
-  if (state.phase !== "word") return;
+  if (state.phase !== GAME_PHASES.FULLSCREEN_CARD) return;
   if (state.quizPhase === "answer") return;
   const card = getCardByCategory(state.pendingCategory);
   state.currentCard = card;
@@ -2518,7 +2588,7 @@ function handleSwapCard() {
 
 function showWinner(teamName) {
   state.gameOver = true;
-  state.phase = "winner";
+  state.phase = GAME_PHASES.WINNER;
   state.pendingRoll = null;
   state.pendingCategory = null;
   winnerLabel.textContent = `${teamName} gewinnt`;
@@ -2587,6 +2657,7 @@ boardSizeSelect?.addEventListener("change", () => {
 });
 
 showMenuPanel();
+updateMainMenuRequiredSelectionState();
 
 startButton.addEventListener("click", handleStartGame);
 document.addEventListener("keydown", (event) => {
@@ -2604,8 +2675,8 @@ undoButton.addEventListener("click", handleUndo);
 csvUploadButton?.addEventListener("click", handleCsvUpload);
 csvRefreshListButton?.addEventListener("click", refreshPublicCsvList);
 storageDatasetSelect?.addEventListener("change", (event) => {
-  setDatasetSelectionInvalidState(false);
   loadStorageDataset(event.target.value);
+  updateMainMenuRequiredSelectionState();
 });
 csvSaveNewButton?.addEventListener("click", saveUploadedCsvAsNewDataset);
 csvOverwriteButton?.addEventListener("click", overwriteDatasetWithUploadedCsv);
@@ -2642,12 +2713,12 @@ datasetAddButton?.addEventListener("click", () => {
   addDatasetSelect("");
 });
 datasetSelect?.addEventListener("change", () => {
-  setDatasetSelectionInvalidState(false);
   applySelectedDatasets();
+  updateMainMenuRequiredSelectionState();
 });
 menuCategoryControls.forEach((control) => {
   control.checkbox?.addEventListener("change", () => {
-    setCategorySelectionInvalidState(menuCategoryControls, false);
+    updateMainMenuRequiredSelectionState();
   });
 });
 gameCategoryControls.forEach((control) => {
@@ -2659,8 +2730,14 @@ openSettingsButton.addEventListener("click", handleOpenSettings);
 closeSettingsButton.addEventListener("click", handleCloseSettings);
 applySettingsButton.addEventListener("click", applySettingsFromPanel);
 mainMenuButton.addEventListener("click", handleMainMenu);
+turnWordHint?.addEventListener("click", () => {
+  if (state.phase !== GAME_PHASES.FULLSCREEN_CARD) return;
+  if (state.pendingCategory !== "Quizfrage" || state.quizPhase !== "question") return;
+  turnContinueButton.click();
+});
+
 turnContinueButton.addEventListener("click", () => {
-  if (state.phase !== "word") return;
+  if (state.phase !== GAME_PHASES.FULLSCREEN_CARD) return;
   if (state.pendingCategory === "Quizfrage" && state.quizPhase === "question") {
     stopTimer();
     state.quizPhase = "answer";
@@ -2671,18 +2748,18 @@ turnContinueButton.addEventListener("click", () => {
   finishTurn(false);
 });
 turnCorrectButton?.addEventListener("click", () => {
-  if (state.phase !== "word") return;
+  if (state.phase !== GAME_PHASES.FULLSCREEN_CARD) return;
   if (state.pendingCategory === "Quizfrage" && state.quizPhase !== "answer") return;
   finishTurn(true);
 });
 turnWrongButton?.addEventListener("click", () => {
-  if (state.phase !== "word") return;
+  if (state.phase !== GAME_PHASES.FULLSCREEN_CARD) return;
   if (state.pendingCategory === "Quizfrage" && state.quizPhase !== "answer") return;
   finishTurn(false, false, { returnToPrevious: true });
 });
 turnSwapButton?.addEventListener("click", handleSwapCard);
 turnReadyButton.addEventListener("click", () => {
-  if (state.phase !== "ready") return;
+  if (state.phase !== GAME_PHASES.READY) return;
   turnReadyButton.disabled = true;
   startCountdown();
 });

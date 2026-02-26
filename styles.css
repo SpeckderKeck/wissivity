@@ -371,9 +371,22 @@ body.fullscreen .board {
 }
 
 
+@keyframes invalidSelectionBlink {
+  0%,
+  100% {
+    background: #ffe7e7;
+    border-color: #f4a7a7;
+  }
+  50% {
+    background: #ffd1d1;
+    border-color: #ef6f6f;
+  }
+}
+
 .selection-invalid {
   background: #ffe7e7 !important;
   border: 1px solid #f4a7a7 !important;
+  animation: invalidSelectionBlink 1s ease-in-out infinite;
 }
 
 .selection-invalid.category-setting {
@@ -722,6 +735,10 @@ body.card-view-active .game-bottom {
 
 body.card-view-active .game-top {
   padding-bottom: 0;
+}
+
+body.fullscreen-card-open {
+  overflow: hidden;
 }
 
 .board {
@@ -1622,13 +1639,10 @@ button:disabled {
 }
 
 .turn-overlay.expanded.turn-overlay-panel {
-
-  width: 100vw;
-  height: 100vh;
-  transform: translate(0, 0);
-  border-radius: 0;
-  overflow: auto;
-  padding: clamp(16px, 3vw, 36px);
+  width: min(700px, calc(100vw - 24px));
+  height: min(620px, calc(100vh - 24px));
+  transform: translate(calc(50vw - min(350px, 50vw - 12px)), calc(50vh - min(310px, 50vh - 12px)));
+  border-radius: 24px;
 }
 
 .turn-category,
@@ -1676,8 +1690,25 @@ button:disabled {
 }
 
 .turn-word {
-  width: min(880px, 100%);
-  min-height: 100%;
+  display: none;
+}
+
+.turn-word.fullscreen-card-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto auto auto;
+  align-content: center;
+  justify-items: center;
+  gap: clamp(10px, 2.4vh, 24px);
+  padding: clamp(14px, 3vw, 36px) max(clamp(14px, 3.2vw, 40px), env(safe-area-inset-left, 0px)) max(clamp(14px, 3vw, 32px), env(safe-area-inset-bottom, 0px)) max(clamp(14px, 3.2vw, 40px), env(safe-area-inset-right, 0px));
+  width: 100dvw;
+  height: 100dvh;
+  text-align: center;
+  background: var(--panel);
+  overflow: hidden;
+  --term-scale: 1;
 }
 
 .turn-timer {
@@ -1690,19 +1721,20 @@ button:disabled {
 }
 
 #turn-word-title {
-  font-size: clamp(1.6rem, 4.8vw, 4.2rem);
-  line-height: 1.15;
-  max-inline-size: min(28ch, 100%);
-  overflow-wrap: break-word;
+  font-size: calc(clamp(2rem, 7.5vw, 6.5rem) * var(--term-scale, 1));
+  line-height: clamp(1.02, 1.15, 1.2);
+  max-inline-size: min(18ch, 100%);
+  overflow-wrap: normal;
   word-break: normal;
-  hyphens: auto;
+  hyphens: none;
   margin: 0;
+  text-wrap: balance;
 }
 
 .turn-word.is-quiz-question #turn-word-title {
-  font-size: clamp(1.35rem, 3.9vw, 3.2rem);
-  line-height: 1.2;
-  max-inline-size: min(32ch, 100%);
+  font-size: calc(clamp(1.4rem, 4.2vw, 3.6rem) * var(--term-scale, 1));
+  line-height: clamp(1.08, 1.18, 1.24);
+  max-inline-size: min(28ch, 100%);
   color: #47b8d8;
 }
 
@@ -1710,9 +1742,24 @@ button:disabled {
   list-style: none;
   padding: 0;
   margin: 0;
-  display: grid;
-  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(8px, 1.8vw, 16px);
   color: var(--muted);
+  max-width: min(90ch, 100%);
+}
+
+#turn-taboo-list li {
+  font-size: calc(clamp(1.05rem, 4.2vw, 3.6rem) * 0.65 * var(--term-scale, 1));
+  line-height: clamp(1.1, 1.25, 1.35);
+  padding: clamp(5px, 1.3vw, 10px) clamp(10px, 2.1vw, 16px);
+  border-radius: 999px;
+  background: var(--surface-alt);
+  max-inline-size: min(24ch, 100%);
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
 }
 
 .turn-answer {
@@ -1736,6 +1783,21 @@ button:disabled {
   animation: penalty-pop 1.4s ease;
 }
 
+
+.turn-word-category-label {
+  margin: 0;
+  font-size: clamp(0.95rem, 2.3vw, 1.45rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.turn-word-hint {
+  margin: 0;
+  font-size: clamp(0.85rem, 1.8vw, 1.15rem);
+  color: var(--muted);
+  opacity: 0.82;
+}
 .turn-action-buttons {
   display: flex;
   gap: 16px;
@@ -1934,7 +1996,7 @@ button:disabled {
   }
 
   #turn-word-title {
-    font-size: clamp(1.25rem, 6.2vw, 2.4rem);
+    font-size: calc(clamp(1.5rem, 8vw, 3rem) * var(--term-scale, 1));
     max-inline-size: min(22ch, 100%);
   }
 

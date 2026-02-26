@@ -195,22 +195,26 @@ const CATEGORY_CONFIG = {
   Quizfrage: { id: "quiz", iconPath: "quiz.svg", fallbackIcon: "?" },
 };
 
+const theme = globalThis.THINKAROO_THEME;
+const getCardColor = theme?.getCardColor ?? (() => "#F3E9D3");
+const getReadableTextColor = theme?.getReadableTextColor ?? (() => "#1E1E1E");
+
 const CATEGORY_VISUALS = {
   Erklären: {
-    color: "#5bc8ac",
-    iconColor: "#2f7c67",
+    color: getCardColor("Erklären"),
+    iconColor: getReadableTextColor(getCardColor("Erklären")),
   },
   Zeichnen: {
-    color: "#f16d9e",
-    iconColor: "#9a2f5d",
+    color: getCardColor("Zeichnen"),
+    iconColor: getReadableTextColor(getCardColor("Zeichnen")),
   },
   Pantomime: {
-    color: "#e6d72a",
-    iconColor: "#7a6d00",
+    color: getCardColor("Pantomime"),
+    iconColor: getReadableTextColor(getCardColor("Pantomime")),
   },
   Quizfrage: {
-    color: "#38bdf8",
-    iconColor: "#0ea5e9",
+    color: getCardColor("Quizfrage"),
+    iconColor: getReadableTextColor(getCardColor("Quizfrage")),
   },
 };
 
@@ -900,7 +904,9 @@ function buildBoard(categories = state.categories) {
       card.className = "category-card";
       if (index === 0) {
         cell.classList.add("start");
-        card.style.setProperty("--card-color", "#d9f7ea");
+        const startColor = getCardColor("Start");
+        card.style.setProperty("--card-color", startColor);
+        card.style.setProperty("--card-text-color", getReadableTextColor(startColor));
         const icon = document.createElement("span");
         icon.className = "category-icon";
         icon.setAttribute("aria-hidden", "true");
@@ -909,7 +915,9 @@ function buildBoard(categories = state.categories) {
         cell.append(card);
       } else if (index === total - 1) {
         cell.classList.add("goal");
-        card.style.setProperty("--card-color", "#ffe4c7");
+        const goalColor = getCardColor("Ziel");
+        card.style.setProperty("--card-color", goalColor);
+        card.style.setProperty("--card-text-color", getReadableTextColor(goalColor));
         const icon = document.createElement("span");
         icon.className = "category-icon";
         icon.setAttribute("aria-hidden", "true");
@@ -921,6 +929,7 @@ function buildBoard(categories = state.categories) {
         if (category) {
           const visuals = CATEGORY_VISUALS[category];
           card.style.setProperty("--card-color", visuals?.color ?? "#ffffff");
+          card.style.setProperty("--card-text-color", getReadableTextColor(visuals?.color ?? "#ffffff"));
           const icon = document.createElement("span");
           icon.className = "category-icon";
           icon.setAttribute("aria-hidden", "true");

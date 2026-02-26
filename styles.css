@@ -2,35 +2,61 @@
   color-scheme: light;
   --header-base-height: 64px;
   --header-height: calc(var(--header-base-height) + env(safe-area-inset-top, 0px));
-  --bg: #f5ece3;
-  --panel: #fff9f2;
-  --card: #fff5ea;
-  --surface-alt: #f5e8d9;
-  --text: #2f261f;
-  --muted: #6f6154;
-  --accent: #ce7a2f;
-  --button: #2f5f3f;
-  --button-text: #ffffff;
-  --button-hover: #284f35;
-  --button-active: #22442d;
-  --button-disabled: #a9bdaf;
-  --success: #2e5e3f;
-  --success-hover: #285238;
-  --success-active: #22472f;
-  --danger: #b3562b;
-  --danger-hover: #9d4b25;
-  --danger-active: #883f1f;
-  --board: #f2e6d7;
-  --border: #d8c5af;
-  --board-card-border: #000000;
-  --shadow: rgba(73, 47, 29, 0.14);
-  --overlay: rgba(47, 38, 31, 0.38);
-  --pastel-1: rgba(139, 90, 53, 0.2);
-  --pastel-2: rgba(46, 94, 63, 0.18);
-  --pastel-3: rgba(206, 122, 47, 0.22);
-  --pastel-4: rgba(255, 249, 242, 0.82);
+  --color-bg: #1F2A1E;
+  --color-surface: #F3E9D3;
+  --color-text: #1E1E1E;
+  --color-text-on-dark: #FFFFFF;
+  --color-border: #8B5E34;
+  --color-muted: #5C6A5A;
+  --color-overlay: rgba(20, 26, 20, 0.55);
+  --color-primary: #3F6B3A;
+  --color-primary-hover: #4B7E46;
+  --color-secondary: #4F86A6;
+  --color-secondary-hover: #629DBD;
+  --color-accent: #E3B23C;
+  --color-warning: #C76A2A;
+  --color-success: #3F6B3A;
+  --color-info: #4F86A6;
+  --color-disabled-bg: rgba(255,255,255,0.35);
+  --color-disabled-text: rgba(30,30,30,0.45);
+  --card-zeichnen: #6B4E8A;
+  --card-erklaeren: #4F86A6;
+  --card-quizfrage: #E3B23C;
+  --card-pantomime: #C76A2A;
+  --card-start: #3F6B3A;
+  --card-ziel: #3F6B3A;
+
+  --bg: var(--color-bg);
+  --panel: var(--color-surface);
+  --card: #F8F0DD;
+  --surface-alt: #EBDDBF;
+  --text: var(--color-text);
+  --muted: var(--color-muted);
+  --accent: var(--color-accent);
+  --button: var(--color-primary);
+  --button-text: var(--color-text-on-dark);
+  --button-hover: var(--color-primary-hover);
+  --button-active: color-mix(in srgb, var(--color-primary) 80%, #000000);
+  --button-disabled: var(--color-disabled-bg);
+  --success: var(--color-success);
+  --success-hover: var(--color-primary-hover);
+  --success-active: color-mix(in srgb, var(--color-success) 80%, #000000);
+  --danger: var(--color-warning);
+  --danger-hover: color-mix(in srgb, var(--color-warning) 82%, #000000);
+  --danger-active: color-mix(in srgb, var(--color-warning) 70%, #000000);
+  --board: #E8DBC1;
+  --border: var(--color-border);
+  --board-card-border: color-mix(in srgb, var(--color-border) 80%, #1E1E1E);
+  --shadow: rgba(12, 20, 12, 0.25);
+  --overlay: var(--color-overlay);
+  --pastel-1: color-mix(in srgb, var(--color-warning) 22%, transparent);
+  --pastel-2: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  --pastel-3: color-mix(in srgb, var(--color-accent) 24%, transparent);
+  --pastel-4: color-mix(in srgb, var(--color-surface) 84%, transparent);
   --board-cell-max: 12vmin;
+  --app-bg: var(--color-bg);
 }
+
 
 * {
   box-sizing: border-box;
@@ -66,8 +92,9 @@ body.game-active .app {
   left: 0;
   width: 100%;
   height: var(--header-height);
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--color-bg) 48%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
   z-index: 40;
   display: flex;
   align-items: center;
@@ -88,16 +115,28 @@ body.game-active .app {
 }
 
 .icon-button {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 35%, var(--color-surface));
+  color: var(--color-text-on-dark);
   display: grid;
   place-items: center;
   font-size: 1.2rem;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-muted);
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-accent) 72%, transparent);
+  outline-offset: 1px;
 }
 
 .qr-icon {
@@ -166,6 +205,7 @@ body.fullscreen .board {
   background: var(--panel);
   padding: clamp(12px, 1.8vw, 20px);
   border-radius: 16px;
+  border: 1px solid var(--border);
   box-shadow: 0 10px 30px var(--shadow);
 }
 
@@ -251,6 +291,7 @@ body.fullscreen .board {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 10px 12px;
+  min-height: 44px;
 }
 
 .field-group {
@@ -343,9 +384,9 @@ body.fullscreen .board {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 35%, var(--color-surface));
+  color: var(--color-text-on-dark);
   font-size: 1.25rem;
   font-weight: 700;
   display: inline-grid;
@@ -363,9 +404,9 @@ body.fullscreen .board {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 35%, var(--color-surface));
+  color: var(--color-text-on-dark);
   font-size: 1.25rem;
   font-weight: 700;
   display: inline-grid;
@@ -493,12 +534,14 @@ body.fullscreen .board {
 }
 
 .count-button {
+  min-height: 44px;
+  min-width: 44px;
   width: 36px;
   height: 36px;
   border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 35%, var(--color-surface));
+  color: var(--color-text-on-dark);
   font-size: 1.2rem;
   font-weight: 700;
   display: grid;
@@ -549,9 +592,9 @@ body.fullscreen .board {
   width: 28px;
   height: 28px;
   border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 35%, var(--color-surface));
+  color: var(--color-text-on-dark);
   display: grid;
   place-items: center;
   font-size: 1.1rem;
@@ -627,6 +670,7 @@ body.fullscreen .board {
 
 .primary {
   width: 100%;
+  min-height: 48px;
   padding: 16px;
   border-radius: 999px;
   background: var(--button);
@@ -748,6 +792,7 @@ body.card-view-active .game-top {
   inset: clamp(4px, calc(var(--board-cell) * 0.08), 10px);
   border-radius: clamp(8px, 1.4vmin, 14px);
   background: var(--card-color, var(--card));
+  color: var(--card-text-color, var(--color-text));
   border: 1px solid var(--board-card-border);
   display: flex;
   align-items: center;
@@ -768,7 +813,7 @@ body.card-view-active .game-top {
 
 .category-icon.icon-fallback {
   background-image: none;
-  color: var(--icon-color, rgba(0, 0, 0, 0.5));
+  color: var(--icon-color, currentColor);
   font-size: clamp(0.9rem, calc(var(--board-cell) * 0.28), 1.8rem);
   display: grid;
   place-items: center;
@@ -1054,13 +1099,16 @@ button {
 }
 
 button:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  outline: 3px solid color-mix(in srgb, var(--color-accent) 78%, transparent);
   outline-offset: 2px;
 }
 
 button:disabled {
   cursor: not-allowed;
-  opacity: 0.7;
+  opacity: 1;
+  background: var(--color-disabled-bg) !important;
+  color: var(--color-disabled-text) !important;
+  border-color: color-mix(in srgb, var(--color-border) 45%, transparent);
 }
 
 .primary:hover:not(:disabled) {
@@ -1097,9 +1145,9 @@ button:disabled {
 }
 
 .ghost {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text);
+  background: var(--color-secondary);
+  border: 1px solid color-mix(in srgb, var(--color-secondary) 75%, #000000);
+  color: var(--color-text-on-dark);
   padding: 10px;
   border-radius: 12px;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
@@ -1124,13 +1172,13 @@ button:disabled {
 .ghost:hover:not(:disabled),
 .icon-button:hover:not(:disabled),
 .dice:hover:not(:disabled) {
-  background: var(--card);
+  background: var(--color-secondary-hover);
 }
 
 .ghost:active:not(:disabled),
 .icon-button:active:not(:disabled),
 .dice:active:not(:disabled) {
-  background: var(--surface-alt);
+  background: color-mix(in srgb, var(--color-secondary) 78%, #000000);
   transform: translateY(1px);
 }
 
@@ -1384,9 +1432,9 @@ button:disabled {
 .card-editor-actions-right select {
   min-height: 40px;
   border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 35%, var(--color-surface));
+  color: var(--color-text-on-dark);
   padding: 8px 10px;
 }
 
@@ -1485,6 +1533,7 @@ button:disabled {
 
   .card-editor-actions .primary,
   .card-editor-actions .ghost {
+
     width: 100%;
   }
 
@@ -1521,7 +1570,9 @@ button:disabled {
 }
 
 .overlay-content {
-  background: var(--surface-alt);
+
+  background: var(--panel);
+  border: 1px solid var(--border);
   padding: 30px 40px;
   border-radius: 20px;
   animation: pop 0.6s ease;
@@ -1545,6 +1596,7 @@ button:disabled {
 }
 
 .turn-overlay-panel {
+
   position: fixed;
   top: 0;
   left: 0;
@@ -1552,6 +1604,7 @@ button:disabled {
   height: var(--panel-height, 160px);
   transform: translate(var(--panel-x, 0px), var(--panel-y, 0px));
   background: var(--panel);
+  border: 1px solid var(--border);
   border-radius: 24px;
   padding: 32px;
   display: grid;
@@ -1560,14 +1613,16 @@ button:disabled {
   transition: transform 0.7s ease, width 0.7s ease, height 0.7s ease, border-radius 0.7s ease;
 }
 
-.turn-overlay.category .turn-overlay-panel {
+.turn-overlay.category.turn-overlay-panel {
+
   width: var(--panel-category-width, 33vw);
   height: var(--panel-category-height, 33vh);
   transform: translate(var(--panel-category-x, 0px), var(--panel-category-y, 0px));
   box-shadow: 0 18px 40px var(--shadow);
 }
 
-.turn-overlay.expanded .turn-overlay-panel {
+.turn-overlay.expanded.turn-overlay-panel {
+
   width: 100vw;
   height: 100vh;
   transform: translate(0, 0);
@@ -1715,7 +1770,7 @@ button:disabled {
 
 .turn-action-button.is-swap {
   background: var(--accent);
-  color: #1f2937;
+  color: var(--color-text);
 }
 
 .turn-action-button:hover:not(:disabled) {

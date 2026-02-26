@@ -675,6 +675,27 @@ body.fullscreen .board {
   display: block;
 }
 
+.primary.menu-start-button {
+  border: 2px solid color-mix(in srgb, var(--color-accent) 72%, #ffffff);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-accent) 88%, #000000) 0%,
+    color-mix(in srgb, var(--color-warning) 62%, var(--color-primary)) 100%
+  );
+  color: color-mix(in srgb, var(--color-text) 88%, #ffffff);
+  box-shadow:
+    0 10px 24px color-mix(in srgb, var(--color-warning) 38%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--color-surface) 40%, transparent);
+}
+
+.primary.menu-start-button:hover:not(:disabled) {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-accent) 96%, #000000) 0%,
+    color-mix(in srgb, var(--color-warning) 74%, var(--color-primary)) 100%
+  );
+}
+
 .primary {
   width: 100%;
   min-height: 48px;

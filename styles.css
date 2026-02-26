@@ -231,18 +231,11 @@ body.fullscreen .board {
   height: 100vh;
   z-index: 0;
   pointer-events: none;
-}
-
-.menu-background-picture,
-.menu-background-image {
-  display: block;
-  width: 100vw;
-  height: 100vh;
-}
-
-.menu-background-image {
-  object-fit: cover;
-  object-position: center;
+  background:
+    radial-gradient(circle at 18% 15%, color-mix(in srgb, var(--card-erklaeren) 42%, transparent) 0%, transparent 46%),
+    radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--card-zeichnen) 34%, transparent) 0%, transparent 44%),
+    radial-gradient(circle at 50% 82%, color-mix(in srgb, var(--card-quizfrage) 30%, transparent) 0%, transparent 52%),
+    linear-gradient(160deg, color-mix(in srgb, var(--color-bg) 88%, #000000) 0%, color-mix(in srgb, var(--color-primary) 68%, var(--color-bg)) 48%, color-mix(in srgb, var(--card-pantomime) 30%, var(--color-bg)) 100%);
 }
 
 #menu .card h2 {

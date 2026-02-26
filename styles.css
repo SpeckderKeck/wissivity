@@ -1746,6 +1746,9 @@ button:disabled {
   gap: 0;
   overflow: hidden;
   text-align: center;
+  max-width: none;
+  justify-self: stretch;
+  align-self: stretch;
   --term-scale: 1;
   --taboo-scale: 1;
 }

@@ -1194,6 +1194,7 @@ function handleRoll() {
   }
 
   statusText?.classList.add("hidden");
+  rollButton?.classList.remove("dice--pulse");
 
   const roll = Math.floor(Math.random() * 6) + 1;
   state.pendingRoll = roll;

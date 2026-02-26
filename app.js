@@ -4,6 +4,9 @@ const teamCountDecrease = document.getElementById("team-count-decrease");
 const teamCountIncrease = document.getElementById("team-count-increase");
 const teamListContainer = document.getElementById("team-list");
 const startButton = document.getElementById("start-game");
+const landingStartButton = document.getElementById("landing-start");
+const landingPanel = document.getElementById("landing");
+const landingQr = document.getElementById("landing-qr");
 const menuPanel = document.getElementById("menu");
 const gamePanel = document.getElementById("game");
 const board = document.getElementById("board");
@@ -168,15 +171,33 @@ function setPanelState(panel, isActive) {
 }
 
 function showMenuPanel() {
+  setPanelState(landingPanel, false);
   setPanelState(menuPanel, true);
   setPanelState(gamePanel, false);
+  document.body.classList.remove("landing-active");
   document.body.classList.remove("game-active");
 }
 
 function showGamePanel() {
+  setPanelState(landingPanel, false);
   setPanelState(menuPanel, false);
   setPanelState(gamePanel, true);
+  document.body.classList.remove("landing-active");
   document.body.classList.add("game-active");
+}
+
+function showLandingPanel() {
+  setPanelState(landingPanel, true);
+  setPanelState(menuPanel, false);
+  setPanelState(gamePanel, false);
+  document.body.classList.add("landing-active");
+  document.body.classList.remove("game-active");
+}
+
+function updateLandingQrCode() {
+  if (!landingQr) return;
+  const pageUrl = window.location.href;
+  landingQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=480x480&data=${encodeURIComponent(pageUrl)}`;
 }
 
 const CATEGORY_CONFIG = {
@@ -2567,8 +2588,10 @@ boardSizeSelect?.addEventListener("change", () => {
   applyBoardSize(selectedBoardSize);
 });
 
-showMenuPanel();
+showLandingPanel();
+updateLandingQrCode();
 
+landingStartButton?.addEventListener("click", showMenuPanel);
 startButton.addEventListener("click", handleStartGame);
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;

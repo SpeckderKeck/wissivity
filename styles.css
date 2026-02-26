@@ -1936,3 +1936,54 @@ button:disabled {
     gap: 14px;
   }
 }
+
+body.landing-open {
+  overflow: hidden;
+}
+
+.landing-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  z-index: 9999;
+  background: #050505;
+}
+
+.landing-overlay__media,
+.landing-overlay__media img {
+  width: 100%;
+  height: 100%;
+}
+
+.landing-overlay__media img {
+  display: block;
+  object-fit: cover;
+  object-position: center;
+}
+
+.landing-overlay__actions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+
+.landing-overlay__start-button {
+  pointer-events: auto;
+  min-height: 48px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.85rem 1.5rem;
+  background: #f2db34;
+  color: #111;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+}

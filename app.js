@@ -90,6 +90,7 @@ function createFullscreenCardOverlay({
       update: () => {},
       setOpen: () => {},
       fitTermText: () => {},
+      fitTabooText: () => {},
     };
   }
 
@@ -105,8 +106,26 @@ function createFullscreenCardOverlay({
     }
   };
 
+  const fitTabooText = () => {
+    root.style.setProperty("--taboo-scale", "1");
+    const tabooItems = tabooListElement.querySelectorAll("li");
+    if (tabooItems.length === 0) return;
+    const minScale = 0.6;
+    const scaleStep = 0.04;
+    let nextScale = 1;
+
+    while (
+      nextScale > minScale
+      && Array.from(tabooItems).some((item) => item.scrollWidth > item.clientWidth + 1)
+    ) {
+      nextScale -= scaleStep;
+      root.style.setProperty("--taboo-scale", nextScale.toFixed(2));
+    }
+  };
+
   const resizeObserver = new ResizeObserver(() => {
     fitTermText();
+    fitTabooText();
   });
   resizeObserver.observe(root);
 
@@ -115,6 +134,9 @@ function createFullscreenCardOverlay({
       if (categoryElement) {
         categoryElement.textContent = category || "Kategorie";
       }
+      const categoryColor = CATEGORY_VISUALS[category]?.color ?? getCardColor(category);
+      root.style.setProperty("--fullscreen-card-bg", categoryColor ?? "#F3E9D3");
+      root.style.setProperty("--fullscreen-card-text", getReadableTextColor(categoryColor ?? "#F3E9D3"));
       termElement.textContent = term || "Keine Karte";
       tabooListElement.innerHTML = "";
       tabooTerms.forEach((taboo) => {
@@ -126,16 +148,19 @@ function createFullscreenCardOverlay({
         hintElement.classList.toggle("hidden", !showHint);
       }
       fitTermText();
+      fitTabooText();
     },
     setOpen: ({ isOpen }) => {
-      root.classList.toggle("fullscreen-card-overlay", isOpen);
+      root.classList.toggle("fullscreen-game-card", isOpen);
       root.classList.toggle("hidden", !isOpen);
       document.body.classList.toggle("fullscreen-card-open", isOpen);
       if (isOpen) {
         fitTermText();
+        fitTabooText();
       }
     },
     fitTermText,
+    fitTabooText,
   };
 }
 
@@ -2498,6 +2523,7 @@ function hideTurnOverlay() {
   fullscreenCardOverlay.setOpen({ isOpen: false });
   turnOverlay.classList.remove("expanded");
   turnOverlay.classList.remove("category");
+  turnOverlay.classList.remove("fullscreen-state");
   turnOverlay.classList.remove("active");
   requestAnimationFrame(() => {
     renderBoardPath();
@@ -2537,6 +2563,7 @@ function showWordCard() {
   turnCountdownCard.classList.add("hidden");
   turnOverlay.classList.remove("category");
   turnOverlay.classList.add("expanded");
+  turnOverlay.classList.add("fullscreen-state");
   fullscreenCardOverlay.setOpen({ isOpen: true });
   state.phase = GAME_PHASES.FULLSCREEN_CARD;
   const card = getCardByCategory(state.pendingCategory);

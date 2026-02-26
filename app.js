@@ -99,6 +99,39 @@ const mainMenuButton = document.getElementById("main-menu");
 const boardSizeInputs = document.querySelectorAll('input[name="board-size"]');
 const teamStatusList = document.getElementById("team-status-list");
 
+function createMenuBackground() {
+  const layer = document.createElement("div");
+  layer.className = "menu-background";
+  layer.setAttribute("aria-hidden", "true");
+
+  const picture = document.createElement("picture");
+  picture.className = "menu-background-picture";
+
+  const phoneSource = document.createElement("source");
+  phoneSource.media = "(max-width: 768px)";
+  phoneSource.srcset = "/menuphone.png";
+
+  const desktopImage = document.createElement("img");
+  desktopImage.className = "menu-background-image";
+  desktopImage.src = "/menupc.png";
+  desktopImage.alt = "";
+  desktopImage.setAttribute("aria-hidden", "true");
+  desktopImage.loading = "eager";
+
+  picture.append(phoneSource, desktopImage);
+  layer.append(picture);
+  return layer;
+}
+
+function attachMenuBackground(menuElement) {
+  if (!menuElement || menuElement.querySelector(".menu-background")) {
+    return;
+  }
+  menuElement.prepend(createMenuBackground());
+}
+
+attachMenuBackground(menuPanel);
+
 function setStatusMessage(message, { pulseDice = false } = {}) {
   if (statusText) {
     statusText.classList.remove("hidden");

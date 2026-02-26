@@ -2162,7 +2162,12 @@ body.landing-open {
 }
 
 @media (max-width: 768px) {
+  .landing-overlay__media img {
+    object-position: center center;
+  }
+
   .landing-overlay__actions {
     padding-bottom: calc(env(safe-area-inset-bottom) + 1.5rem);
+    transform: translateY(-48px);
   }
 }

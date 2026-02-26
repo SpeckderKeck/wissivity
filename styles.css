@@ -659,7 +659,7 @@ body.fullscreen .board {
   position: sticky;
   bottom: 0;
   padding-top: clamp(8px, 1.5vh, 18px);
-  background: linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--app-bg) 85%, transparent) 34%, var(--app-bg) 100%);
+  background: transparent;
 }
 
 .menu-start-button {

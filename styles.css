@@ -1615,11 +1615,32 @@ button:disabled {
 
 .turn-overlay.fullscreen-state {
   background: transparent;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .turn-overlay.fullscreen-state .turn-overlay-panel {
-  opacity: 0;
+  width: 100dvw;
+  height: calc(100dvh - var(--header-height));
+  transform: translate(0, var(--header-height));
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.turn-overlay.fullscreen-state .turn-category,
+.turn-overlay.fullscreen-state .turn-countdown-card {
+  display: none;
+}
+
+.turn-overlay.fullscreen-state #turn-word {
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+}
+
+.turn-overlay.fullscreen-state #turn-word.hidden {
   pointer-events: none;
 }
 

@@ -223,16 +223,21 @@ function setStatusMessage(message, { pulseDice = false } = {}) {
 }
 
 function setNextRollStatus(teamIndex, { pulseDice = true } = {}) {
-  if (!statusText) {
-    rollButton?.classList.toggle("dice--pulse", pulseDice);
-    return;
+  if (statusText) {
+    statusText.classList.add("hidden");
+    statusText.classList.remove("status--next-roll");
+    statusText.textContent = "";
   }
-  const team = state.teams[teamIndex] ?? { name: "Team", icon: "" };
-  statusText.classList.remove("hidden");
-  statusText.textContent = "";
-  statusText.classList.add("status--next-roll");
-  statusText.textContent = `${team.name || "Team"} würfelt`;
   rollButton?.classList.toggle("dice--pulse", pulseDice);
+}
+
+function isWaitingForRoll(teamIndex) {
+  return (
+    teamIndex === state.currentTeam
+    && state.pendingRoll === null
+    && state.phase === GAME_PHASES.IDLE
+    && !state.gameOver
+  );
 }
 
 function showDiceOverlay(roll) {
@@ -1151,9 +1156,16 @@ function renderTeamStatus() {
     }
     const info = document.createElement("div");
     info.className = "team-status-info";
-    const label = document.createElement("span");
-    label.textContent = formatTeamLabel(index);
-    info.append(label);
+    const icon = document.createElement("span");
+    icon.className = "team-status-icon";
+    icon.textContent = team.icon || "🎯";
+    if (isWaitingForRoll(index)) {
+      icon.classList.add("is-waiting-roll");
+    }
+    const name = document.createElement("span");
+    name.className = "team-status-name";
+    name.textContent = team.name || `Team ${index + 1}`;
+    info.append(icon, name);
     const position = document.createElement("div");
     position.className = "team-status-position";
     position.textContent = `Feld ${state.positions[index] + 1}`;
@@ -1297,6 +1309,7 @@ function handleRoll() {
 
   const roll = Math.floor(Math.random() * 6) + 1;
   state.pendingRoll = roll;
+  renderTeamStatus();
   showDiceOverlay(roll);
   const previousPositions = [...state.positions];
   state.history.push({
@@ -1380,7 +1393,6 @@ function finishTurn(isCorrect, timedOut = false, { returnToPrevious = false } = 
     showWinner(formatTeamLabel(teamIndex));
     return;
   }
-  setStatusMessage(`${formatTeamLabel(state.currentTeam)} beendet den Zug.`);
   state.currentTeam = (state.currentTeam + 1) % state.teams.length;
   setNextRollStatus(state.currentTeam);
   renderTeamStatus();

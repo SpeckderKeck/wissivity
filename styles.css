@@ -1025,6 +1025,19 @@ body.fullscreen-card-open {
   font-weight: 600;
 }
 
+.team-status-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.team-status-icon.is-waiting-roll {
+  animation: team-icon-blink 0.9s ease-in-out infinite;
+}
+
+.team-status-name {
+  line-height: 1.2;
+}
+
 
 .team-status-position {
   font-size: 0.9rem;
@@ -1326,6 +1339,18 @@ button:disabled {
 
 .dice--pulse {
   animation: dice-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes team-icon-blink {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.88);
+  }
 }
 
 .dice-overlay {

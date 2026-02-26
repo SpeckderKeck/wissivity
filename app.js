@@ -1186,7 +1186,7 @@ function setQuizAnswerCard(card) {
     }
     return;
   }
-  turnWordTitle.textContent = card.term;
+  turnWordTitle.textContent = "Antwort";
   turnTabooList.innerHTML = "";
   if (turnAnswer) {
     const answerText = card.answer ? `Antwort: ${card.answer}` : "Antwort fehlt.";

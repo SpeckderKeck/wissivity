@@ -119,31 +119,9 @@ function setNextRollStatus(teamIndex, { pulseDice = true } = {}) {
   }
   const team = state.teams[teamIndex] ?? { name: "Team", icon: "" };
   statusText.classList.remove("hidden");
-  statusText.replaceChildren();
+  statusText.textContent = "";
   statusText.classList.add("status--next-roll");
-
-  const closeButton = document.createElement("button");
-  closeButton.type = "button";
-  closeButton.className = "status-close-button";
-  closeButton.setAttribute("aria-label", "Hinweis schließen");
-  closeButton.textContent = "×";
-  closeButton.addEventListener("click", () => {
-    statusText.classList.add("hidden");
-  });
-  statusText.append(closeButton);
-
-  if (team.icon) {
-    const icon = document.createElement("span");
-    icon.className = "status-next-roll-icon";
-    icon.setAttribute("aria-hidden", "true");
-    icon.textContent = team.icon;
-    statusText.append(icon);
-  }
-
-  const label = document.createElement("span");
-  label.className = "status-next-roll-label";
-  label.textContent = `${team.name || "Team"} würfelt`;
-  statusText.append(label);
+  statusText.textContent = `${team.name || "Team"} würfelt`;
   rollButton?.classList.toggle("dice--pulse", pulseDice);
 }
 

@@ -1275,16 +1275,16 @@ function setQuizQuestionCard(card) {
 
 function setQuizAnswerCard(card) {
   turnWord?.classList.remove("is-quiz-question");
+  const answerText = card?.answer || "Antwort fehlt.";
   fullscreenCardOverlay.update({
     category: state.pendingCategory,
-    term: card?.term ?? "Antwort",
+    term: answerText,
     tabooTerms: [],
     showHint: false,
   });
   if (turnAnswer) {
-    const answerText = card?.answer ? `Antwort: ${card.answer}` : "Antwort fehlt.";
-    turnAnswer.textContent = answerText;
-    turnAnswer.classList.remove("hidden");
+    turnAnswer.textContent = "";
+    turnAnswer.classList.add("hidden");
   }
 }
 

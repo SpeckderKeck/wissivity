@@ -178,13 +178,12 @@ body.fullscreen .board {
   isolation: isolate;
 }
 
-#menu > *:not(.panel-background),
-#game > *:not(.panel-background) {
+#menu > *:not(.menu-background) {
   position: relative;
   z-index: 1;
 }
 
-.panel-background {
+.menu-background {
   position: fixed;
   inset: 0;
   width: 100vw;
@@ -193,14 +192,14 @@ body.fullscreen .board {
   pointer-events: none;
 }
 
-.panel-background-picture,
-.panel-background-image {
+.menu-background-picture,
+.menu-background-image {
   display: block;
   width: 100vw;
   height: 100vh;
 }
 
-.panel-background-image {
+.menu-background-image {
   object-fit: cover;
   object-position: center;
 }

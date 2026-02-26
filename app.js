@@ -99,20 +99,20 @@ const mainMenuButton = document.getElementById("main-menu");
 const boardSizeInputs = document.querySelectorAll('input[name="board-size"]');
 const teamStatusList = document.getElementById("team-status-list");
 
-function createPanelBackground() {
+function createMenuBackground() {
   const layer = document.createElement("div");
-  layer.className = "panel-background";
+  layer.className = "menu-background";
   layer.setAttribute("aria-hidden", "true");
 
   const picture = document.createElement("picture");
-  picture.className = "panel-background-picture";
+  picture.className = "menu-background-picture";
 
   const phoneSource = document.createElement("source");
   phoneSource.media = "(max-width: 768px)";
   phoneSource.srcset = "/menuphone.png";
 
   const desktopImage = document.createElement("img");
-  desktopImage.className = "panel-background-image";
+  desktopImage.className = "menu-background-image";
   desktopImage.src = "/menupc.png";
   desktopImage.alt = "";
   desktopImage.setAttribute("aria-hidden", "true");
@@ -123,15 +123,14 @@ function createPanelBackground() {
   return layer;
 }
 
-function attachPanelBackground(panelElement) {
-  if (!panelElement || panelElement.querySelector(".panel-background")) {
+function attachMenuBackground(menuElement) {
+  if (!menuElement || menuElement.querySelector(".menu-background")) {
     return;
   }
-  panelElement.prepend(createPanelBackground());
+  menuElement.prepend(createMenuBackground());
 }
 
-attachPanelBackground(menuPanel);
-attachPanelBackground(gamePanel);
+attachMenuBackground(menuPanel);
 
 function setStatusMessage(message, { pulseDice = false } = {}) {
   if (statusText) {

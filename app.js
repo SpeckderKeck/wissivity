@@ -1250,12 +1250,17 @@ function setQuizQuestionCard(card) {
 
 function setQuizAnswerCard(card) {
   turnWord?.classList.remove("is-quiz-question");
-  fullscreenCardOverlay.update({
-    category: state.pendingCategory,
-    term: card?.term ?? "Antwort",
-    tabooTerms: [],
-    showHint: false,
-  });
+  if (!card) {
+    turnWordTitle.textContent = "Antwort";
+    turnTabooList.innerHTML = "";
+    if (turnAnswer) {
+      turnAnswer.textContent = "Antwort fehlt.";
+      turnAnswer.classList.remove("hidden");
+    }
+    return;
+  }
+  turnWordTitle.textContent = "Antwort";
+  turnTabooList.innerHTML = "";
   if (turnAnswer) {
     const answerText = card?.answer ? `Antwort: ${card.answer}` : "Antwort fehlt.";
     turnAnswer.textContent = answerText;

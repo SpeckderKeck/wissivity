@@ -713,6 +713,18 @@ function setCategorySelectionInvalidState(controls, isInvalid) {
   });
 }
 
+function updateMainMenuRequiredSelectionState() {
+  const selectedDatasetKeys = readSelectedDatasetKeys();
+  const hasSelectedDatasets = selectedDatasetKeys.length > 0;
+  const selectedCategories = getSelectedCategories(menuCategoryControls);
+  const hasSelectedCategories = selectedCategories.length > 0;
+
+  setDatasetSelectionInvalidState(!hasSelectedDatasets);
+  setCategorySelectionInvalidState(menuCategoryControls, !hasSelectedCategories);
+
+  return hasSelectedDatasets && hasSelectedCategories;
+}
+
 function readCategoryTimes(controls) {
   return controls.reduce((times, control) => {
     times[control.category] = Number.parseInt(control.timeSelect.value, 10);
@@ -1331,22 +1343,14 @@ function handleUndo() {
 }
 
 function handleStartGame() {
-  const selectedDatasetKeys = readSelectedDatasetKeys();
-  const hasSelectedDatasets = selectedDatasetKeys.length > 0;
-  const hasLoadedCards = Array.isArray(state.cards) && state.cards.length > 0;
-  if (!hasSelectedDatasets && !hasLoadedCards) {
-    setDatasetSelectionInvalidState(true);
+  const isMainMenuComplete = updateMainMenuRequiredSelectionState();
+  if (!isMainMenuComplete) {
     return;
   }
-  setDatasetSelectionInvalidState(false);
+
   applySelectedDatasets();
 
   const selectedCategories = getSelectedCategories(menuCategoryControls);
-  if (selectedCategories.length === 0) {
-    setCategorySelectionInvalidState(menuCategoryControls, true);
-    return;
-  }
-  setCategorySelectionInvalidState(menuCategoryControls, false);
   const selectedBoardSize = getSelectedBoardSize(boardSizeSelect ?? boardSizeInputs);
   syncBoardSizeControls(selectedBoardSize);
   state.categories = selectedCategories;
@@ -1906,6 +1910,7 @@ function createDatasetSelectRow(currentKey = "") {
     row.remove();
     applySelectedDatasets();
     updateDatasetRowControls();
+    updateMainMenuRequiredSelectionState();
   });
   row.append(removeButton);
 
@@ -2001,13 +2006,14 @@ function addDatasetSelect(initialKey = "") {
 
   const { row, select } = createDatasetSelectRow(initialKey);
   select.addEventListener("change", () => {
-    setDatasetSelectionInvalidState(false);
     applySelectedDatasets();
     updateDatasetRowControls();
+    updateMainMenuRequiredSelectionState();
   });
   datasetSelectList.append(row);
   applySelectedDatasets();
   updateDatasetRowControls();
+  updateMainMenuRequiredSelectionState();
 }
 
 function populateMainDatasetSelect() {
@@ -2387,6 +2393,7 @@ function handleMainMenu() {
   stopTimer();
   hideTurnOverlay();
   showMenuPanel();
+  updateMainMenuRequiredSelectionState();
 }
 
 function setOverlayStartFromCell() {
@@ -2587,6 +2594,7 @@ boardSizeSelect?.addEventListener("change", () => {
 });
 
 showMenuPanel();
+updateMainMenuRequiredSelectionState();
 
 startButton.addEventListener("click", handleStartGame);
 document.addEventListener("keydown", (event) => {
@@ -2604,8 +2612,8 @@ undoButton.addEventListener("click", handleUndo);
 csvUploadButton?.addEventListener("click", handleCsvUpload);
 csvRefreshListButton?.addEventListener("click", refreshPublicCsvList);
 storageDatasetSelect?.addEventListener("change", (event) => {
-  setDatasetSelectionInvalidState(false);
   loadStorageDataset(event.target.value);
+  updateMainMenuRequiredSelectionState();
 });
 csvSaveNewButton?.addEventListener("click", saveUploadedCsvAsNewDataset);
 csvOverwriteButton?.addEventListener("click", overwriteDatasetWithUploadedCsv);
@@ -2642,12 +2650,12 @@ datasetAddButton?.addEventListener("click", () => {
   addDatasetSelect("");
 });
 datasetSelect?.addEventListener("change", () => {
-  setDatasetSelectionInvalidState(false);
   applySelectedDatasets();
+  updateMainMenuRequiredSelectionState();
 });
 menuCategoryControls.forEach((control) => {
   control.checkbox?.addEventListener("change", () => {
-    setCategorySelectionInvalidState(menuCategoryControls, false);
+    updateMainMenuRequiredSelectionState();
   });
 });
 gameCategoryControls.forEach((control) => {

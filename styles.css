@@ -2139,3 +2139,9 @@ body.landing-open {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
   cursor: pointer;
 }
+
+@media (max-width: 768px) {
+  .landing-overlay__actions {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 1.5rem);
+  }
+}

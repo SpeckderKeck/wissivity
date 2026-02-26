@@ -682,6 +682,19 @@ function getSelectedCategories(controls) {
   return controls.filter((control) => control.checkbox.checked).map((control) => control.category);
 }
 
+function setDatasetSelectionInvalidState(isInvalid) {
+  datasetSelectList?.classList.toggle("selection-invalid", isInvalid);
+  datasetSelect?.classList.toggle("selection-invalid", isInvalid);
+  storageDatasetSelect?.classList.toggle("selection-invalid", isInvalid);
+}
+
+function setCategorySelectionInvalidState(controls, isInvalid) {
+  controls.forEach((control) => {
+    const row = control.checkbox?.closest(".category-setting");
+    row?.classList.toggle("selection-invalid", isInvalid);
+  });
+}
+
 function readCategoryTimes(controls) {
   return controls.reduce((times, control) => {
     times[control.category] = Number.parseInt(control.timeSelect.value, 10);
@@ -1298,16 +1311,18 @@ function handleStartGame() {
   const hasSelectedDatasets = selectedDatasetKeys.length > 0;
   const hasLoadedCards = Array.isArray(state.cards) && state.cards.length > 0;
   if (!hasSelectedDatasets && !hasLoadedCards) {
-    alert("Bitte mindestens einen Kartensatz wählen.");
+    setDatasetSelectionInvalidState(true);
     return;
   }
+  setDatasetSelectionInvalidState(false);
   applySelectedDatasets();
 
   const selectedCategories = getSelectedCategories(menuCategoryControls);
   if (selectedCategories.length === 0) {
-    alert("Bitte mindestens eine Kategorie wählen.");
+    setCategorySelectionInvalidState(menuCategoryControls, true);
     return;
   }
+  setCategorySelectionInvalidState(menuCategoryControls, false);
   const selectedBoardSize = getSelectedBoardSize(boardSizeSelect ?? boardSizeInputs);
   syncBoardSizeControls(selectedBoardSize);
   state.categories = selectedCategories;
@@ -1932,14 +1947,14 @@ function applySelectedDatasets() {
 
   state.cards = mergedCards;
 
-  if (selectedKeys.length === 0) {
-    csvStatus.textContent = "Bitte mindestens einen Kartensatz wählen.";
-  } else {
+  if (selectedKeys.length > 0) {
     const labels = selectedKeys
       .map((key) => getDatasetEntryByKey(key)?.label)
       .filter(Boolean)
       .join(" + ");
     csvStatus.textContent = `${labels}: ${state.cards.length} Karten.`;
+  } else if (csvStatus?.textContent === "Bitte mindestens einen Kartensatz wählen.") {
+    csvStatus.textContent = "";
   }
 
   if (csvUpload) {
@@ -1962,6 +1977,7 @@ function addDatasetSelect(initialKey = "") {
 
   const { row, select } = createDatasetSelectRow(initialKey);
   select.addEventListener("change", () => {
+    setDatasetSelectionInvalidState(false);
     applySelectedDatasets();
     updateDatasetRowControls();
   });
@@ -2314,9 +2330,10 @@ function syncSettingsPanel() {
 function applySettingsFromPanel() {
   const selectedCategories = getSelectedCategories(gameCategoryControls);
   if (selectedCategories.length === 0) {
-    alert("Bitte mindestens eine Kategorie wählen.");
+    setCategorySelectionInvalidState(gameCategoryControls, true);
     return;
   }
+  setCategorySelectionInvalidState(gameCategoryControls, false);
   const selectedBoardSize = getSelectedBoardSize(boardSizeSelectGame);
   syncBoardSizeControls(selectedBoardSize);
   state.categories = selectedCategories;
@@ -2563,6 +2580,7 @@ undoButton.addEventListener("click", handleUndo);
 csvUploadButton?.addEventListener("click", handleCsvUpload);
 csvRefreshListButton?.addEventListener("click", refreshPublicCsvList);
 storageDatasetSelect?.addEventListener("change", (event) => {
+  setDatasetSelectionInvalidState(false);
   loadStorageDataset(event.target.value);
 });
 csvSaveNewButton?.addEventListener("click", saveUploadedCsvAsNewDataset);
@@ -2600,7 +2618,18 @@ datasetAddButton?.addEventListener("click", () => {
   addDatasetSelect("");
 });
 datasetSelect?.addEventListener("change", () => {
+  setDatasetSelectionInvalidState(false);
   applySelectedDatasets();
+});
+menuCategoryControls.forEach((control) => {
+  control.checkbox?.addEventListener("change", () => {
+    setCategorySelectionInvalidState(menuCategoryControls, false);
+  });
+});
+gameCategoryControls.forEach((control) => {
+  control.checkbox?.addEventListener("change", () => {
+    setCategorySelectionInvalidState(gameCategoryControls, false);
+  });
 });
 openSettingsButton.addEventListener("click", handleOpenSettings);
 closeSettingsButton.addEventListener("click", handleCloseSettings);

@@ -1385,7 +1385,7 @@ function finishTurn(isCorrect, timedOut = false, { returnToPrevious = false } = 
     state.pendingReturn = { teamIndex, targetPosition };
   }
   state.turnStartPositions = null;
-  const animationText = isCorrect ? "✅" : "❌";
+  const animationText = isCorrect ? "Richtig!" : "❌";
   showOverlay(animationText, 900);
   hideTurnOverlay();
   state.pendingRoll = null;

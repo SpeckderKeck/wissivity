@@ -1256,24 +1256,23 @@ button:disabled {
 }
 
 .status--next-roll {
-  width: min(92dvw, clamp(320px, 45vw, 680px));
-  min-height: clamp(240px, 50vh, 560px);
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: clamp(10px, 1.8vh, 16px);
-  padding: clamp(18px, 4vw, 36px);
-  border-radius: 24px;
-}
-
-.status-next-roll-icon {
-  font-size: clamp(3rem, 10vw, 6rem);
-  line-height: 1;
-}
-
-.status-next-roll-label {
-  font-size: clamp(1.4rem, 4vw, 3rem);
-  line-height: 1.15;
+  position: fixed;
+  left: 50%;
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  bottom: auto;
+  transform: translateX(-50%);
+  width: min(92dvw, 460px);
+  min-height: 0;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--panel) 94%, white 6%);
+  box-shadow: 0 6px 18px rgba(11, 27, 58, 0.12);
+  color: var(--text);
+  font-size: clamp(0.95rem, 1.9vw, 1.15rem);
+  line-height: 1.3;
+  z-index: 41;
+  pointer-events: none;
 }
 
 .game-controls {

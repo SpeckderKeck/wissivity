@@ -5,6 +5,12 @@ const teamCountIncrease = document.getElementById("team-count-increase");
 const teamListContainer = document.getElementById("team-list");
 const startButton = document.getElementById("start-game");
 const menuPanel = document.getElementById("menu");
+const modeSelectionPanel = document.getElementById("mode-selection");
+const speedQuizMenuPanel = document.getElementById("speedquiz-menu");
+const modeBoardButton = document.getElementById("mode-board");
+const modeSpeedQuizButton = document.getElementById("mode-speedquiz");
+const speedQuizDatasetSelect = document.getElementById("speedquiz-dataset-select");
+const speedQuizCategoriesContainer = document.getElementById("speedquiz-categories");
 const gamePanel = document.getElementById("game");
 const board = document.getElementById("board");
 const rollButton = document.getElementById("roll");
@@ -261,12 +267,32 @@ function setPanelState(panel, isActive) {
 }
 
 function showMenuPanel() {
+  setPanelState(modeSelectionPanel, false);
+  setPanelState(speedQuizMenuPanel, false);
   setPanelState(menuPanel, true);
   setPanelState(gamePanel, false);
   document.body.classList.remove("game-active");
 }
 
+function showModeSelectionPanel() {
+  setPanelState(modeSelectionPanel, true);
+  setPanelState(speedQuizMenuPanel, false);
+  setPanelState(menuPanel, false);
+  setPanelState(gamePanel, false);
+  document.body.classList.remove("game-active");
+}
+
+function showSpeedQuizMenuPanel() {
+  setPanelState(modeSelectionPanel, false);
+  setPanelState(speedQuizMenuPanel, true);
+  setPanelState(menuPanel, false);
+  setPanelState(gamePanel, false);
+  document.body.classList.remove("game-active");
+}
+
 function showGamePanel() {
+  setPanelState(modeSelectionPanel, false);
+  setPanelState(speedQuizMenuPanel, false);
   setPanelState(menuPanel, false);
   setPanelState(gamePanel, true);
   document.body.classList.add("game-active");
@@ -402,6 +428,10 @@ const state = {
   selectedDatasets: [],
   customDatasets: {},
   storageDatasets: {},
+  speedQuiz: {
+    selectedDataset: "",
+    selectedCategories: [...ALLOWED_CARD_CATEGORIES],
+  },
   uploadedCsvCards: [],
   datasetStorageMode: "local",
   customDatasetsApiUrl: "",
@@ -774,6 +804,7 @@ function getDatasetEntryByKey(key) {
 
 function refreshDatasetSelections() {
   setupDatasetSelects();
+  renderSpeedQuizDatasetOptions();
   applySelectedDatasets();
 }
 
@@ -2142,6 +2173,65 @@ function setupDatasetSelects() {
   updateDatasetRowControls();
 }
 
+function ensureSpeedQuizDefaults() {
+  const firstAvailableDatasetKey = getAllDatasetEntries()[0]?.key ?? "";
+  if (!getDatasetEntryByKey(state.speedQuiz.selectedDataset)) {
+    state.speedQuiz.selectedDataset = firstAvailableDatasetKey;
+  }
+  const validCategories = state.speedQuiz.selectedCategories.filter((category) =>
+    ALLOWED_CARD_CATEGORIES.includes(category)
+  );
+  state.speedQuiz.selectedCategories = validCategories.length > 0
+    ? validCategories
+    : [...ALLOWED_CARD_CATEGORIES];
+}
+
+function renderSpeedQuizDatasetOptions() {
+  if (!speedQuizDatasetSelect) return;
+
+  ensureSpeedQuizDefaults();
+  const availableDatasets = getAllDatasetEntries();
+  speedQuizDatasetSelect.innerHTML = "";
+
+  availableDatasets.forEach(({ key, label }) => {
+    const option = document.createElement("option");
+    option.value = key;
+    option.textContent = label;
+    speedQuizDatasetSelect.append(option);
+  });
+
+  speedQuizDatasetSelect.value = state.speedQuiz.selectedDataset;
+}
+
+function renderSpeedQuizCategoryOptions() {
+  if (!speedQuizCategoriesContainer) return;
+
+  ensureSpeedQuizDefaults();
+  speedQuizCategoriesContainer.innerHTML = "";
+
+  ALLOWED_CARD_CATEGORIES.forEach((category) => {
+    const label = document.createElement("label");
+    label.className = "category-toggle";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = category;
+    checkbox.checked = state.speedQuiz.selectedCategories.includes(category);
+    checkbox.addEventListener("change", () => {
+      const selectedCategories = [...speedQuizCategoriesContainer.querySelectorAll('input[type="checkbox"]:checked')]
+        .map((input) => input.value)
+        .filter((value) => ALLOWED_CARD_CATEGORIES.includes(value));
+      state.speedQuiz.selectedCategories = selectedCategories.length > 0
+        ? selectedCategories
+        : [...ALLOWED_CARD_CATEGORIES];
+      renderSpeedQuizCategoryOptions();
+    });
+
+    label.append(checkbox, document.createTextNode(` ${category}`));
+    speedQuizCategoriesContainer.append(label);
+  });
+}
+
 const SUPABASE_URL = "https://mqbokupviznrmnwvtwwe.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xYm9rdXB2aXpucm1ud3Z0d3dlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMzczNzYsImV4cCI6MjA4NzYxMzM3Nn0.dckhmcqrKAv8dYTxg6b4313OQs-uI2MCeWXPqfQr5HI";
@@ -2310,8 +2400,7 @@ async function loadStorageDataset(objectName) {
     state.selectedDatasets = [...nextSelectedDatasets].slice(0, MAX_DATASET_SELECTIONS);
     state.uploadedCsvCards = cloneCards(cards);
 
-    setupDatasetSelects();
-    applySelectedDatasets();
+    refreshDatasetSelections();
     updateDatasetAddButtonVisibility();
 
     console.log("Storage CSV Vorschau (erste 200 Zeichen):", csvText.slice(0, 200));
@@ -2636,6 +2725,8 @@ async function setup() {
   updateFullscreenState();
   syncSettingsPanel();
   setupDatasetSelects();
+  renderSpeedQuizDatasetOptions();
+  renderSpeedQuizCategoryOptions();
   refreshCsvDatasetOverwriteSelect("");
   applySelectedDatasets();
   updateCsvDatasetActionState();
@@ -2678,6 +2769,19 @@ showMenuPanel();
 updateMainMenuRequiredSelectionState();
 
 startButton.addEventListener("click", handleStartGame);
+modeBoardButton?.addEventListener("click", () => {
+  showMenuPanel();
+  updateMainMenuRequiredSelectionState();
+});
+modeSpeedQuizButton?.addEventListener("click", () => {
+  showSpeedQuizMenuPanel();
+});
+speedQuizDatasetSelect?.addEventListener("change", (event) => {
+  state.speedQuiz.selectedDataset = event.target.value;
+});
+document.addEventListener("landing:start", () => {
+  showModeSelectionPanel();
+});
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
   if (qrModal && !qrModal.classList.contains("hidden")) {

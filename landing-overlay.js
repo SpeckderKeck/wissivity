@@ -21,6 +21,7 @@ function createLandingOverlay({ onStart } = {}) {
     overlay.remove();
     document.body.classList.remove('landing-open');
     document.body.style.overflow = 'auto';
+    document.dispatchEvent(new CustomEvent('landing:start'));
     if (typeof onStart === 'function') {
       onStart();
     }

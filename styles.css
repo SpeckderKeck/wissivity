@@ -219,6 +219,118 @@ body.fullscreen .board {
   isolation: isolate;
 }
 
+#mode-selection.panel--active,
+#speedquiz-menu.panel--active {
+  min-height: calc(100dvh - var(--header-height) - clamp(32px, 5vh, 72px));
+}
+
+.mode-selection,
+.speedquiz-menu {
+  min-height: inherit;
+  display: grid;
+  place-items: center;
+}
+
+.mode-selection {
+  position: relative;
+}
+
+.mode-selection__options {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(16px, 4vw, 48px);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.mode-option {
+  display: grid;
+  justify-items: center;
+}
+
+.mode-option__button {
+  width: clamp(120px, 18vw, 220px);
+  aspect-ratio: 1 / 1;
+  border-radius: 18px;
+  border: 2px solid var(--border);
+  background: color-mix(in srgb, var(--panel) 90%, white 10%);
+  box-shadow: 0 8px 20px var(--shadow);
+  cursor: pointer;
+  transition: transform 120ms ease, background-color 120ms ease, border-color 120ms ease;
+  position: relative;
+  animation: mode-float 2.6s ease-in-out infinite;
+}
+
+.mode-option:nth-child(2) .mode-option__button {
+  animation-delay: 0.2s;
+}
+
+.mode-option__button:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-primary) 55%, var(--border));
+  background: color-mix(in srgb, var(--panel) 70%, var(--color-primary) 30%);
+}
+
+.mode-option__button:active {
+  transform: translateY(1px);
+  background: color-mix(in srgb, var(--panel) 55%, var(--color-primary) 45%);
+}
+
+.mode-option__button::after {
+  content: attr(data-mode-label);
+  position: absolute;
+  left: 50%;
+  bottom: -38px;
+  transform: translate(-50%, 8px);
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--panel) 84%, black 16%);
+  color: var(--text);
+  white-space: nowrap;
+  font-weight: 700;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.mode-option__button:hover::after,
+.mode-option__button:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@keyframes mode-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.speedquiz-menu__card {
+  width: min(520px, 100%);
+  display: grid;
+  gap: 14px;
+}
+
+.speedquiz-menu__categories {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+#speedquiz-categories {
+  display: grid;
+  gap: 10px;
+}
+
 #menu > *:not(.menu-background) {
   position: relative;
   z-index: 1;

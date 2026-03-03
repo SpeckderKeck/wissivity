@@ -1380,6 +1380,36 @@ async function loadSinglechoiceOptions(questionId) {
     .slice(0, 4);
 }
 
+
+function buildSinglechoiceOptionsFromCard(card, questionId = "") {
+  const correctAnswer = String(card?.answer ?? "").trim();
+  const tabooEntries = Array.isArray(card?.taboo)
+    ? card.taboo.map((entry) => String(entry ?? "").trim()).filter(Boolean)
+    : [];
+
+  const uniqueOptions = [];
+  const seen = new Set();
+  const addOption = (text) => {
+    const normalized = String(text ?? "").trim();
+    if (!normalized || seen.has(normalized)) return;
+    seen.add(normalized);
+    uniqueOptions.push(normalized);
+  };
+
+  addOption(correctAnswer);
+  tabooEntries.forEach(addOption);
+
+  if (!correctAnswer || uniqueOptions.length < 4) {
+    return [];
+  }
+
+  return uniqueOptions.slice(0, 4).map((label, index) => ({
+    id: `${questionId || "question"}-${index + 1}`,
+    label,
+    isCorrect: label === correctAnswer,
+  }));
+}
+
 function readStoredSinglechoiceAnswers() {
   try {
     const raw = localStorage.getItem(SINGLECHOICE_ANSWERS_STORAGE_KEY);
@@ -1489,16 +1519,7 @@ async function setSinglechoiceCard(card) {
   try {
     baseOptions = await loadSinglechoiceOptions(questionId);
   } catch {
-    const fallbackCorrectAnswer = String(card?.answer ?? "").trim();
-    const answerCandidates = [card?.answer, ...(Array.isArray(card?.taboo) ? card.taboo.slice(1, 4) : [])]
-      .map((entry) => String(entry ?? "").trim())
-      .filter(Boolean)
-      .slice(0, 4);
-    baseOptions = answerCandidates.map((label, index) => ({
-      id: `${questionId || "question"}-${index + 1}`,
-      label,
-      isCorrect: label === fallbackCorrectAnswer,
-    }));
+    baseOptions = buildSinglechoiceOptionsFromCard(card, questionId);
   }
 
   if (baseOptions.length !== 4) {

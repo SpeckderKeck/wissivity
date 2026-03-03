@@ -372,6 +372,53 @@ async function handleDatasetsApi(req, res, url) {
 }
 
 
+
+function buildSinglechoiceOptions(questionId, card) {
+  const correctAnswer = String(card?.answer ?? '').trim();
+  const tabooEntries = Array.isArray(card?.taboo)
+    ? card.taboo.map((entry) => String(entry ?? '').trim()).filter(Boolean)
+    : [];
+
+  const uniqueOptions = [];
+  const seen = new Set();
+  const addOption = (text) => {
+    const normalized = String(text ?? '').trim();
+    if (!normalized || seen.has(normalized)) return;
+    seen.add(normalized);
+    uniqueOptions.push(normalized);
+  };
+
+  addOption(correctAnswer);
+  tabooEntries.forEach(addOption);
+
+  if (!correctAnswer || uniqueOptions.length < 4) {
+    return [];
+  }
+
+  return uniqueOptions.slice(0, 4).map((text, index) => ({
+    id: `${questionId}-${index + 1}`,
+    text,
+    isCorrect: text === correctAnswer,
+  }));
+}
+
+async function loadSinglechoiceOptionsByQuestionId(questionId) {
+  const [datasetId = '', rawCardIndex = ''] = String(questionId).split(':');
+  const cardIndex = Number.parseInt(rawCardIndex, 10) - 1;
+  if (!datasetId || !Number.isInteger(cardIndex) || cardIndex < 0) {
+    return [];
+  }
+
+  try {
+    const cards = await readDatasetCards(datasetId);
+    const card = cards[cardIndex];
+    if (!card || card.category !== 'Singlechoice') return [];
+    return buildSinglechoiceOptions(questionId, card);
+  } catch {
+    return [];
+  }
+}
+
 async function handleSinglechoiceAnswersApi(req, res, url) {
   if (req.method === 'OPTIONS') {
     setCorsHeaders(res);
@@ -385,8 +432,10 @@ async function handleSinglechoiceAnswersApi(req, res, url) {
 
   if (req.method === 'GET' && questionIdFromPath) {
     const answers = await readSinglechoiceAnswers();
-    const answerId = typeof answers[questionIdFromPath] === 'string' ? answers[questionIdFromPath] : null;
-    sendJson(res, 200, { questionId: questionIdFromPath, answerId });
+    const stored = answers[questionIdFromPath];
+    const answerId = typeof stored === 'string' ? stored : typeof stored?.answerId === 'string' ? stored.answerId : null;
+    const isCorrect = typeof stored?.isCorrect === 'boolean' ? stored.isCorrect : null;
+    sendJson(res, 200, { questionId: questionIdFromPath, answerId, isCorrect });
     return true;
   }
 
@@ -406,10 +455,11 @@ async function handleSinglechoiceAnswersApi(req, res, url) {
       return true;
     }
 
+    const isCorrect = Boolean(payload?.isCorrect);
     const answers = await readSinglechoiceAnswers();
-    answers[questionId] = answerId;
+    answers[questionId] = { answerId, isCorrect };
     await writeSinglechoiceAnswers(answers);
-    sendJson(res, 200, { ok: true, questionId, answerId });
+    sendJson(res, 200, { ok: true, questionId, answerId, isCorrect });
     return true;
   }
 
@@ -463,6 +513,18 @@ const server = http.createServer(async (req, res) => {
       if (handled) {
         return;
       }
+    }
+
+    const singlechoiceOptionsMatch = url.pathname.match(/^\/singlechoice-options\/([^/]+)$/);
+    if (req.method === 'GET' && singlechoiceOptionsMatch) {
+      const questionId = decodeURIComponent(singlechoiceOptionsMatch[1]);
+      const options = await loadSinglechoiceOptionsByQuestionId(questionId);
+      if (options.length !== 4) {
+        sendJson(res, 404, { error: 'not_found' });
+        return;
+      }
+      sendJson(res, 200, { questionId, options });
+      return;
     }
 
     await serveStatic(req, res);

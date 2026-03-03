@@ -374,28 +374,16 @@ async function handleDatasetsApi(req, res, url) {
 
 
 function buildSinglechoiceOptions(questionId, card) {
+  const answerCandidates = [card?.answer, ...(Array.isArray(card?.taboo) ? card.taboo.slice(1, 4) : [])]
+    .map((entry) => String(entry ?? '').trim())
+    .filter(Boolean)
+    .slice(0, 4);
   const correctAnswer = String(card?.answer ?? '').trim();
-  const tabooEntries = Array.isArray(card?.taboo)
-    ? card.taboo.map((entry) => String(entry ?? '').trim()).filter(Boolean)
-    : [];
-
-  const uniqueOptions = [];
-  const seen = new Set();
-  const addOption = (text) => {
-    const normalized = String(text ?? '').trim();
-    if (!normalized || seen.has(normalized)) return;
-    seen.add(normalized);
-    uniqueOptions.push(normalized);
-  };
-
-  addOption(correctAnswer);
-  tabooEntries.forEach(addOption);
-
-  if (!correctAnswer || uniqueOptions.length < 4) {
+  if (answerCandidates.length !== 4 || !correctAnswer) {
     return [];
   }
 
-  return uniqueOptions.slice(0, 4).map((text, index) => ({
+  return answerCandidates.map((text, index) => ({
     id: `${questionId}-${index + 1}`,
     text,
     isCorrect: text === correctAnswer,

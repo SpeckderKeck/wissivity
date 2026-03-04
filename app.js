@@ -1342,11 +1342,17 @@ function setSingleChoiceResult(optionButton, isCorrect, correctAnswer) {
   const optionButtons = [...turnSingleChoiceOptions.querySelectorAll(".single-choice-option-button")];
   optionButtons.forEach((button) => {
     button.disabled = true;
-    button.classList.remove("is-selected", "is-correct", "is-wrong", "is-animating");
+    button.classList.remove(
+      "is-selected",
+      "is-correct",
+      "is-wrong",
+      "is-animating",
+      "is-correct-outline",
+    );
 
     const buttonOption = normalizeAnswerOption(button.dataset.option ?? button.textContent);
     if (correctAnswer && buttonOption === correctAnswer) {
-      button.classList.add("is-correct");
+      button.classList.add("is-correct-outline");
     }
   });
 

@@ -31,6 +31,7 @@ const turnWord = document.getElementById("turn-word");
 const turnTimer = document.getElementById("turn-timer");
 const turnPenalty = document.getElementById("turn-penalty");
 const turnWordTitle = document.getElementById("turn-word-title");
+const turnSingleChoiceOptions = document.getElementById("turn-single-choice-options");
 const turnTabooList = document.getElementById("turn-taboo-list");
 const turnWordCategoryLabel = document.getElementById("turn-word-category-label");
 const turnWordHint = document.getElementById("turn-word-hint");
@@ -1308,6 +1309,27 @@ function setWordCard(card) {
   if (turnAnswer) {
     turnAnswer.textContent = "";
   }
+  if (turnSingleChoiceOptions) {
+    turnSingleChoiceOptions.innerHTML = "";
+    turnSingleChoiceOptions.classList.add("hidden");
+  }
+}
+
+function getSingleChoiceOptions(card) {
+  const options = [card?.answer, ...(Array.isArray(card?.wrongAnswers) ? card.wrongAnswers : [])]
+    .map((entry) => String(entry ?? "").trim())
+    .filter(Boolean)
+    .slice(0, 4);
+
+  for (let index = options.length; index < 4; index += 1) {
+    options.push(`Option ${index + 1}`);
+  }
+
+  for (let index = options.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [options[index], options[randomIndex]] = [options[randomIndex], options[index]];
+  }
+  return options;
 }
 
 function setQuizQuestionCard(card) {
@@ -1321,6 +1343,22 @@ function setQuizQuestionCard(card) {
   if (turnAnswer) {
     turnAnswer.textContent = "";
     turnAnswer.classList.add("hidden");
+  }
+  if (turnSingleChoiceOptions) {
+    turnSingleChoiceOptions.innerHTML = "";
+    if (state.pendingCategory === "Single-Choice") {
+      const options = getSingleChoiceOptions(card);
+      options.forEach((option) => {
+        const optionButton = document.createElement("button");
+        optionButton.type = "button";
+        optionButton.className = "single-choice-option-button";
+        optionButton.textContent = option;
+        turnSingleChoiceOptions.append(optionButton);
+      });
+      turnSingleChoiceOptions.classList.remove("hidden");
+    } else {
+      turnSingleChoiceOptions.classList.add("hidden");
+    }
   }
 }
 
@@ -1336,6 +1374,10 @@ function setQuizAnswerCard(card) {
   if (turnAnswer) {
     turnAnswer.textContent = "";
     turnAnswer.classList.add("hidden");
+  }
+  if (turnSingleChoiceOptions) {
+    turnSingleChoiceOptions.innerHTML = "";
+    turnSingleChoiceOptions.classList.add("hidden");
   }
 }
 

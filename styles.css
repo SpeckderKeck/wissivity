@@ -2060,6 +2060,12 @@ button:disabled {
   animation-name: single-choice-wrong-pop;
 }
 
+.single-choice-option-button.is-correct-outline {
+  outline: 3px solid color-mix(in srgb, #2bb673 92%, #ffffff 8%);
+  outline-offset: 0;
+  box-shadow: inset 0 0 0 1px rgba(15, 47, 31, 0.12);
+}
+
 @keyframes single-choice-correct-pop {
   0% {
     background: color-mix(in srgb, var(--fullscreen-card-text, var(--text)) 14%, transparent);

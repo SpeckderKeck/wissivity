@@ -1611,14 +1611,17 @@ function handleStartGame() {
 function normalizeCardInput(rawRow = {}) {
   const category = normalizeCategoryInput(rawRow.category);
   const term = String(rawRow.term ?? "").trim();
-  const tabooCandidates = Array.isArray(rawRow.taboo)
-    ? rawRow.taboo
-    : [rawRow.answer, rawRow.tabu2, rawRow.tabu3, rawRow.tabu4];
-  const normalizedTaboo = tabooCandidates.map((entry) => String(entry ?? "").trim()).filter(Boolean);
 
   if (isAnswerCardCategory(category)) {
-    const answer = String(rawRow.answer ?? normalizedTaboo[0] ?? "").trim();
-    const wrongAnswers = normalizedTaboo.slice(1, 4);
+    const normalizedWrongAnswers = Array.isArray(rawRow.wrongAnswers)
+      ? rawRow.wrongAnswers.map((entry) => String(entry ?? "").trim()).filter(Boolean).slice(0, 3)
+      : [];
+    const fallbackTabooCandidates = Array.isArray(rawRow.taboo)
+      ? rawRow.taboo
+      : [rawRow.answer, rawRow.tabu2, rawRow.tabu3, rawRow.tabu4];
+    const normalizedFallbackTaboo = fallbackTabooCandidates.map((entry) => String(entry ?? "").trim()).filter(Boolean);
+    const answer = String(rawRow.answer ?? normalizedFallbackTaboo[0] ?? "").trim();
+    const wrongAnswers = normalizedWrongAnswers.length > 0 ? normalizedWrongAnswers : normalizedFallbackTaboo.slice(1, 4);
     return {
       category,
       term,
@@ -1627,6 +1630,11 @@ function normalizeCardInput(rawRow = {}) {
       taboo: [],
     };
   }
+
+  const tabooCandidates = Array.isArray(rawRow.taboo)
+    ? rawRow.taboo
+    : [rawRow.answer, rawRow.tabu2, rawRow.tabu3, rawRow.tabu4];
+  const normalizedTaboo = tabooCandidates.map((entry) => String(entry ?? "").trim()).filter(Boolean);
 
   return {
     category,
